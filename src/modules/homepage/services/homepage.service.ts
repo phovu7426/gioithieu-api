@@ -3,7 +3,6 @@ import { CacheService } from '@/common/services/cache.service';
 import { PublicProjectService } from '@/modules/introduction/project/public/project/services/project.service';
 import { PublicAboutService } from '@/modules/common/about/public/about/services/about.service';
 import { PublicStaffService } from '@/modules/introduction/staff/public/staff/services/staff.service';
-import { PublicTestimonialService } from '@/modules/introduction/testimonial/public/testimonial/services/testimonial.service';
 import { PublicPartnerService } from '@/modules/introduction/partner/public/partner/services/partner.service';
 import { PublicCertificateService } from '@/modules/introduction/certificate/public/certificate/services/certificate.service';
 import { PublicFaqService } from '@/modules/common/faq/public/faq/services/faq.service';
@@ -15,7 +14,6 @@ export class HomepageService {
     PROJECTS: 'public:homepage:projects',
     ABOUT_SECTIONS: 'public:homepage:about_sections',
     STAFF: 'public:homepage:staff',
-    TESTIMONIALS: 'public:homepage:testimonials',
     PARTNERS: 'public:homepage:partners',
     CERTIFICATES: 'public:homepage:certificates',
     FAQS: 'public:homepage:faqs',
@@ -26,9 +24,7 @@ export class HomepageService {
     PROJECTS: 600,        // 10 phút - Dự án thay đổi không thường xuyên
     ABOUT_SECTIONS: 3600, // 1 giờ - Giới thiệu ít thay đổi
     STAFF: 1800,          // 30 phút - Nhân viên có thể thay đổi
-    TESTIMONIALS: 600,    // 10 phút - Lời chứng thực
     PARTNERS: 3600,       // 1 giờ - Đối tác ít thay đổi
-    GALLERY: 300,         // 5 phút - Gallery có thể cập nhật
     CERTIFICATES: 3600,   // 1 giờ - Chứng chỉ ít thay đổi
     FAQS: 1200,           // 20 phút - FAQs
   };
@@ -38,7 +34,6 @@ export class HomepageService {
     private readonly projectService: PublicProjectService,
     private readonly aboutService: PublicAboutService,
     private readonly staffService: PublicStaffService,
-    private readonly testimonialService: PublicTestimonialService,
     private readonly partnerService: PublicPartnerService,
     private readonly certificateService: PublicCertificateService,
     private readonly faqService: PublicFaqService,
@@ -55,7 +50,6 @@ export class HomepageService {
       featuredProjects,
       aboutSections,
       staff,
-      featuredTestimonials,
       partners,
       certificates,
       popularFaqs,
@@ -93,15 +87,6 @@ export class HomepageService {
           return result?.data || [];
         },
         this.CACHE_TTL.STAFF,
-      ),
-
-      // Featured testimonials - cache 10 phút
-      this.cacheService.getOrSet(
-        this.CACHE_KEYS.TESTIMONIALS,
-        async () => {
-          return await this.testimonialService.getFeatured(10);
-        },
-        this.CACHE_TTL.TESTIMONIALS,
       ),
 
       // Partners - cache 1 giờ
@@ -147,8 +132,6 @@ export class HomepageService {
       about_sections: aboutSections,
       // Nhân viên
       staff: staff,
-      // Lời chứng thực nổi bật
-      featured_testimonials: featuredTestimonials,
       // Đối tác
       partners: partners,
       // Chứng chỉ
@@ -195,13 +178,6 @@ export class HomepageService {
    */
   async clearStaffCache(): Promise<void> {
     await this.cacheService.del(this.CACHE_KEYS.STAFF);
-  }
-
-  /**
-   * Xóa cache liên quan đến testimonials
-   */
-  async clearTestimonialsCache(): Promise<void> {
-    await this.cacheService.del(this.CACHE_KEYS.TESTIMONIALS);
   }
 
   /**
