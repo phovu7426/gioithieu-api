@@ -5,7 +5,6 @@ import { PublicAboutService } from '@/modules/common/about/public/about/services
 import { PublicStaffService } from '@/modules/introduction/staff/public/staff/services/staff.service';
 import { PublicTestimonialService } from '@/modules/introduction/testimonial/public/testimonial/services/testimonial.service';
 import { PublicPartnerService } from '@/modules/introduction/partner/public/partner/services/partner.service';
-import { PublicGalleryService } from '@/modules/introduction/gallery/public/gallery/services/gallery.service';
 import { PublicCertificateService } from '@/modules/introduction/certificate/public/certificate/services/certificate.service';
 import { PublicFaqService } from '@/modules/common/faq/public/faq/services/faq.service';
 
@@ -18,7 +17,6 @@ export class HomepageService {
     STAFF: 'public:homepage:staff',
     TESTIMONIALS: 'public:homepage:testimonials',
     PARTNERS: 'public:homepage:partners',
-    GALLERY: 'public:homepage:gallery',
     CERTIFICATES: 'public:homepage:certificates',
     FAQS: 'public:homepage:faqs',
   };
@@ -42,7 +40,6 @@ export class HomepageService {
     private readonly staffService: PublicStaffService,
     private readonly testimonialService: PublicTestimonialService,
     private readonly partnerService: PublicPartnerService,
-    private readonly galleryService: PublicGalleryService,
     private readonly certificateService: PublicCertificateService,
     private readonly faqService: PublicFaqService,
   ) {}
@@ -60,7 +57,6 @@ export class HomepageService {
       staff,
       featuredTestimonials,
       partners,
-      featuredGallery,
       certificates,
       popularFaqs,
     ] = await Promise.all([
@@ -121,15 +117,6 @@ export class HomepageService {
         this.CACHE_TTL.PARTNERS,
       ),
 
-      // Featured gallery - cache 5 phút
-      this.cacheService.getOrSet(
-        this.CACHE_KEYS.GALLERY,
-        async () => {
-          return await this.galleryService.getFeatured(10);
-        },
-        this.CACHE_TTL.GALLERY,
-      ),
-
       // Certificates - cache 1 giờ
       this.cacheService.getOrSet(
         this.CACHE_KEYS.CERTIFICATES,
@@ -164,8 +151,6 @@ export class HomepageService {
       featured_testimonials: featuredTestimonials,
       // Đối tác
       partners: partners,
-      // Gallery nổi bật
-      featured_gallery: featuredGallery,
       // Chứng chỉ
       certificates: certificates,
       // FAQs phổ biến
@@ -224,13 +209,6 @@ export class HomepageService {
    */
   async clearPartnersCache(): Promise<void> {
     await this.cacheService.del(this.CACHE_KEYS.PARTNERS);
-  }
-
-  /**
-   * Xóa cache liên quan đến gallery
-   */
-  async clearGalleryCache(): Promise<void> {
-    await this.cacheService.del(this.CACHE_KEYS.GALLERY);
   }
 
   /**
