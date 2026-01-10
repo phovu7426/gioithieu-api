@@ -44,6 +44,7 @@ import { PartnerModule } from '@/modules/partner/partner.module';
 import { GalleryModule } from '@/modules/gallery/gallery.module';
 import { CertificateModule } from '@/modules/certificate/certificate.module';
 import { FaqModule } from '@/modules/faq/faq.module';
+import { HomepageModule } from '@/modules/homepage/homepage.module';
 
 @Module({
   imports: [
@@ -76,6 +77,8 @@ import { FaqModule } from '@/modules/faq/faq.module';
     // Company Introduction Modules - Phase 3
     CertificateModule,
     FaqModule,
+    // Homepage Module - Gộp tất cả API cho trang chủ
+    HomepageModule,
   ],
   controllers: [],
   providers: [
