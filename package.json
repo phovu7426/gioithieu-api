@@ -31,11 +31,7 @@
     "db:create": "ts-node -r tsconfig-paths/register src/core/database/cli/create-database.ts",
     "db:drop": "ts-node -r tsconfig-paths/register src/core/database/cli/drop-database.ts",
     "seed": "ts-node -r tsconfig-paths/register src/core/database/cli/seed.ts",
-    "seed:refresh": "ts-node -r tsconfig-paths/register src/core/database/cli/seed.ts --refresh",
-    "fix:admin": "ts-node -r tsconfig-paths/register src/core/database/cli/fix-admin.ts",
-    "seed:posts": "ts-node -r tsconfig-paths/register src/core/database/cli/seed-posts.ts",
-    "seed:posts:refresh": "ts-node -r tsconfig-paths/register src/core/database/cli/seed-posts.ts --refresh",
-    "backfill:comic-last-chapter": "ts-node -r tsconfig-paths/register src/core/database/cli/backfill-comic-last-chapter.ts"
+    "seed:refresh": "ts-node -r tsconfig-paths/register src/core/database/cli/seed.ts --refresh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.940.0",
