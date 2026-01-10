@@ -212,6 +212,37 @@ export class SeedMenus {
         permission_code: 'menu.manage',
       },
       
+      // ========== TÍNH NĂNG MỞ RỘNG ==========
+      {
+        code: 'extra-management',
+        name: 'Tính năng mở rộng',
+        path: '/admin/extra',
+        api_path: 'api/admin/extra',
+        icon: '👪',
+        type: MenuType.group,
+        status: BasicStatus.active,
+        parent_id: null,
+        sort_order: 20,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'notification.manage',
+        permission_codes: ['notification.manage', 'banner.manage', 'banner_location.manage'],
+      },
+      // ========== THÔNG BÁO ==========
+      {
+        code: 'notifications',
+        name: 'Thông báo',
+        path: '/admin/notifications',
+        api_path: 'api/admin/notifications',
+        icon: '🔔',
+        type: MenuType.route,
+        status: BasicStatus.active,
+        parent_id: null,
+        sort_order: 120,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'notification.manage',
+      },
       // ========== BANNER (GROUP - check nhiều quyền) ==========
       {
         code: 'banner-management',
@@ -271,22 +302,6 @@ export class SeedMenus {
         is_public: false,
         show_in_menu: true,
         permission_code: 'contact.manage',
-      },
-      
-      // ========== THÔNG BÁO ==========
-      {
-        code: 'notifications',
-        name: 'Thông báo',
-        path: '/admin/notifications',
-        api_path: 'api/admin/notifications',
-        icon: '🔔',
-        type: MenuType.route,
-        status: BasicStatus.active,
-        parent_id: null,
-        sort_order: 120,
-        is_public: false,
-        show_in_menu: true,
-        permission_code: 'notification.manage',
       },
       
       // ========== GIỚI THIỆU (GROUP - check nhiều quyền) ==========
