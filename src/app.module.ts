@@ -36,6 +36,14 @@ import { ContactModule } from '@/modules/contact/contact.module';
 import { SystemConfigModule } from '@/modules/system-config/system-config.module';
 import { AppMailModule } from '@/core/mail/mail.module';
 import { ComicsModule } from '@/modules/comics/comics.module';
+import { ProjectModule } from '@/modules/project/project.module';
+import { AboutModule } from '@/modules/about/about.module';
+import { StaffModule } from '@/modules/staff/staff.module';
+import { TestimonialModule } from '@/modules/testimonial/testimonial.module';
+import { PartnerModule } from '@/modules/partner/partner.module';
+import { GalleryModule } from '@/modules/gallery/gallery.module';
+import { CertificateModule } from '@/modules/certificate/certificate.module';
+import { FaqModule } from '@/modules/faq/faq.module';
 
 @Module({
   imports: [
@@ -56,7 +64,18 @@ import { ComicsModule } from '@/modules/comics/comics.module';
     ContactModule,
     SystemConfigModule,
     AppMailModule,
-    ComicsModule,
+    // ComicsModule, // Commented out - not needed for company introduction website
+    // Company Introduction Modules - Phase 1
+    ProjectModule,
+    AboutModule,
+    StaffModule,
+    // Company Introduction Modules - Phase 2
+    TestimonialModule,
+    PartnerModule,
+    GalleryModule,
+    // Company Introduction Modules - Phase 3
+    CertificateModule,
+    FaqModule,
   ],
   controllers: [],
   providers: [

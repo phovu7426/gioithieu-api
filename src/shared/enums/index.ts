@@ -17,6 +17,10 @@ export * from './types/comment-status.enum';
 export * from './types/notification-type.enum';
 export * from './types/menu-type.enum';
 export * from './types/banner-link-target.enum';
+export * from './types/project-status.enum';
+export * from './types/about-section-type.enum';
+export * from './types/partner-type.enum';
+export * from './types/certificate-type.enum';
 
 // Interfaces
 export { EnumValueMetadata } from './interfaces/enum-metadata.interface';

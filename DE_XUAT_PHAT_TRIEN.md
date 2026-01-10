@@ -10,34 +10,48 @@
 - ✅ `menus` - Menu hệ thống
 - ✅ `notifications` - Thông báo
 
-## ➕ Các Bảng Cần Thêm Cho Web Giới Thiệu Công Ty Xây Dựng
+## ➕ Danh Sách Bảng DB Được Cải Tiến
+
+Dựa trên tham khảo website romanproperty.vn và phân tích nhu cầu thực tế, danh sách bảng được tối ưu như sau:
 
 ### 1. Projects (Dự án) - **QUAN TRỌNG**
 ```prisma
 model Project {
-  id              BigInt      @id
-  name            String      // Tên dự án
-  slug            String      @unique
-  description     String?     @db.Text
-  short_description String?   @db.VarChar(500)
-  cover_image     String?
-  location        String?     // Địa điểm
-  area            Decimal?    // Diện tích (m²)
-  start_date      DateTime?
-  end_date        DateTime?
-  status          ProjectStatus // planning, in_progress, completed, cancelled
-  category_id     BigInt?     // Loại dự án (nhà ở, công trình công cộng, v.v.)
-  client_name     String?     // Tên chủ đầu tư
-  budget          Decimal?    // Ngân sách
-  images          Json?       // Mảng ảnh dự án
-  featured        Boolean     @default(false)
-  view_count      BigInt      @default(0)
-  sort_order      Int         @default(0)
-  meta_title      String?
-  meta_description String?    @db.Text
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
+  id                BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String      @db.VarChar(255)
+  slug              String      @unique @db.VarChar(255)
+  description       String?     @db.Text
+  short_description String?     @db.VarChar(500)
+  cover_image       String?     @db.VarChar(500)
+  location          String?     @db.VarChar(255)  // Địa điểm
+  area              Decimal?    @db.Decimal(15, 2)  // Diện tích (m²)
+  start_date        DateTime?   @db.DateTime(0)
+  end_date          DateTime?   @db.DateTime(0)
+  status            ProjectStatus @default(planning)
+  client_name       String?     @db.VarChar(255)  // Tên chủ đầu tư
+  budget            Decimal?    @db.Decimal(20, 2)  // Ngân sách
+  images            Json?       // Mảng ảnh dự án
+  featured          Boolean     @default(false)
+  view_count        BigInt      @default(0) @db.UnsignedBigInt
+  sort_order        Int         @default(0)
+  meta_title        String?     @db.VarChar(255)
+  meta_description  String?     @db.Text
+  canonical_url     String?     @db.VarChar(500)
+  og_image          String?     @db.VarChar(500)
+  created_user_id   BigInt?     @db.UnsignedBigInt
+  updated_user_id   BigInt?     @db.UnsignedBigInt
+  created_at        DateTime    @default(now()) @db.DateTime(0)
+  updated_at        DateTime    @updatedAt @db.DateTime(0)
+  deleted_at        DateTime?   @db.DateTime(0)
+
+  @@index([slug], map: "idx_projects_slug")
+  @@index([status], map: "idx_projects_status")
+  @@index([featured], map: "idx_projects_featured")
+  @@index([sort_order], map: "idx_projects_sort_order")
+  @@index([created_at], map: "idx_projects_created_at")
+  @@index([status, featured], map: "idx_projects_status_featured")
+  @@index([deleted_at], map: "idx_projects_deleted_at")
+  @@map("projects")
 }
 
 enum ProjectStatus {
@@ -48,126 +62,132 @@ enum ProjectStatus {
 }
 ```
 
-### 2. ProjectCategories (Danh mục dự án)
-```prisma
-model ProjectCategory {
-  id          BigInt    @id
-  name        String
-  slug        String    @unique
-  description String?   @db.Text
-  image       String?
-  sort_order  Int       @default(0)
-  status      BasicStatus
-  projects    Project[]
-}
-```
+**Lý do:** Bảng này là core của website giới thiệu công ty xây dựng. Không cần ProjectCategories vì có thể dùng tags hoặc phân loại đơn giản bằng status/featured.
 
-### 3. Services (Dịch vụ)
-```prisma
-model Service {
-  id              BigInt      @id
-  name            String
-  slug            String      @unique
-  description     String?     @db.Text
-  short_description String?  @db.VarChar(500)
-  icon            String?     // Icon hoặc ảnh đại diện
-  image           String?
-  content         String?     @db.LongText // Nội dung chi tiết
-  features        Json?       // Danh sách tính năng
-  price_range     String?     // Khoảng giá (nếu có)
-  status          BasicStatus
-  sort_order      Int         @default(0)
-  meta_title      String?
-  meta_description String?   @db.Text
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
-}
-```
+---
 
-### 4. Team/Staff (Đội ngũ nhân viên)
+### 2. Staff (Đội ngũ nhân viên) - **QUAN TRỌNG**
 ```prisma
-model TeamMember {
-  id              BigInt      @id
-  name            String
-  position        String      // Chức vụ
-  department      String?     // Phòng ban
+model Staff {
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  name            String      @db.VarChar(255)
+  position        String      @db.VarChar(255)  // Chức vụ
+  department      String?     @db.VarChar(255)  // Phòng ban
   bio             String?     @db.Text
-  avatar          String?
-  email           String?
-  phone           String?
+  avatar          String?     @db.VarChar(500)
+  email           String?     @db.VarChar(255)
+  phone           String?     @db.VarChar(20)
   social_links    Json?       // Facebook, LinkedIn, v.v.
   experience      Int?        // Số năm kinh nghiệm
-  expertise       String?     @db.Text // Chuyên môn
-  status          BasicStatus
+  expertise       String?     @db.Text  // Chuyên môn
+  status          BasicStatus @default(active)
   sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  @@index([status], map: "idx_staff_status")
+  @@index([sort_order], map: "idx_staff_sort_order")
+  @@index([department], map: "idx_staff_department")
+  @@index([deleted_at], map: "idx_staff_deleted_at")
+  @@map("staff")
 }
 ```
 
-### 5. Testimonials (Lời chứng thực/Khách hàng nói gì)
+**Lý do:** Đổi tên từ TeamMember sang Staff cho rõ ràng hơn. Cần thiết để giới thiệu đội ngũ công ty.
+
+---
+
+### 3. Testimonials (Lời chứng thực/Khách hàng nói gì)
 ```prisma
 model Testimonial {
-  id              BigInt      @id
-  client_name     String
-  client_position String?     // Chức vụ khách hàng
-  client_company  String?     // Công ty khách hàng
-  client_avatar   String?
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  client_name     String      @db.VarChar(255)
+  client_position String?     @db.VarChar(255)  // Chức vụ khách hàng
+  client_company  String?     @db.VarChar(255)  // Công ty khách hàng
+  client_avatar   String?     @db.VarChar(500)
   content         String      @db.Text
-  rating          Int?        // 1-5 sao
-  project_id      BigInt?     // Liên kết với dự án (nếu có)
+  rating          Int?        @db.UnsignedTinyInt  // 1-5 sao
+  project_id      BigInt?     @db.UnsignedBigInt  // Liên kết với dự án (nếu có)
   featured        Boolean     @default(false)
-  status          BasicStatus
+  status          BasicStatus @default(active)
   sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  project Project? @relation(fields: [project_id], references: [id], onDelete: SetNull)
+
+  @@index([status], map: "idx_testimonials_status")
+  @@index([featured], map: "idx_testimonials_featured")
+  @@index([project_id], map: "idx_testimonials_project_id")
+  @@index([sort_order], map: "idx_testimonials_sort_order")
+  @@index([deleted_at], map: "idx_testimonials_deleted_at")
+  @@map("testimonials")
 }
 ```
 
-### 6. Gallery (Thư viện ảnh)
+**Lý do:** Tăng độ tin cậy, xây dựng niềm tin với khách hàng.
+
+---
+
+### 4. Gallery (Thư viện ảnh)
 ```prisma
 model Gallery {
-  id              BigInt      @id
-  title           String
-  slug            String      @unique
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  title           String      @db.VarChar(255)
+  slug            String      @unique @db.VarChar(255)
   description     String?     @db.Text
-  cover_image     String?
-  category_id     BigInt?     // Phân loại ảnh
+  cover_image     String?     @db.VarChar(500)
   images          Json        // Mảng ảnh
   featured        Boolean     @default(false)
-  status          BasicStatus
+  status          BasicStatus @default(active)
   sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
-}
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
 
-model GalleryCategory {
-  id          BigInt    @id
-  name        String
-  slug        String    @unique
-  description String?   @db.Text
-  galleries   Gallery[]
+  @@index([slug], map: "idx_gallery_slug")
+  @@index([status], map: "idx_gallery_status")
+  @@index([featured], map: "idx_gallery_featured")
+  @@index([sort_order], map: "idx_gallery_sort_order")
+  @@index([deleted_at], map: "idx_gallery_deleted_at")
+  @@map("gallery")
 }
 ```
 
-### 7. Partners/Clients (Đối tác/Khách hàng)
+**Lý do:** Cần thiết để showcase công trình, dự án. Không cần GalleryCategory vì có thể dùng tags hoặc phân loại đơn giản bằng featured/status.
+
+---
+
+### 5. Partners (Đối tác/Khách hàng)
 ```prisma
 model Partner {
-  id              BigInt      @id
-  name            String
-  logo            String
-  website         String?
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  name            String      @db.VarChar(255)
+  logo            String      @db.VarChar(500)
+  website         String?     @db.VarChar(500)
   description     String?     @db.Text
-  type            PartnerType // client, supplier, partner
-  status          BasicStatus
+  type            PartnerType  @default(client)
+  status          BasicStatus @default(active)
   sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  @@index([type], map: "idx_partners_type")
+  @@index([status], map: "idx_partners_status")
+  @@index([sort_order], map: "idx_partners_sort_order")
+  @@index([deleted_at], map: "idx_partners_deleted_at")
+  @@map("partners")
 }
 
 enum PartnerType {
@@ -177,23 +197,35 @@ enum PartnerType {
 }
 ```
 
-### 8. Certificates/Awards (Chứng chỉ/Giải thưởng)
+**Lý do:** Thể hiện uy tín, mối quan hệ hợp tác.
+
+---
+
+### 6. Certificates (Chứng chỉ/Giải thưởng)
 ```prisma
 model Certificate {
-  id              BigInt      @id
-  name            String
-  image           String
-  issued_by       String?     // Cấp bởi
-  issued_date     DateTime?
-  expiry_date     DateTime?
-  certificate_number String?  // Số chứng chỉ
-  description     String?     @db.Text
-  type            CertificateType // iso, award, license, v.v.
-  status          BasicStatus
-  sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
+  id                BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String          @db.VarChar(255)
+  image             String          @db.VarChar(500)
+  issued_by         String?         @db.VarChar(255)  // Cấp bởi
+  issued_date       DateTime?       @db.DateTime(0)
+  expiry_date       DateTime?       @db.DateTime(0)
+  certificate_number String?         @db.VarChar(100)  // Số chứng chỉ
+  description       String?         @db.Text
+  type              CertificateType @default(license)
+  status            BasicStatus     @default(active)
+  sort_order        Int             @default(0)
+  created_user_id   BigInt?         @db.UnsignedBigInt
+  updated_user_id   BigInt?         @db.UnsignedBigInt
+  created_at        DateTime        @default(now()) @db.DateTime(0)
+  updated_at        DateTime        @updatedAt @db.DateTime(0)
+  deleted_at        DateTime?       @db.DateTime(0)
+
+  @@index([type], map: "idx_certificates_type")
+  @@index([status], map: "idx_certificates_status")
+  @@index([sort_order], map: "idx_certificates_sort_order")
+  @@index([deleted_at], map: "idx_certificates_deleted_at")
+  @@map("certificates")
 }
 
 enum CertificateType {
@@ -205,21 +237,34 @@ enum CertificateType {
 }
 ```
 
-### 9. About (Giới thiệu công ty)
+**Lý do:** Thể hiện năng lực, uy tín của công ty.
+
+---
+
+### 7. About (Giới thiệu công ty)
 ```prisma
 model AboutSection {
-  id              BigInt      @id
-  title           String
-  slug            String      @unique
-  content         String      @db.LongText
-  image           String?
-  video_url       String?
-  section_type    AboutSectionType // history, mission, vision, values, v.v.
-  status          BasicStatus
-  sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
+  id              BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  title           String          @db.VarChar(255)
+  slug            String          @unique @db.VarChar(255)
+  content         String          @db.LongText
+  image           String?         @db.VarChar(500)
+  video_url       String?         @db.VarChar(500)
+  section_type    AboutSectionType @default(history)
+  status          BasicStatus     @default(active)
+  sort_order      Int             @default(0)
+  created_user_id BigInt?         @db.UnsignedBigInt
+  updated_user_id BigInt?         @db.UnsignedBigInt
+  created_at      DateTime        @default(now()) @db.DateTime(0)
+  updated_at      DateTime        @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?       @db.DateTime(0)
+
+  @@index([slug], map: "idx_about_sections_slug")
+  @@index([section_type], map: "idx_about_sections_type")
+  @@index([status], map: "idx_about_sections_status")
+  @@index([sort_order], map: "idx_about_sections_sort_order")
+  @@index([deleted_at], map: "idx_about_sections_deleted_at")
+  @@map("about_sections")
 }
 
 enum AboutSectionType {
@@ -233,66 +278,80 @@ enum AboutSectionType {
 }
 ```
 
-### 10. FAQs (Câu hỏi thường gặp)
+**Lý do:** Cần thiết cho trang "Giới thiệu" trên website.
+
+---
+
+### 8. FAQs (Câu hỏi thường gặp)
 ```prisma
 model Faq {
-  id              BigInt      @id
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
   question        String      @db.Text
   answer          String      @db.LongText
-  category_id     BigInt?     // Phân loại câu hỏi
-  view_count      BigInt      @default(0)
-  helpful_count   BigInt      @default(0)
-  status          BasicStatus
+  view_count      BigInt      @default(0) @db.UnsignedBigInt
+  helpful_count   BigInt      @default(0) @db.UnsignedBigInt
+  status          BasicStatus @default(active)
   sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
-}
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
 
-model FaqCategory {
-  id          BigInt    @id
-  name        String
-  slug        String    @unique
-  description String?   @db.Text
-  faqs        Faq[]
+  @@index([status], map: "idx_faqs_status")
+  @@index([sort_order], map: "idx_faqs_sort_order")
+  @@index([view_count], map: "idx_faqs_view_count")
+  @@index([deleted_at], map: "idx_faqs_deleted_at")
+  @@map("faqs")
 }
 ```
 
-### 11. Statistics (Thống kê/Số liệu)
-```prisma
-model Statistic {
-  id              BigInt      @id
-  label           String      // "Dự án hoàn thành"
-  value           String      // "500+"
-  icon            String?     // Icon
-  unit            String?     // "+", "%", v.v.
-  description     String?     @db.Text
-  status          BasicStatus
-  sort_order      Int         @default(0)
-  created_at      DateTime    @default(now())
-  updated_at      DateTime    @updatedAt
-  deleted_at      DateTime?
-}
-```
+**Lý do:** Hỗ trợ khách hàng, giảm tải công việc tư vấn. Không cần FaqCategory vì có thể dùng tags hoặc phân loại đơn giản.
+
+---
+
+## 📋 Tổng Kết Danh Sách Bảng DB
+
+### Bảng Hiện Có (Tái Sử Dụng)
+1. ✅ `banners`, `banner_locations`
+2. ✅ `posts`, `postcategory`, `posttag`
+3. ✅ `contacts`
+4. ✅ `general_configs`
+5. ✅ `users`, `profiles`
+6. ✅ `menus`
+7. ✅ `notifications`
+
+### Bảng Mới Cần Tạo
+1. ✅ **Projects** - Quản lý dự án
+2. ✅ **Staff** - Đội ngũ nhân viên
+3. ✅ **Testimonials** - Lời chứng thực
+4. ✅ **Gallery** - Thư viện ảnh
+5. ✅ **Partners** - Đối tác/Khách hàng
+6. ✅ **Certificates** - Chứng chỉ/Giải thưởng
+7. ✅ **AboutSection** - Giới thiệu công ty
+8. ✅ **Faq** - Câu hỏi thường gặp
+
+### Tổng Cộng: 8 bảng mới + 7 nhóm bảng hiện có = **15 nhóm bảng**
+
+---
 
 ## 📋 Ưu Tiên Triển Khai
 
-### Phase 1 (Bắt buộc)
-1. ✅ **Projects** - Quản lý dự án
-2. ✅ **ProjectCategories** - Phân loại dự án
-3. ✅ **Services** - Dịch vụ công ty
-4. ✅ **About** - Giới thiệu công ty
+### Phase 1 (Bắt buộc - Core)
+1. ✅ **Projects** - Quản lý dự án (QUAN TRỌNG NHẤT)
+2. ✅ **AboutSection** - Giới thiệu công ty
+3. ✅ **Staff** - Đội ngũ nhân viên
 
 ### Phase 2 (Quan trọng)
-5. ✅ **Team/Staff** - Đội ngũ nhân viên
-6. ✅ **Testimonials** - Lời chứng thực
-7. ✅ **Partners** - Đối tác/Khách hàng
-8. ✅ **Gallery** - Thư viện ảnh
+4. ✅ **Testimonials** - Lời chứng thực
+5. ✅ **Partners** - Đối tác/Khách hàng
+6. ✅ **Gallery** - Thư viện ảnh
 
 ### Phase 3 (Bổ sung)
-9. ✅ **Certificates** - Chứng chỉ/Giải thưởng
-10. ✅ **FAQs** - Câu hỏi thường gặp
-11. ✅ **Statistics** - Thống kê/Số liệu
+7. ✅ **Certificates** - Chứng chỉ/Giải thưởng
+8. ✅ **Faq** - Câu hỏi thường gặp
+
+---
 
 ## 🔧 Cần Sửa/Thêm
 
@@ -311,9 +370,41 @@ model Statistic {
 - Meta tags optimization
 - Image optimization
 
-## 📝 Ghi Chú
+---
 
-- Các bảng `posts`, `banners`, `contacts` đã có sẵn, có thể tái sử dụng
-- Ưu tiên tạo module **Projects** và **Services** trước vì đây là core của web giới thiệu công ty xây dựng
-- Có thể tận dụng `Post` model cho phần "Tin tức" hoặc "Dự án nổi bật"
+## 📝 Ghi Chú Quan Trọng
 
+1. **Tận dụng bảng hiện có:**
+   - Dùng `posts` cho tin tức/blog
+   - Dùng `posttag` cho tags của Projects, Gallery
+   - Dùng `postcategory` nếu cần phân loại phức tạp hơn
+
+2. **Đơn giản hóa:**
+   - Loại bỏ các bảng category không cần thiết
+   - Dùng status, featured, tags để phân loại
+   - Giảm độ phức tạp, dễ maintain
+
+3. **Ưu tiên:**
+   - Tập trung vào **Projects** và **AboutSection** trước
+   - Đây là 2 phần quan trọng nhất của website giới thiệu công ty xây dựng
+
+4. **Mở rộng sau:**
+   - Nếu sau này cần phân loại phức tạp hơn, có thể thêm lại các bảng category
+   - Hiện tại giữ đơn giản để dễ triển khai và maintain
+
+---
+
+## 🎯 Mapping Với Website romanproperty.vn
+
+| Trang Website | Bảng DB Tương Ứng |
+|--------------|-------------------|
+| Trang chủ | `banners`, `projects` (featured), `posts` (featured) |
+| Giới thiệu | `about_sections` |
+| Dự án trọng điểm | `projects` |
+| Tin tức | `posts`, `postcategory`, `posttag` |
+| Liên hệ | `contacts` |
+| (Ẩn) Đội ngũ | `staff` |
+| (Ẩn) Đối tác | `partners` |
+| (Ẩn) Thư viện | `gallery` |
+| (Ẩn) Chứng chỉ | `certificates` |
+| (Ẩn) FAQ | `faqs` |

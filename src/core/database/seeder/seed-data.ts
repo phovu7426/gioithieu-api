@@ -19,6 +19,14 @@ import { SeedComicCategories } from '@/core/database/seeder/seed-comic-categorie
 import { SeedComics } from '@/core/database/seeder/seed-comics';
 import { SeedChapters } from '@/core/database/seeder/seed-chapters';
 import { SeedComicLastChapter } from '@/core/database/seeder/seed-comic-last-chapter';
+import { SeedProjects } from '@/core/database/seeder/seed-projects';
+import { SeedAboutSections } from '@/core/database/seeder/seed-about-sections';
+import { SeedStaff } from '@/core/database/seeder/seed-staff';
+import { SeedTestimonials } from '@/core/database/seeder/seed-testimonials';
+import { SeedPartners } from '@/core/database/seeder/seed-partners';
+import { SeedGallery } from '@/core/database/seeder/seed-gallery';
+import { SeedCertificates } from '@/core/database/seeder/seed-certificates';
+import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
 
 @Injectable()
 export class SeedService {
@@ -45,6 +53,15 @@ export class SeedService {
     private readonly seedComics: SeedComics,
     private readonly seedChapters: SeedChapters,
     private readonly seedComicLastChapter: SeedComicLastChapter,
+    // Company Introduction Seeders
+    private readonly seedProjects: SeedProjects,
+    private readonly seedAboutSections: SeedAboutSections,
+    private readonly seedStaff: SeedStaff,
+    private readonly seedTestimonials: SeedTestimonials,
+    private readonly seedPartners: SeedPartners,
+    private readonly seedGallery: SeedGallery,
+    private readonly seedCertificates: SeedCertificates,
+    private readonly seedFaqs: SeedFaqs,
   ) { }
 
   async seedAll(): Promise<void> {
@@ -88,6 +105,17 @@ export class SeedService {
 
       // Groups and contexts (sau khi có users và system context)
       await this.seedGroups.seed();
+
+      // Company Introduction Modules
+      await this.seedProjects.seed();
+      await this.seedAboutSections.seed();
+      await this.seedStaff.seed();
+      await this.seedPartners.seed();
+      await this.seedGallery.seed();
+      await this.seedCertificates.seed();
+      await this.seedFaqs.seed();
+      // Testimonials cần seed sau Projects vì có relation
+      await this.seedTestimonials.seed();
 
       this.logger.log('Database seeding completed successfully');
     } catch (error) {
@@ -140,6 +168,16 @@ export class SeedService {
       
       await this.prisma.emailConfig.deleteMany({});
       await this.prisma.generalConfig.deleteMany({});
+
+      // Company Introduction Tables
+      await this.prisma.testimonial.deleteMany({});
+      await this.prisma.project.deleteMany({});
+      await this.prisma.gallery.deleteMany({});
+      await this.prisma.certificate.deleteMany({});
+      await this.prisma.faq.deleteMany({});
+      await this.prisma.partner.deleteMany({});
+      await this.prisma.staff.deleteMany({});
+      await this.prisma.aboutSection.deleteMany({});
 
       this.logger.log('Database cleared successfully');
     } catch (error) {

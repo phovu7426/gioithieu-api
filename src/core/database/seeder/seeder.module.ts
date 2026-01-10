@@ -18,6 +18,14 @@ import { SeedComicCategories } from '@/core/database/seeder/seed-comic-categorie
 import { SeedComics } from '@/core/database/seeder/seed-comics';
 import { SeedChapters } from '@/core/database/seeder/seed-chapters';
 import { SeedComicLastChapter } from '@/core/database/seeder/seed-comic-last-chapter';
+import { SeedProjects } from '@/core/database/seeder/seed-projects';
+import { SeedAboutSections } from '@/core/database/seeder/seed-about-sections';
+import { SeedStaff } from '@/core/database/seeder/seed-staff';
+import { SeedTestimonials } from '@/core/database/seeder/seed-testimonials';
+import { SeedPartners } from '@/core/database/seeder/seed-partners';
+import { SeedGallery } from '@/core/database/seeder/seed-gallery';
+import { SeedCertificates } from '@/core/database/seeder/seed-certificates';
+import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
 
 @Module({
   imports: [PrismaModule],
@@ -42,6 +50,15 @@ import { SeedComicLastChapter } from '@/core/database/seeder/seed-comic-last-cha
     SeedComics,
     SeedChapters,
     SeedComicLastChapter,
+    // Company Introduction Seeders
+    SeedProjects,
+    SeedAboutSections,
+    SeedStaff,
+    SeedTestimonials,
+    SeedPartners,
+    SeedGallery,
+    SeedCertificates,
+    SeedFaqs,
   ],
   exports: [SeedService],
 })

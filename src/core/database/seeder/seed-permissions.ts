@@ -67,6 +67,16 @@ export class SeedPermissions {
       
       // ========== GROUP MODULE ==========
       { code: 'group.manage', name: 'Quản lý Nhóm', status: 'active', parent_code: null },
+      
+      // ========== COMPANY INTRODUCTION MODULES ==========
+      { code: 'project.manage', name: 'Quản lý Dự án', status: 'active', parent_code: null },
+      { code: 'about.manage', name: 'Quản lý Giới thiệu', status: 'active', parent_code: null },
+      { code: 'staff.manage', name: 'Quản lý Nhân viên', status: 'active', parent_code: null },
+      { code: 'testimonial.manage', name: 'Quản lý Lời chứng thực', status: 'active', parent_code: null },
+      { code: 'partner.manage', name: 'Quản lý Đối tác', status: 'active', parent_code: null },
+      { code: 'gallery.manage', name: 'Quản lý Thư viện ảnh', status: 'active', parent_code: null },
+      { code: 'certificate.manage', name: 'Quản lý Chứng chỉ', status: 'active', parent_code: null },
+      { code: 'faq.manage', name: 'Quản lý Câu hỏi thường gặp', status: 'active', parent_code: null },
     ];
 
     const createdPermissions: Map<string, any> = new Map();

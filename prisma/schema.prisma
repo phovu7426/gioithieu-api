@@ -889,3 +889,257 @@ model Bookmark {
   @@index([created_at], map: "idx_created_at")
   @@map("bookmarks")
 }
+
+// ============================================
+// Phase 1: Core Modules - Company Introduction
+// ============================================
+
+enum ProjectStatus {
+  planning
+  in_progress
+  completed
+  cancelled
+}
+
+model Project {
+  id                BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String        @db.VarChar(255)
+  slug              String        @unique @db.VarChar(255)
+  description       String?       @db.Text
+  short_description String?       @db.VarChar(500)
+  cover_image       String?       @db.VarChar(500)
+  location          String?       @db.VarChar(255)
+  area              Decimal?      @db.Decimal(15, 2)
+  start_date        DateTime?     @db.DateTime(0)
+  end_date          DateTime?     @db.DateTime(0)
+  status            ProjectStatus @default(planning)
+  client_name       String?       @db.VarChar(255)
+  budget            Decimal?      @db.Decimal(20, 2)
+  images            Json?
+  featured          Boolean       @default(false)
+  view_count        BigInt        @default(0) @db.UnsignedBigInt
+  sort_order        Int           @default(0)
+  meta_title        String?       @db.VarChar(255)
+  meta_description  String?       @db.Text
+  canonical_url     String?       @db.VarChar(500)
+  og_image          String?       @db.VarChar(500)
+  created_user_id   BigInt?       @db.UnsignedBigInt
+  updated_user_id   BigInt?       @db.UnsignedBigInt
+  created_at        DateTime      @default(now()) @db.DateTime(0)
+  updated_at        DateTime      @updatedAt @db.DateTime(0)
+  deleted_at        DateTime?     @db.DateTime(0)
+
+  testimonials Testimonial[]
+
+  @@index([slug], map: "idx_projects_slug")
+  @@index([status], map: "idx_projects_status")
+  @@index([featured], map: "idx_projects_featured")
+  @@index([sort_order], map: "idx_projects_sort_order")
+  @@index([created_at], map: "idx_projects_created_at")
+  @@index([status, featured], map: "idx_projects_status_featured")
+  @@index([deleted_at], map: "idx_projects_deleted_at")
+  @@map("projects")
+}
+
+enum AboutSectionType {
+  history
+  mission
+  vision
+  values
+  culture
+  achievement
+  other
+}
+
+model AboutSection {
+  id              BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  title           String            @db.VarChar(255)
+  slug            String            @unique @db.VarChar(255)
+  content         String            @db.LongText
+  image           String?           @db.VarChar(500)
+  video_url       String?           @db.VarChar(500)
+  section_type    AboutSectionType  @default(history)
+  status          BasicStatus       @default(active)
+  sort_order      Int               @default(0)
+  created_user_id BigInt?           @db.UnsignedBigInt
+  updated_user_id BigInt?           @db.UnsignedBigInt
+  created_at      DateTime          @default(now()) @db.DateTime(0)
+  updated_at      DateTime          @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?         @db.DateTime(0)
+
+  @@index([slug], map: "idx_about_sections_slug")
+  @@index([section_type], map: "idx_about_sections_type")
+  @@index([status], map: "idx_about_sections_status")
+  @@index([sort_order], map: "idx_about_sections_sort_order")
+  @@index([deleted_at], map: "idx_about_sections_deleted_at")
+  @@map("about_sections")
+}
+
+model Staff {
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  name            String      @db.VarChar(255)
+  position        String      @db.VarChar(255)
+  department      String?     @db.VarChar(255)
+  bio             String?     @db.Text
+  avatar          String?     @db.VarChar(500)
+  email           String?     @db.VarChar(255)
+  phone           String?     @db.VarChar(20)
+  social_links    Json?
+  experience      Int?
+  expertise       String?     @db.Text
+  status          BasicStatus @default(active)
+  sort_order      Int         @default(0)
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  @@index([status], map: "idx_staff_status")
+  @@index([sort_order], map: "idx_staff_sort_order")
+  @@index([department], map: "idx_staff_department")
+  @@index([deleted_at], map: "idx_staff_deleted_at")
+  @@map("staff")
+}
+
+// ============================================
+// Phase 2: Important Modules
+// ============================================
+
+model Testimonial {
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  client_name     String      @db.VarChar(255)
+  client_position String?     @db.VarChar(255)
+  client_company  String?     @db.VarChar(255)
+  client_avatar   String?     @db.VarChar(500)
+  content         String      @db.Text
+  rating          Int?        @db.UnsignedTinyInt
+  project_id      BigInt?     @db.UnsignedBigInt
+  featured        Boolean     @default(false)
+  status          BasicStatus @default(active)
+  sort_order      Int         @default(0)
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  project Project? @relation(fields: [project_id], references: [id], onDelete: SetNull)
+
+  @@index([status], map: "idx_testimonials_status")
+  @@index([featured], map: "idx_testimonials_featured")
+  @@index([project_id], map: "idx_testimonials_project_id")
+  @@index([sort_order], map: "idx_testimonials_sort_order")
+  @@index([deleted_at], map: "idx_testimonials_deleted_at")
+  @@map("testimonials")
+}
+
+enum PartnerType {
+  client
+  supplier
+  partner
+}
+
+model Partner {
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  name            String      @db.VarChar(255)
+  logo            String      @db.VarChar(500)
+  website         String?     @db.VarChar(500)
+  description     String?     @db.Text
+  type            PartnerType @default(client)
+  status          BasicStatus @default(active)
+  sort_order      Int         @default(0)
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  @@index([type], map: "idx_partners_type")
+  @@index([status], map: "idx_partners_status")
+  @@index([sort_order], map: "idx_partners_sort_order")
+  @@index([deleted_at], map: "idx_partners_deleted_at")
+  @@map("partners")
+}
+
+model Gallery {
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  title           String      @db.VarChar(255)
+  slug            String      @unique @db.VarChar(255)
+  description     String?     @db.Text
+  cover_image     String?     @db.VarChar(500)
+  images          Json
+  featured        Boolean     @default(false)
+  status          BasicStatus @default(active)
+  sort_order      Int         @default(0)
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  @@index([slug], map: "idx_gallery_slug")
+  @@index([status], map: "idx_gallery_status")
+  @@index([featured], map: "idx_gallery_featured")
+  @@index([sort_order], map: "idx_gallery_sort_order")
+  @@index([deleted_at], map: "idx_gallery_deleted_at")
+  @@map("gallery")
+}
+
+// ============================================
+// Phase 3: Additional Modules
+// ============================================
+
+enum CertificateType {
+  iso
+  award
+  license
+  certification
+  other
+}
+
+model Certificate {
+  id                BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  name              String            @db.VarChar(255)
+  image             String            @db.VarChar(500)
+  issued_by         String?           @db.VarChar(255)
+  issued_date       DateTime?         @db.DateTime(0)
+  expiry_date       DateTime?         @db.DateTime(0)
+  certificate_number String?           @db.VarChar(100)
+  description       String?           @db.Text
+  type              CertificateType   @default(license)
+  status            BasicStatus       @default(active)
+  sort_order        Int               @default(0)
+  created_user_id   BigInt?           @db.UnsignedBigInt
+  updated_user_id   BigInt?           @db.UnsignedBigInt
+  created_at        DateTime          @default(now()) @db.DateTime(0)
+  updated_at        DateTime          @updatedAt @db.DateTime(0)
+  deleted_at        DateTime?         @db.DateTime(0)
+
+  @@index([type], map: "idx_certificates_type")
+  @@index([status], map: "idx_certificates_status")
+  @@index([sort_order], map: "idx_certificates_sort_order")
+  @@index([deleted_at], map: "idx_certificates_deleted_at")
+  @@map("certificates")
+}
+
+model Faq {
+  id              BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  question        String      @db.Text
+  answer          String      @db.LongText
+  view_count      BigInt      @default(0) @db.UnsignedBigInt
+  helpful_count   BigInt      @default(0) @db.UnsignedBigInt
+  status          BasicStatus @default(active)
+  sort_order      Int         @default(0)
+  created_user_id BigInt?     @db.UnsignedBigInt
+  updated_user_id BigInt?     @db.UnsignedBigInt
+  created_at      DateTime    @default(now()) @db.DateTime(0)
+  updated_at      DateTime    @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?   @db.DateTime(0)
+
+  @@index([status], map: "idx_faqs_status")
+  @@index([sort_order], map: "idx_faqs_sort_order")
+  @@index([view_count], map: "idx_faqs_view_count")
+  @@index([deleted_at], map: "idx_faqs_deleted_at")
+  @@map("faqs")
+}
