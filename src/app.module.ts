@@ -16,7 +16,7 @@ import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import { FilePathInterceptor } from '@/common/interceptors/file-path.interceptor';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { AuthModule } from '@/modules/auth/auth.module';
+import { AuthModule } from '@/modules/common/auth/auth.module';
 import { RbacModule } from '@/modules/rbac/rbac.module';
 import { RbacGuard } from '@/common/guards/rbac.guard';
 import { RequestContextMiddleware } from '@/common/middlewares/request-context.middleware';
@@ -25,25 +25,23 @@ import { ContextModule } from '@/modules/context/context.module';
 import { GroupInterceptor } from '@/common/interceptors/group.interceptor';
 
 // New Domain Modules
-import { PostModule } from '@/modules/post/post.module';
-import { NotificationModule } from '@/modules/notification/notification.module';
-import { UserManagementModule } from '@/modules/user-management/user-management.module';
+import { NotificationModule } from '@/modules/extra/notification/notification.module';
+import { UserManagementModule } from '@/modules/common/user-management/user-management.module';
 import { EnumModule } from '@/shared/enums';
-import { FileUploadModule } from '@/modules/file-upload/file-upload.module';
-import { MenuModule } from '@/modules/menu/menu.module';
-import { BannerModule } from '@/modules/banner/banner.module';
+import { FileUploadModule } from '@/modules/common/file-upload/file-upload.module';
+import { MenuModule } from '@/modules/common/menu/menu.module';
+import { BannerModule } from '@/modules/extra/banner/banner.module';
 import { ContactModule } from '@/modules/contact/contact.module';
-import { SystemConfigModule } from '@/modules/system-config/system-config.module';
+import { SystemConfigModule } from '@/modules/common/system-config/system-config.module';
 import { AppMailModule } from '@/core/mail/mail.module';
-import { ComicsModule } from '@/modules/comics/comics.module';
-import { ProjectModule } from '@/modules/project/project.module';
-import { AboutModule } from '@/modules/about/about.module';
-import { StaffModule } from '@/modules/staff/staff.module';
-import { TestimonialModule } from '@/modules/testimonial/testimonial.module';
-import { PartnerModule } from '@/modules/partner/partner.module';
-import { GalleryModule } from '@/modules/gallery/gallery.module';
-import { CertificateModule } from '@/modules/certificate/certificate.module';
-import { FaqModule } from '@/modules/faq/faq.module';
+import { ProjectModule } from '@/modules/introduction/project/project.module';
+import { AboutModule } from '@/modules/common/about/about.module';
+import { StaffModule } from '@/modules/introduction/staff/staff.module';
+import { TestimonialModule } from '@/modules/introduction/testimonial/testimonial.module';
+import { PartnerModule } from '@/modules/introduction/partner/partner.module';
+import { GalleryModule } from '@/modules/introduction/gallery/gallery.module';
+import { CertificateModule } from '@/modules/introduction/certificate/certificate.module';
+import { FaqModule } from '@/modules/common/faq/faq.module';
 import { HomepageModule } from '@/modules/homepage/homepage.module';
 
 @Module({
@@ -55,7 +53,6 @@ import { HomepageModule } from '@/modules/homepage/homepage.module';
     RbacModule,
     ContextModule,
     // New Domain Modules
-    PostModule,
     NotificationModule,
     UserManagementModule,
     EnumModule,
@@ -65,16 +62,15 @@ import { HomepageModule } from '@/modules/homepage/homepage.module';
     ContactModule,
     SystemConfigModule,
     AppMailModule,
-    // ComicsModule, // Commented out - not needed for company introduction website
-    // Company Introduction Modules - Phase 1
+    // Introduction Modules - Phase 1
     ProjectModule,
     AboutModule,
     StaffModule,
-    // Company Introduction Modules - Phase 2
+    // Introduction Modules - Phase 2
     TestimonialModule,
     PartnerModule,
     GalleryModule,
-    // Company Introduction Modules - Phase 3
+    // Introduction Modules - Phase 3
     CertificateModule,
     FaqModule,
     // Homepage Module - Gộp tất cả API cho trang chủ

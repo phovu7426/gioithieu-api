@@ -90,6 +90,17 @@ Quản lý blog và nội dung.
 
 ---
 
+### 🏠 Homepage Module (homepage/)
+
+API để lấy tất cả dữ liệu cần thiết cho trang chủ trong một lần gọi.
+
+#### Public APIs
+- **Homepage Data**: [`/public/homepage`](./homepage/homepage.md) - Lấy tất cả dữ liệu trang chủ (dự án, giới thiệu, nhân viên, lời chứng thực, đối tác, gallery, chứng chỉ, FAQs)
+
+📖 [Homepage API Documentation](./homepage/homepage.md)
+
+---
+
 ### 📬 Contact Module (contact/)
 
 Quản lý liên hệ từ người dùng.

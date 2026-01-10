@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { HomepageController } from '@/modules/homepage/controllers/homepage.controller';
 import { HomepageService } from '@/modules/homepage/services/homepage.service';
-import { PublicProjectModule } from '@/modules/project/public/project/project.module';
-import { PublicAboutModule } from '@/modules/about/public/about/about.module';
-import { PublicStaffModule } from '@/modules/staff/public/staff/staff.module';
-import { PublicTestimonialModule } from '@/modules/testimonial/public/testimonial/testimonial.module';
-import { PublicPartnerModule } from '@/modules/partner/public/partner/partner.module';
-import { PublicGalleryModule } from '@/modules/gallery/public/gallery/gallery.module';
-import { PublicCertificateModule } from '@/modules/certificate/public/certificate/certificate.module';
-import { PublicFaqModule } from '@/modules/faq/public/faq/faq.module';
+import { PublicProjectModule } from '@/modules/introduction/project/public/project/project.module';
+import { PublicAboutModule } from '@/modules/common/about/public/about/about.module';
+import { PublicStaffModule } from '@/modules/introduction/staff/public/staff/staff.module';
+import { PublicTestimonialModule } from '@/modules/introduction/testimonial/public/testimonial/testimonial.module';
+import { PublicPartnerModule } from '@/modules/introduction/partner/public/partner/partner.module';
+import { PublicGalleryModule } from '@/modules/introduction/gallery/public/gallery/gallery.module';
+import { PublicCertificateModule } from '@/modules/introduction/certificate/public/certificate/certificate.module';
+import { PublicFaqModule } from '@/modules/common/faq/public/faq/faq.module';
 
 @Module({
   imports: [

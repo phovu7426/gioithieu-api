@@ -891,7 +891,7 @@ model Bookmark {
 }
 
 // ============================================
-// Phase 1: Core Modules - Company Introduction
+// Phase 1: Core Modules - Introduction
 // ============================================
 
 enum ProjectStatus {

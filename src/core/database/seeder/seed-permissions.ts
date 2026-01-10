@@ -68,7 +68,7 @@ export class SeedPermissions {
       // ========== GROUP MODULE ==========
       { code: 'group.manage', name: 'Quản lý Nhóm', status: 'active', parent_code: null },
       
-      // ========== COMPANY INTRODUCTION MODULES ==========
+      // ========== INTRODUCTION MODULES ==========
       { code: 'project.manage', name: 'Quản lý Dự án', status: 'active', parent_code: null },
       { code: 'about.manage', name: 'Quản lý Giới thiệu', status: 'active', parent_code: null },
       { code: 'staff.manage', name: 'Quản lý Nhân viên', status: 'active', parent_code: null },
