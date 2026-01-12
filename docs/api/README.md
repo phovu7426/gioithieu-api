@@ -101,6 +101,24 @@ API để lấy tất cả dữ liệu cần thiết cho trang chủ trong một
 
 ---
 
+### 🏢 Introduction Module (introduction/)
+
+Quản lý nội dung giới thiệu công ty: dự án, nhân viên, gallery, đối tác, lời chứng thực, chứng chỉ, phần giới thiệu, và FAQs.
+
+#### Admin APIs
+- **Projects**: [`/admin/projects`](./introduction/admin/project.md)
+- **Staff**: [`/admin/staff`](./introduction/admin/staff.md)
+- **Gallery**: [`/admin/gallery`](./introduction/admin/gallery.md)
+- **Partners**: [`/admin/partners`](./introduction/admin/partner.md)
+- **Testimonials**: [`/admin/testimonials`](./introduction/admin/testimonial.md)
+- **Certificates**: [`/admin/certificates`](./introduction/admin/certificate.md)
+- **About Sections**: [`/admin/about-sections`](./introduction/admin/about-section.md)
+- **FAQs**: [`/admin/faqs`](./introduction/admin/faq.md)
+
+📖 [Introduction Module Documentation](./introduction/README.md)
+
+---
+
 ### 📬 Contact Module (contact/)
 
 Quản lý liên hệ từ người dùng.
