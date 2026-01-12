@@ -3,6 +3,7 @@ import { Prisma, Project } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { ProjectStatus } from '@/shared/enums/types/project-status.enum';
 import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
+import { toPlain } from '@/common/base/services/prisma/prisma.utils';
 
 type PublicProjectBag = PrismaListBag & {
   Model: Project;
@@ -78,7 +79,8 @@ export class PublicProjectService extends PrismaListService<PublicProjectBag> {
       data: { view_count: { increment: 1 } },
     });
 
-    return project;
+    // Convert BigInt fields to plain numbers/strings to avoid JSON stringify errors
+    return toPlain(project);
   }
 
   /**
