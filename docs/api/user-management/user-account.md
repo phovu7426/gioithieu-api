@@ -212,7 +212,6 @@ const getUserInfo = async () => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error:', error);
     throw error;
   }
 };
@@ -236,7 +235,6 @@ const updateProfile = async (userData) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error updating profile:', error);
     throw error;
   }
 };
@@ -263,15 +261,18 @@ const changePassword = async (oldPassword, newPassword) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error changing password:', error);
     throw error;
   }
 };
 
 // Sử dụng
 getUserInfo()
-.then(userInfo => console.log('User info:', userInfo))
-.catch(error => console.error('Get user info failed:', error));
+.then(userInfo => {
+  // Use userInfo
+})
+.catch(error => {
+  // Handle error
+});
 
 updateProfile({
   name: "Nguyễn Văn A",
@@ -280,9 +281,17 @@ updateProfile({
   birthday: "1990-01-15",
   gender: "male"
 })
-.then(data => console.log('Profile updated:', data))
-.catch(error => console.error('Update failed:', error));
+.then(data => {
+  // Profile updated
+})
+.catch(error => {
+  // Handle error
+});
 
 changePassword("oldpassword123", "newpassword456")
-.then(() => console.log('Password changed successfully'))
-.catch(error => console.error('Change password failed:', error));
+.then(() => {
+  // Password changed successfully
+})
+.catch(error => {
+  // Handle error
+});

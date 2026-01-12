@@ -247,7 +247,6 @@ const socket = io('http://localhost:3000/api', {
 
 // Listen for new notifications
 socket.on('notification:new', (notification) => {
-  console.log('New notification:', notification);
   // Update UI
   showNotification(notification);
   updateUnreadCount();
@@ -255,12 +254,12 @@ socket.on('notification:new', (notification) => {
 
 // Listen for notification updates
 socket.on('notification:update', (notification) => {
-  console.log('Notification updated:', notification);
+  // Handle notification update
 });
 
 // Listen for mark as read
 socket.on('notification:read', (data) => {
-  console.log('Notification read:', data.notificationId);
+  // Handle notification read
 });
 ```
 

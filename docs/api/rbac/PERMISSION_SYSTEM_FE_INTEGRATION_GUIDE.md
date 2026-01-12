@@ -351,7 +351,7 @@ api.interceptors.response.use(
       window.location.href = '/login';
     } else if (error.response?.status === 403) {
       // Không có quyền → hiển thị thông báo
-      console.error('Access denied:', error.response.data.message);
+      // Handle access denied
     }
     return Promise.reject(error);
   }
@@ -397,7 +397,6 @@ export async function initializeUserGroups(token) {
     
     return myGroups;
   } catch (error) {
-    console.error('Failed to initialize user groups:', error);
     throw error;
   }
 }

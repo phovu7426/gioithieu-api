@@ -138,7 +138,6 @@ const updateProfile = async (userData) => {
     
     return await response.json();
   } catch (error) {
-    console.error('Error updating profile:', error);
     throw error;
   }
 };
@@ -151,5 +150,9 @@ updateProfile({
   birthday: "1990-01-15",
   gender: "male"
 })
-.then(data => console.log('Profile updated:', data))
-.catch(error => console.error('Update failed:', error));
+.then(data => {
+  // Profile updated
+})
+.catch(error => {
+  // Handle error
+});

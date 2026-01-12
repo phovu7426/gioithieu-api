@@ -64,7 +64,7 @@ export class EnumLoader {
           });
         }
       } catch (error) {
-        console.warn(`Failed to load enum from ${file}:`, error);
+        // Error loading enum - silently continue
       }
     }
 

@@ -389,17 +389,10 @@ async function getHomepageData() {
     
     if (result.success) {
       const data = result.data;
-      console.log('Featured Projects:', data.featured_projects);
-      console.log('About Sections:', data.about_sections);
-      console.log('Staff:', data.staff);
-      console.log('Testimonials:', data.featured_testimonials);
-      console.log('Partners:', data.partners);
-      console.log('Gallery:', data.featured_gallery);
-      console.log('Certificates:', data.certificates);
-      console.log('FAQs:', data.popular_faqs);
+      // Use data.featured_projects, data.about_sections, etc.
     }
   } catch (error) {
-    console.error('Error fetching homepage data:', error);
+    // Handle error
   }
 }
 ```
@@ -433,7 +426,7 @@ async function getHomepageData(): Promise<HomepageData | null> {
     }
     return null;
   } catch (error) {
-    console.error('Error fetching homepage data:', error);
+    // Handle error
     return null;
   }
 }
@@ -546,7 +539,6 @@ try {
 
   if (!result.success) {
     // Handle error
-    console.error('API Error:', result.message);
     // Show error message to user
     return;
   }
@@ -554,7 +546,6 @@ try {
   // Use result.data
 } catch (error) {
   // Handle network error
-  console.error('Network Error:', error);
 }
 ```
 
