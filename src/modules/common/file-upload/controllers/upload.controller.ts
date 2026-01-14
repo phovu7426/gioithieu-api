@@ -7,21 +7,18 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ConfigService } from '@nestjs/config';
 import { UploadService } from '../services/upload.service';
+import { FileValidationService } from '../services/file-validation.service';
 import { Permission } from '@/common/decorators/rbac.decorators';
 import { LogRequest } from '@/common/decorators/log-request.decorator';
 import { UploadResponseDto } from '../dtos/upload-response.dto';
 
 @Controller('upload')
 export class UploadController {
-  private readonly maxFileSize: number;
-
   constructor(
     private readonly uploadService: UploadService,
-    private readonly configService: ConfigService,
+    private readonly fileValidationService: FileValidationService,
   ) {
-    this.maxFileSize = this.configService.get<number>('storage.maxFileSize', 10485760); // Default 10MB
   }
 
   @Permission('public')
@@ -29,7 +26,9 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       limits: {
-        fileSize: 104857600, // 100MB - Multer sẽ reject nếu vượt quá, nhưng chúng ta sẽ validate lại với config
+        // Keep this aligned with default storage.maxFileSize (10MB) to avoid large in-memory buffers.
+        // The FileValidationService also double-checks using config.
+        fileSize: 10485760,
       },
     }),
   )
@@ -38,13 +37,9 @@ export class UploadController {
       throw new BadRequestException('File is required');
     }
 
-    // Kiểm tra file size (double check)
-    if (file.size > this.maxFileSize) {
-      const maxSizeMB = (this.maxFileSize / 1024 / 1024).toFixed(2);
-      throw new BadRequestException(
-        `File size exceeds maximum allowed size of ${maxSizeMB}MB`,
-      );
-    }
+    // Validate type + content + size, and sanitize name
+    const { sanitizedOriginalName } = this.fileValidationService.validateFile(file);
+    file.originalname = sanitizedOriginalName;
 
     return this.uploadService.uploadFile(file);
   }
@@ -54,7 +49,9 @@ export class UploadController {
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       limits: {
-        fileSize: 104857600, // 100MB - Multer sẽ reject nếu vượt quá, nhưng chúng ta sẽ validate lại với config
+        // Keep this aligned with default storage.maxFileSize (10MB) to avoid large in-memory buffers.
+        // The FileValidationService also double-checks using config.
+        fileSize: 10485760,
       },
     }),
   )
@@ -63,14 +60,10 @@ export class UploadController {
       throw new BadRequestException('Files are required');
     }
 
-    // Kiểm tra file size cho từng file (double check)
-    const maxSizeMB = (this.maxFileSize / 1024 / 1024).toFixed(2);
+    // Validate each file (type + content + size) and sanitize names
     for (const file of files) {
-      if (file.size > this.maxFileSize) {
-        throw new BadRequestException(
-          `File ${file.originalname} exceeds maximum allowed size of ${maxSizeMB}MB`,
-        );
-      }
+      const { sanitizedOriginalName } = this.fileValidationService.validateFile(file);
+      file.originalname = sanitizedOriginalName;
     }
 
     return this.uploadService.uploadFiles(files);

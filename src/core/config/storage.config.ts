@@ -7,6 +7,10 @@ export default registerAs('storage', () => ({
   // Max file size (bytes), default 10MB
   maxFileSize: parseInt(process.env.STORAGE_MAX_FILE_SIZE || '10485760', 10),
   
+  // Allowed file types (JSON string, optional - overrides defaults)
+  // Example: '{"custom": {"extensions": [".custom"], "mimeTypes": ["application/custom"]}}'
+  allowedFileTypes: process.env.STORAGE_ALLOWED_FILE_TYPES || undefined,
+  
   // Local storage config
   local: {
     destination: './storage/uploads', // Hardcoded - not sensitive

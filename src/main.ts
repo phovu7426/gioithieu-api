@@ -109,6 +109,8 @@ async function bootstrap() {
     app.useStaticAssets(join(process.cwd(), localDestination), {
       prefix: localBaseUrl,
       setHeaders: (res: Response) => {
+        // Prevent MIME sniffing (important for uploaded content)
+        res.setHeader('X-Content-Type-Options', 'nosniff');
         // Set CORS headers when serving static files
         if (appConfig.corsEnabled) {
           const hasWildcard = appConfig.corsOrigins.includes('*');
