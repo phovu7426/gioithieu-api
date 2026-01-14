@@ -57,8 +57,59 @@ export class CustomLoggerService implements LoggerService {
 
   // Minimal API: build structured entry then write
 
+  /**
+   * Check if log message should be skipped (framework noise)
+   */
+  private shouldSkipLog(message: any): boolean {
+    if (typeof message !== 'string') {
+      return false;
+    }
+    
+    const skipPatterns = [
+      'Module dependencies initialized',
+      'Mapped {',
+      'Controller {',
+      'Starting Nest application',
+      'Nest application successfully started',
+      'TokenBlacklistService destroyed',
+      'TokenBlacklistService initialized',
+      'Timezone set to',
+    ];
+    
+    return skipPatterns.some(pattern => message.includes(pattern));
+  }
+
+  /**
+   * Remove empty objects and null/undefined values from log entry
+   */
+  private cleanLogEntry(entry: any): any {
+    const cleaned: any = {};
+    
+    for (const [key, value] of Object.entries(entry)) {
+      if (value === null || value === undefined) {
+        continue;
+      }
+      
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        const cleanedObj = this.cleanLogEntry(value);
+        // Only include non-empty objects
+        if (Object.keys(cleanedObj).length > 0) {
+          cleaned[key] = cleanedObj;
+        }
+      } else if (Array.isArray(value)) {
+        if (value.length > 0) {
+          cleaned[key] = value;
+        }
+      } else {
+        cleaned[key] = value;
+      }
+    }
+    
+    return cleaned;
+  }
+
   private buildLogEntry(level: LogLevel, message: any, context?: LogContext & { trace?: string }) {
-    return {
+    const entry = {
       timestamp: DateUtil.formatTimestamp(),
       level: level.toUpperCase(),
       message,
@@ -78,6 +129,9 @@ export class CustomLoggerService implements LoggerService {
       trace: context?.trace,
       extra: context?.extra || {},
     };
+    
+    // Remove empty objects and null values
+    return this.cleanLogEntry(entry);
   }
 
   private extractErrorInfo(message: any, trace?: string): { errorMessage?: string; stackTrace?: string } | undefined {
@@ -134,6 +188,10 @@ export class CustomLoggerService implements LoggerService {
    * Generic structured log with metadata and optional custom file path.
    */
   public write(level: LogLevel, message: any, context?: LogContext, options?: LogWriteOptions): void {
+    // Skip framework noise logs for 'log' level
+    if (level === 'log' && this.shouldSkipLog(message)) {
+      return;
+    }
     const mergedContext = { ...this.getDefaultContext(), ...(context || {}) };
     const entry = this.buildLogEntry(level, message, mergedContext);
     this.writeJsonToFiles(level, entry, options);
@@ -147,6 +205,10 @@ export class CustomLoggerService implements LoggerService {
   }
 
   log(message: any, context?: LogContext, options?: LogWriteOptions): void {
+    // Skip framework noise logs
+    if (this.shouldSkipLog(message)) {
+      return;
+    }
     const mergedContext = { ...this.getDefaultContext(), ...(context || {}) };
     const entry = this.buildLogEntry('log', message, mergedContext);
     this.writeJsonToFiles('log', entry, options);

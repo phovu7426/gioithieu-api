@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Request, Response, NextFunction } from 'express';
@@ -39,14 +38,10 @@ async function bootstrap() {
   // Set process timezone (best effort; DB timezone configured separately)
   try {
     process.env.TZ = appConfig.timezone;
-    Logger.log(`Timezone set to ${appConfig.timezone}`, 'Application');
   } catch { }
 
   // Enable CORS if configured
   applyCors(app, { enabled: appConfig.corsEnabled, origins: appConfig.corsOrigins });
-  if (appConfig.corsEnabled) {
-    logger.log('CORS enabled', { origins: appConfig.corsOrigins });
-  }
 
   // HTTP hardening middlewares
   applyHttpHardening(app, '10mb');
