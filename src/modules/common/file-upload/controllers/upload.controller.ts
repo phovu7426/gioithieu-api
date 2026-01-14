@@ -24,7 +24,6 @@ export class UploadController {
     this.maxFileSize = this.configService.get<number>('storage.maxFileSize', 10485760); // Default 10MB
   }
 
-  @LogRequest()
   @Permission('public')
   @Post('file')
   @UseInterceptors(
@@ -50,7 +49,6 @@ export class UploadController {
     return this.uploadService.uploadFile(file);
   }
 
-  @LogRequest()
   @Permission('public')
   @Post('files')
   @UseInterceptors(

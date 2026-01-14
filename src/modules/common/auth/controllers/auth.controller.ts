@@ -37,7 +37,6 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
-  @LogRequest({ fileBaseName: 'auth_logout' })
   @Permission('public')
   @Post('logout')
   async logout(@Headers('authorization') authHeader: string, @Res({ passthrough: true }) res: Response) {
@@ -54,7 +53,6 @@ export class AuthController {
     return null;
   }
 
-  @LogRequest({ fileBaseName: 'auth_refresh' })
   @Permission('public')
   @Post('refresh')
   async refresh(@Body() dto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
