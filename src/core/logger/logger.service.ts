@@ -2,7 +2,6 @@ import { Injectable, LoggerService, LogLevel } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { performance } from 'perf_hooks';
 import { RequestContext } from '@/common/utils/request-context.util';
 import { Auth } from '@/common/utils/auth.util';
@@ -59,9 +58,6 @@ export class CustomLoggerService implements LoggerService {
   // Minimal API: build structured entry then write
 
   private buildLogEntry(level: LogLevel, message: any, context?: LogContext & { trace?: string }) {
-    const environment = this.configService.get('app.environment') || this.configService.get('NODE_ENV') || process.env.NODE_ENV || 'development';
-    const appName = this.configService.get('app.name') || 'NestJS App';
-    const appVersion = this.configService.get('app.version') || '1.0.0';
     return {
       timestamp: DateUtil.formatTimestamp(),
       level: level.toUpperCase(),
@@ -69,7 +65,6 @@ export class CustomLoggerService implements LoggerService {
       context: context?.context || 'Application',
       account: {
         userId: context?.userId,
-        username: context?.username,
       },
       api: {
         method: context?.method,
@@ -79,13 +74,6 @@ export class CustomLoggerService implements LoggerService {
       device: {
         ip: context?.ip,
         userAgent: context?.userAgent,
-      },
-      server: {
-        hostname: os.hostname(),
-        pid: process.pid,
-        environment,
-        appName,
-        appVersion,
       },
       trace: context?.trace,
       extra: context?.extra || {},
