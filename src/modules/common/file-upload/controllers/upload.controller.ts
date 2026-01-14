@@ -11,6 +11,7 @@ import { UploadService } from '../services/upload.service';
 import { FileValidationService } from '../services/file-validation.service';
 import { Permission } from '@/common/decorators/rbac.decorators';
 import { UploadResponseDto } from '../dtos/upload-response.dto';
+import { Throttle } from '@nestjs/throttler/dist/throttler.decorator';
 
 @Controller('upload')
 export class UploadController {
@@ -22,6 +23,7 @@ export class UploadController {
 
   @Permission('public')
   @Post('file')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @UseInterceptors(
     FileInterceptor('file', {
       limits: {
@@ -45,6 +47,7 @@ export class UploadController {
 
   @Permission('public')
   @Post('files')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       limits: {
