@@ -10,7 +10,6 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from '../services/upload.service';
 import { FileValidationService } from '../services/file-validation.service';
 import { Permission } from '@/common/decorators/rbac.decorators';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
 import { UploadResponseDto } from '../dtos/upload-response.dto';
 
 @Controller('upload')
