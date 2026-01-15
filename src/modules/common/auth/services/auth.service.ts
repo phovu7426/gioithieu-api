@@ -124,10 +124,7 @@ export class AuthService {
         status: UserStatus.active as any,
       },
     });
-
-    // Name đã được lưu trong users (username hoặc email), không cần tạo profile nữa
-    // Profile chỉ cần tạo khi có thông tin khác như birthday, gender, etc.
-
+    
     return { user: safeUser(saved) };
   }
 
