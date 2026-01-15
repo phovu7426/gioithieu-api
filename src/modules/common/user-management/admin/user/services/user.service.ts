@@ -108,6 +108,40 @@ export class UserService extends PrismaCrudService<AdminUserBag> {
       payload.password = await bcrypt.hash(payload.password, 10);
     }
 
+    // Validate unique constraints (email, phone, username)
+    // Check email unique
+    if (payload.email !== undefined && payload.email !== null) {
+      const existingByEmail = await this.prisma.user.findFirst({
+        where: { email: payload.email },
+        select: { id: true },
+      });
+      if (existingByEmail) {
+        throw new Error('Email đã được sử dụng.');
+      }
+    }
+
+    // Check phone unique
+    if (payload.phone !== undefined && payload.phone !== null) {
+      const existingByPhone = await this.prisma.user.findFirst({
+        where: { phone: payload.phone },
+        select: { id: true },
+      });
+      if (existingByPhone) {
+        throw new Error('Số điện thoại đã được sử dụng.');
+      }
+    }
+
+    // Check username unique
+    if (payload.username !== undefined && payload.username !== null) {
+      const existingByUsername = await this.prisma.user.findFirst({
+        where: { username: payload.username },
+        select: { id: true },
+      });
+      if (existingByUsername) {
+        throw new Error('Tên đăng nhập đã được sử dụng.');
+      }
+    }
+
     // Handle role_ids - lưu vào biến tạm để xử lý sau khi create
     if (payload.role_ids !== undefined) {
       this.tempRoleIds = Array.isArray(payload.role_ids)
@@ -166,13 +200,59 @@ export class UserService extends PrismaCrudService<AdminUserBag> {
   /**
    * Chuẩn hóa payload trước khi update
    */
-  protected override async beforeUpdate(_where: Prisma.UserWhereInput, updateDto: AdminUserBag['Update']): Promise<AdminUserBag['Update']> {
+  protected override async beforeUpdate(where: Prisma.UserWhereInput, updateDto: AdminUserBag['Update']): Promise<AdminUserBag['Update']> {
     const payload: any = { ...updateDto };
 
     if (payload.password) {
       payload.password = await bcrypt.hash(payload.password, 10);
     } else if ('password' in payload) {
       delete payload.password;
+    }
+
+    // Validate unique constraints (email, phone, username)
+    const userId = where.id ? Number(where.id) : null;
+    if (userId) {
+      // Check email unique
+      if (payload.email !== undefined) {
+        const existingByEmail = await this.prisma.user.findFirst({
+          where: {
+            email: payload.email,
+            NOT: { id: BigInt(userId) },
+          },
+          select: { id: true },
+        });
+        if (existingByEmail) {
+          throw new Error('Email đã được sử dụng.');
+        }
+      }
+
+      // Check phone unique
+      if (payload.phone !== undefined && payload.phone !== null) {
+        const existingByPhone = await this.prisma.user.findFirst({
+          where: {
+            phone: payload.phone,
+            NOT: { id: BigInt(userId) },
+          },
+          select: { id: true },
+        });
+        if (existingByPhone) {
+          throw new Error('Số điện thoại đã được sử dụng.');
+        }
+      }
+
+      // Check username unique
+      if (payload.username !== undefined && payload.username !== null) {
+        const existingByUsername = await this.prisma.user.findFirst({
+          where: {
+            username: payload.username,
+            NOT: { id: BigInt(userId) },
+          },
+          select: { id: true },
+        });
+        if (existingByUsername) {
+          throw new Error('Tên đăng nhập đã được sử dụng.');
+        }
+      }
     }
 
     if (payload.role_ids !== undefined) {
@@ -184,6 +264,7 @@ export class UserService extends PrismaCrudService<AdminUserBag> {
     }
     delete payload.role_ids;
 
+    // Handle profile (tách ra xử lý riêng)
     if ('profile' in payload) {
       this.profilePayload = payload.profile as any;
       delete payload.profile;

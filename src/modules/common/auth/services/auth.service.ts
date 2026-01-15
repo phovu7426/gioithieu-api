@@ -120,20 +120,13 @@ export class AuthService {
         email: dto.email,
         phone: dto.phone ?? null,
         password: hashed,
+        name: dto.name, // Set name trong users
         status: UserStatus.active as any,
       },
     });
 
-    if (saved && saved.id) {
-      await this.prisma.profile
-        .create({
-          data: {
-            user_id: saved.id,
-            name: saved.username || saved.email,
-          } as any,
-        })
-        .catch(() => undefined);
-    }
+    // Name đã được lưu trong users (username hoặc email), không cần tạo profile nữa
+    // Profile chỉ cần tạo khi có thông tin khác như birthday, gender, etc.
 
     return { user: safeUser(saved) };
   }

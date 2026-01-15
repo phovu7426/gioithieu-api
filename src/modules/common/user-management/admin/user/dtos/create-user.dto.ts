@@ -4,14 +4,6 @@ import { Type } from 'class-transformer';
 class ProfilePayloadDto {
   @IsOptional()
   @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  image?: string;
-
-  @IsOptional()
-  @IsString()
   birthday?: string;
 
   @IsOptional()
@@ -44,6 +36,14 @@ export class CreateUserDto {
   @IsString()
   @MinLength(6)
   password: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  image?: string;
 
   @IsOptional()
   @IsArray()

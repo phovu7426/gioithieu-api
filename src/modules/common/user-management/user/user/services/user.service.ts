@@ -46,6 +46,8 @@ export class UserService {
     // Cập nhật bảng users
     const userPatch: any = {};
     if (dto.phone !== undefined) userPatch.phone = dto.phone;
+    if (dto.name !== undefined) userPatch.name = dto.name;
+    if (dto.image !== undefined) userPatch.image = dto.image;
     if (Object.keys(userPatch).length > 0) {
       await this.prisma.user.update({
         where: { id: BigInt(userId) },
@@ -55,8 +57,6 @@ export class UserService {
 
     // Cập nhật bảng profiles
     const profilePatch: any = {};
-    if (dto.name !== undefined) profilePatch.name = dto.name;
-    if (dto.image !== undefined) profilePatch.image = dto.image;
     if (dto.birthday !== undefined) profilePatch.birthday = dto.birthday;
     if (dto.gender !== undefined) profilePatch.gender = dto.gender;
     if (dto.address !== undefined) profilePatch.address = dto.address;
