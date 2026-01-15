@@ -159,7 +159,7 @@ export class AuthService {
       if (!refreshError) {
         userId = Number(decoded!.sub);
         jti = decoded!.jti as string | undefined;
-        if (!userId || !jti) {
+        if (!userId || !jti || isNaN(userId)) {
           refreshError = 'Invalid refresh token';
         }
       }
@@ -264,5 +264,84 @@ export class AuthService {
     await this.accountLockoutService.reset('auth:login', user!.email!.toLowerCase());
 
     return null;
+  }
+
+  async handleGoogleAuth(user: {
+    googleId: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    picture?: string;
+  }) {
+    const email = user.email.toLowerCase();
+
+    // Chuẩn hóa data một lần
+    const fullName =
+      [user.firstName, user.lastName].filter(Boolean).join(' ') ||
+      email.split('@')[0];
+
+    const username =
+      email.split('@')[0] + '_' + Date.now().toString().slice(-6);
+
+    const now = new Date();
+
+    // Dùng upsert để tối ưu: chỉ 1 query thay vì findFirst + create/update
+    const dbUser = await this.prisma.user.upsert({
+      where: { email },
+      create: {
+        email,
+        username,
+        name: fullName,
+        image: user.picture ?? null,
+        status: UserStatus.active as any,
+        googleId: user.googleId,
+        email_verified_at: now, // Google email đã được xác thực
+        last_login_at: now,
+      },
+      update: {
+        last_login_at: now,
+        email_verified_at: now, // Luôn cập nhật email_verified_at khi login bằng Google
+        ...(user.picture && { image: user.picture }),
+        ...(fullName && { name: fullName }),
+        ...(user.googleId && { googleId: user.googleId }),
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        status: true,
+        image: true,
+        name: true,
+      },
+    });
+
+    // Kiểm tra status
+    if (dbUser.status !== UserStatus.active) {
+      throw new Error('Tài khoản đã bị khóa hoặc không hoạt động.');
+    }
+
+    // Tạo token
+    const numericUserId = Number(dbUser.id);
+    const {
+      accessToken,
+      refreshToken,
+      refreshJti,
+      accessTtlSec,
+    } = this.tokenService.generateTokens(numericUserId, dbUser.email!);
+
+    await this.redis
+      .set(
+        this.buildRefreshKey(numericUserId, refreshJti),
+        '1',
+        this.tokenService.getRefreshTtlSec(),
+      )
+      .catch(() => undefined);
+
+    return {
+      token: accessToken,
+      refreshToken,
+      expiresIn: accessTtlSec,
+      user: safeUser(dbUser as any),
+    };
   }
 }

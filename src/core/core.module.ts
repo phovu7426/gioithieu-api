@@ -9,6 +9,7 @@ import appConfig from '@/core/config/app.config';
 import jwtConfig from '@/core/config/jwt.config';
 import mailConfig from '@/core/config/mail.config';
 import storageConfig from '@/core/config/storage.config';
+import googleOAuthConfig from '@/core/config/google-oauth.config';
 import { ModuleRef } from '@nestjs/core';
 
 // Infrastructure modules
@@ -24,7 +25,7 @@ import { AttemptLimiterService } from '@/core/security/attempt-limiter.service';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [appConfig, jwtConfig, mailConfig, storageConfig],
+      load: [appConfig, jwtConfig, mailConfig, storageConfig, googleOAuthConfig],
       validationSchema: Joi.object({
         // App
         NODE_ENV: Joi.string().valid('development', 'test', 'staging', 'production').default('development'),
@@ -100,6 +101,11 @@ import { AttemptLimiterService } from '@/core/security/attempt-limiter.service';
         STORAGE_S3_BASE_URL: Joi.string().allow(''),
         STORAGE_S3_ENDPOINT: Joi.string().uri({ allowRelative: false, scheme: ['http', 'https'] }).allow(''),
         STORAGE_S3_FORCE_PATH_STYLE: Joi.boolean().truthy('true').falsy('false').default(true),
+
+        // Google OAuth (optional)
+        GOOGLE_CLIENT_ID: Joi.string().allow(''),
+        GOOGLE_CLIENT_SECRET: Joi.string().allow(''),
+        GOOGLE_CALLBACK_URL: Joi.string().uri({ scheme: ['http', 'https'] }).allow(''),
       }),
     }),
     PrismaModule,

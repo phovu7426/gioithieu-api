@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AuthService } from '@/modules/common/auth/services/auth.service';
 import { LoginDto } from '@/modules/common/auth/dto/login.dto';
 import { RegisterDto } from '@/modules/common/auth/dto/register.dto';
@@ -10,8 +10,9 @@ import { ResetPasswordDto } from '@/modules/common/auth/dto/reset-password.dto';
 import { Auth } from '@/common/utils/auth.util';
 import { Permission } from '@/common/decorators/rbac.decorators';
 import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { AuthGuard } from '@nestjs/passport';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
@@ -79,5 +80,29 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @LogRequest({ fileBaseName: 'auth_google' })
+  @Permission('public')
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // Guard redirects to Google
+  }
+
+  @LogRequest({ fileBaseName: 'auth_google_callback' })
+  @Permission('public')
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const user = req.user as any;
+    const result = await this.authService.handleGoogleAuth(user);
+    
+    if (result?.token) {
+      const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
+      res.cookie('auth_token', result.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
+    }
+    
+    return result;
   }
 }

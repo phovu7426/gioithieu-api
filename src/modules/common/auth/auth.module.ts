@@ -1,16 +1,21 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
 import { AuthService } from '@/modules/common/auth/services/auth.service';
 import { AuthController } from '@/modules/common/auth/controllers/auth.controller';
 import jwtConfig from '@/core/config/jwt.config';
+import googleOAuthConfig from '@/core/config/google-oauth.config';
 import { JwtStrategy } from '@/modules/common/auth/strategies/jwt.strategy';
+import { GoogleStrategy } from '@/modules/common/auth/strategies/google.strategy';
 import { TokenService } from '@/modules/common/auth/services/token.service';
 import { RbacModule } from '@/modules/rbac/rbac.module';
 
 @Module({
   imports: [
+    PassportModule,
     ConfigModule.forFeature(jwtConfig),
+    ConfigModule.forFeature(googleOAuthConfig),
     RbacModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
@@ -29,6 +34,7 @@ import { RbacModule } from '@/modules/rbac/rbac.module';
   providers: [
     AuthService,
     JwtStrategy,
+    GoogleStrategy,
     TokenService,
   ],
   exports: [AuthService],
