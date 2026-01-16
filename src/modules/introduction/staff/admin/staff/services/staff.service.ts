@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Staff } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
+import { PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
+import { BaseContentService } from '@/common/base/services/prisma/base-content.service';
 
 type AdminStaffBag = PrismaCrudBag & {
   Model: Staff;
@@ -14,7 +15,7 @@ type AdminStaffBag = PrismaCrudBag & {
 };
 
 @Injectable()
-export class StaffService extends PrismaCrudService<AdminStaffBag> {
+export class StaffService extends BaseContentService<AdminStaffBag> {
   constructor(
     private readonly prisma: PrismaService,
   ) {
@@ -33,4 +34,5 @@ export class StaffService extends PrismaCrudService<AdminStaffBag> {
     };
   }
 }
+
 

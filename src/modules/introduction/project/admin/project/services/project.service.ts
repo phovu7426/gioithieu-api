@@ -1,9 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma, Project } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { ProjectStatus } from '@/shared/enums/types/project-status.enum';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-import { StringUtil } from '@/core/utils/string.util';
+import { PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
+import { BaseContentService } from '@/common/base/services/prisma/base-content.service';
 
 type AdminProjectBag = PrismaCrudBag & {
   Model: Project;
@@ -16,7 +15,7 @@ type AdminProjectBag = PrismaCrudBag & {
 };
 
 @Injectable()
-export class ProjectService extends PrismaCrudService<AdminProjectBag> {
+export class ProjectService extends BaseContentService<AdminProjectBag> {
   constructor(
     private readonly prisma: PrismaService,
   ) {
@@ -81,53 +80,6 @@ export class ProjectService extends PrismaCrudService<AdminProjectBag> {
   }
 
   /**
-   * Ensure slug is generated from name if not provided, and check uniqueness
-   */
-  private async ensureSlug(data: any, excludeId?: number, currentSlug?: string): Promise<void> {
-    // If no slug but has name → generate from name
-    if (data.name && !data.slug) {
-      data.slug = StringUtil.toSlug(data.name);
-      return;
-    }
-
-    // If has slug → check uniqueness
-    if (data.slug) {
-      const normalizedSlug = StringUtil.toSlug(data.slug);
-      const normalizedCurrentSlug = currentSlug ? StringUtil.toSlug(currentSlug) : null;
-
-      // If slug unchanged, don't update it
-      if (normalizedCurrentSlug && normalizedSlug === normalizedCurrentSlug) {
-        delete data.slug;
-        return;
-      }
-
-      // Check if slug already exists
-      const existing = await this.prisma.project.findFirst({
-        where: {
-          slug: normalizedSlug,
-          deleted_at: null,
-          ...(excludeId ? { id: { not: BigInt(excludeId) } } : {}),
-        },
-      });
-
-      if (existing) {
-        // Generate unique slug by appending number
-        let counter = 1;
-        let uniqueSlug = `${normalizedSlug}-${counter}`;
-        while (await this.prisma.project.findFirst({
-          where: { slug: uniqueSlug, deleted_at: null },
-        })) {
-          counter++;
-          uniqueSlug = `${normalizedSlug}-${counter}`;
-        }
-        data.slug = uniqueSlug;
-      } else {
-        data.slug = normalizedSlug;
-      }
-    }
-  }
-
-  /**
    * Override prepareOptions để thêm sort mặc định
    */
   protected override prepareOptions(queryOptions: any = {}) {
@@ -142,45 +94,6 @@ export class ProjectService extends PrismaCrudService<AdminProjectBag> {
       ...base,
       orderBy,
     };
-  }
-
-  /**
-   * Thay đổi trạng thái project
-   */
-  async changeStatus(id: number, status: ProjectStatus) {
-    return this.update({ id: BigInt(id) } as any, { status: status as any } as any);
-  }
-
-  /**
-   * Toggle featured status
-   */
-  async toggleFeatured(id: number, featured: boolean) {
-    return this.update({ id: BigInt(id) } as any, { featured } as any);
-  }
-
-  /**
-   * Cập nhật thứ tự sắp xếp project
-   */
-  async updateSortOrder(id: number, sortOrder: number) {
-    return this.update({ id: BigInt(id) } as any, { sort_order: sortOrder } as any);
-  }
-
-  /**
-   * Increment view count
-   */
-  async incrementViewCount(id: number) {
-    const project = await this.prisma.project.findFirst({
-      where: { id: BigInt(id) },
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project with ID ${id} not found`);
-    }
-
-    return this.prisma.project.update({
-      where: { id: BigInt(id) },
-      data: { view_count: { increment: 1 } },
-    });
   }
 }
 

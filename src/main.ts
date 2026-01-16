@@ -76,7 +76,7 @@ async function bootstrap() {
   if (storageType === 'local') {
     const localDestination = configService.get<string>('storage.local.destination', './storage/uploads');
     const localBaseUrl = configService.get<string>('storage.local.baseUrl', '/uploads');
-    
+
     // Add CORS middleware for static files BEFORE serving them
     if (appConfig.corsEnabled) {
       const hasWildcard = appConfig.corsOrigins.includes('*');
@@ -96,7 +96,7 @@ async function bootstrap() {
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin');
         // Override helmet's crossOriginResourcePolicy for static files
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-        
+
         // Handle preflight requests
         if (req.method === 'OPTIONS') {
           return res.sendStatus(200);
@@ -104,7 +104,7 @@ async function bootstrap() {
         next();
       });
     }
-    
+
     // Serve static files with CORS headers in setHeaders
     app.useStaticAssets(join(process.cwd(), localDestination), {
       prefix: localBaseUrl,
@@ -154,8 +154,15 @@ async function bootstrap() {
 // Register process handlers inside bootstrap to allow graceful shutdown
 // Note: We keep minimal top-level handlers and attach detailed ones after app starts
 
+
+// Helper để xử lý BigInt khi serialize JSON (Global fix)
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 bootstrap().catch((error) => {
   // Error starting application
   process.exit(1);
 });
+
 
