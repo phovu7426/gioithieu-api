@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { createPaginationMeta } from '@/common/base/utils/pagination.helper';
 import { PrismaListOptions, PrismaListResult } from './prisma.types';
-import { buildOrderBy, toPlain } from './prisma.utils';
+import { buildOrderBy } from './prisma.utils';
 
 type PrismaDelegate = {
   findMany: (args: any) => Promise<any[]>;
@@ -23,7 +23,7 @@ export abstract class PrismaListService<T extends PrismaListBag = PrismaListBag>
     protected readonly delegate: PrismaDelegate,
     private readonly allowedSortFields: string[] = ['id'],
     private readonly defaultSort: string = 'id:DESC',
-  ) {}
+  ) { }
 
   protected prepareOptions(options: PrismaListOptions<T['Where'], T['Select'], T['Include'], T['OrderBy']> = {}) {
     const page = Math.max(Number(options.page) || 1, 1);
@@ -92,7 +92,7 @@ export abstract class PrismaListService<T extends PrismaListBag = PrismaListBag>
       this.delegate.count ? this.delegate.count({ where }) : Promise.resolve(0),
     ]);
 
-    const processed = await this.afterGetList(toPlain(rows), filters, normalized);
+    const processed = await this.afterGetList(rows, filters, normalized);
     return {
       data: processed,
       meta: createPaginationMeta(page, limit, total),
@@ -106,20 +106,20 @@ export abstract class PrismaListService<T extends PrismaListBag = PrismaListBag>
     const normalized = this.prepareOptions(options);
     const entity = this.delegate.findFirst
       ? await this.delegate.findFirst({
-          where,
-          select: normalized.select,
-          include: normalized.include,
-          orderBy: normalized.orderBy,
-        })
+        where,
+        select: normalized.select,
+        include: normalized.include,
+        orderBy: normalized.orderBy,
+      })
       : await this.delegate.findMany({
-          where,
-          select: normalized.select,
-          include: normalized.include,
-          orderBy: normalized.orderBy,
-          take: 1,
-        }).then(r => r[0] || null);
+        where,
+        select: normalized.select,
+        include: normalized.include,
+        orderBy: normalized.orderBy,
+        take: 1,
+      }).then(r => r[0] || null);
 
-    return this.afterGetOne(toPlain(entity), where, normalized);
+    return this.afterGetOne(entity, where, normalized);
   }
 }
 

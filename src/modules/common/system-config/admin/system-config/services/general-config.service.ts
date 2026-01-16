@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { UpdateGeneralConfigDto } from '../dtos/update-general-config.dto';
 import { CacheService } from '@/common/services/cache.service';
-import { toPlain } from '@/common/base/services/prisma/prisma.utils';
+
 
 @Injectable()
 export class GeneralConfigService {
@@ -12,14 +12,14 @@ export class GeneralConfigService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cacheService: CacheService,
-  ) {}
+  ) { }
 
   async getConfig(): Promise<any> {
     const config = await this.prisma.generalConfig.findFirst({
       orderBy: { id: 'asc' },
     });
 
-    return config ? toPlain(config) : null;
+    return config ? config : null;
   }
 
   /**
@@ -112,6 +112,6 @@ export class GeneralConfigService {
       await this.cacheService.del(this.CACHE_KEY);
     }
 
-    return toPlain(result);
+    return result;
   }
 }

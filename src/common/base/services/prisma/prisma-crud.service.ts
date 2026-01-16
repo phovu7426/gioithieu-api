@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaListService, PrismaListBag } from './prisma-list.service';
 import { PrismaListOptions } from './prisma.types';
-import { toPlain } from './prisma.utils';
+
 
 type PrismaDelegate = {
   findMany: (args: any) => Promise<any[]>;
@@ -48,7 +48,7 @@ export abstract class PrismaCrudService<T extends PrismaCrudBag = PrismaCrudBag>
       include: normalized.include,
     });
     await this.afterCreate(created, data);
-    return toPlain(created);
+    return created;
   }
 
   async update(where: T['Where'], data: T['Update'], options?: PrismaListOptions<T['Where'], T['Select'], T['Include'], T['OrderBy']>) {
@@ -61,7 +61,7 @@ export abstract class PrismaCrudService<T extends PrismaCrudBag = PrismaCrudBag>
       include: normalized.include,
     });
     await this.afterUpdate(updated, data);
-    return toPlain(updated);
+    return updated;
   }
 
   async delete(where: T['Where'], options?: PrismaListOptions<T['Where'], T['Select'], T['Include'], T['OrderBy']>) {
@@ -74,7 +74,7 @@ export abstract class PrismaCrudService<T extends PrismaCrudBag = PrismaCrudBag>
       include: normalized.include,
     });
     await this.afterDelete(deleted);
-    return toPlain(deleted);
+    return deleted;
   }
 
   /**

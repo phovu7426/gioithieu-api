@@ -1,15 +1,4 @@
-/**
- * Convert BigInt sâu trong object/array thành number để tránh lỗi JSON stringify.
- * Có thể thay bằng string nếu muốn an toàn hơn.
- */
-export const toPlain = (value: any): any => {
-  if (typeof value === 'bigint') return Number(value);
-  if (Array.isArray(value)) return value.map(toPlain);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, toPlain(v)]));
-  }
-  return value;
-};
+
 
 /**
  * Parse sort string(s) thành Prisma orderBy array/object, có kiểm soát field hợp lệ.

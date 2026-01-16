@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { UpdateEmailConfigDto } from '../dtos/update-email-config.dto';
-import { toPlain } from '@/common/base/services/prisma/prisma.utils';
+
 
 @Injectable()
 export class EmailConfigService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getConfig(): Promise<any> {
     const config = await this.prisma.emailConfig.findFirst({
@@ -18,7 +18,7 @@ export class EmailConfigService {
     // Trả về config nhưng mask password
     const { smtp_password, ...rest } = config;
     return {
-      ...toPlain(rest),
+      ...rest,
       smtp_password: smtp_password ? '******' : undefined,
     };
   }
@@ -66,7 +66,7 @@ export class EmailConfigService {
 
       const { smtp_password, ...rest } = newConfig;
       return {
-        ...toPlain(rest),
+        ...rest,
         smtp_password: '******',
       };
     }
@@ -81,7 +81,7 @@ export class EmailConfigService {
     });
     const { smtp_password, ...rest } = updatedConfig;
     return {
-      ...toPlain(rest),
+      ...rest,
       smtp_password: '******',
     };
   }

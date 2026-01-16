@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { CacheService } from '@/common/services/cache.service';
-import { toPlain } from '@/common/base/services/prisma/prisma.utils';
+
 
 @Injectable()
 export class PublicGeneralConfigService {
@@ -11,7 +11,7 @@ export class PublicGeneralConfigService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cacheService: CacheService,
-  ) {}
+  ) { }
 
   /**
    * Lấy cấu hình chung (có cache)
@@ -25,7 +25,7 @@ export class PublicGeneralConfigService {
           orderBy: { id: 'asc' },
         });
 
-        return config ? toPlain(config) : null;
+        return config ? config : null;
       },
       this.CACHE_TTL,
     );

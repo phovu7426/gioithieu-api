@@ -3,7 +3,7 @@ import { Prisma, Gallery } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-import { toPlain } from '@/common/base/services/prisma/prisma.utils';
+
 
 type PublicGalleryBag = PrismaListBag & {
   Model: Gallery;
@@ -53,7 +53,7 @@ export class PublicGalleryService extends PrismaListService<PublicGalleryBag> {
       },
     });
 
-    return gallery ? toPlain(gallery) : null;
+    return gallery ? gallery : null;
   }
 
   async getFeatured(limit: number = 10): Promise<Gallery[]> {

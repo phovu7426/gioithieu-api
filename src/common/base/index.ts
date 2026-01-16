@@ -19,7 +19,7 @@ export {
 } from '@/common/base/services';
 
 // Utils
-export { toPlain, buildOrderBy } from '@/common/base/services';
+export { buildOrderBy } from '@/common/base/services';
 // Note: ResponseInterceptor has been removed as it was redundant with TransformInterceptor
 // All response transformations are now handled by TransformInterceptor in src/common/interceptors/
 

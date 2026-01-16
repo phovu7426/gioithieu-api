@@ -6,7 +6,7 @@ import { performance } from 'perf_hooks';
 import { RequestContext } from '@/common/utils/request-context.util';
 import { Auth } from '@/common/utils/auth.util';
 import { DateUtil } from '@/core/utils/date.util';
-import { toPlain } from '@/common/base/services/prisma/prisma.utils';
+
 
 import { LogContext } from '@/core/logger/interfaces/log-context.interface';
 
@@ -64,7 +64,7 @@ export class CustomLoggerService implements LoggerService {
     if (typeof message !== 'string') {
       return false;
     }
-    
+
     const skipPatterns = [
       'Module dependencies initialized',
       'Mapped {',
@@ -75,7 +75,7 @@ export class CustomLoggerService implements LoggerService {
       'TokenBlacklistService initialized',
       'Timezone set to',
     ];
-    
+
     return skipPatterns.some(pattern => message.includes(pattern));
   }
 
@@ -84,12 +84,12 @@ export class CustomLoggerService implements LoggerService {
    */
   private cleanLogEntry(entry: any): any {
     const cleaned: any = {};
-    
+
     for (const [key, value] of Object.entries(entry)) {
       if (value === null || value === undefined) {
         continue;
       }
-      
+
       if (typeof value === 'object' && !Array.isArray(value)) {
         const cleanedObj = this.cleanLogEntry(value);
         // Only include non-empty objects
@@ -104,7 +104,7 @@ export class CustomLoggerService implements LoggerService {
         cleaned[key] = value;
       }
     }
-    
+
     return cleaned;
   }
 
@@ -129,7 +129,7 @@ export class CustomLoggerService implements LoggerService {
       trace: context?.trace,
       extra: context?.extra || {},
     };
-    
+
     // Remove empty objects and null values
     return this.cleanLogEntry(entry);
   }
@@ -152,8 +152,8 @@ export class CustomLoggerService implements LoggerService {
 
   private writeJsonToFiles(level: LogLevel, entry: any, options?: LogWriteOptions): void {
     // Convert BigInt to number/string before JSON.stringify to avoid serialization errors
-    const plainEntry = toPlain(entry);
-    const line = JSON.stringify(plainEntry);
+    // Global patch handles BigInt.prototype.toJSON
+    const line = JSON.stringify(entry);
     const date = DateUtil.formatDate(undefined, 'Y-m-d'); // YYYY-MM-DD in configured timezone
 
     // Use per-day subdirectory: logs/YYYY-MM-DD/

@@ -4,11 +4,11 @@ import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { safeUser } from '@/modules/common/auth/utils/user.util';
 import { UpdateProfileDto } from '@/modules/common/user-management/user/user/dto/update-profile.dto';
 import { ChangePasswordDto } from '@/modules/common/user-management/user/user/dto/change-password.dto';
-import { toPlain } from '@/common/base/services/prisma/prisma.utils';
+
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async getByIdSafe(userId: number) {
     if (!userId) return null;
@@ -17,7 +17,7 @@ export class UserService {
       include: { profile: true },
     });
     if (!user) return null;
-    return safeUser(toPlain(user) as any);
+    return safeUser(user as any);
   }
 
   async updateProfile(userId: number, dto: UpdateProfileDto) {
@@ -75,7 +75,7 @@ export class UserService {
       include: { profile: true },
     });
 
-    return updated ? safeUser(toPlain(updated) as any) : null;
+    return updated ? safeUser(updated as any) : null;
   }
 
   async changePassword(userId: number, dto: ChangePasswordDto) {
