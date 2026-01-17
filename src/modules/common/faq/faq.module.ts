@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
 // Import admin modules
-import { AdminFaqModule } from '@/modules/common/faq/admin/faq/faq.module';
+import { AdminFaqModule } from '@/modules/common/faq/admin/faq.module';
 
 // Import public modules
-import { PublicFaqModule } from '@/modules/common/faq/public/faq/faq.module';
+import { PublicFaqModule } from '@/modules/common/faq/public/faq.module';
 
 @Module({
   imports: [

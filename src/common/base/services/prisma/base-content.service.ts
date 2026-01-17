@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaCrudService, PrismaCrudBag } from './prisma-crud.service';
 import { StringUtil } from '@/core/utils/string.util';
+import { Prisma } from '@prisma/client';
 
 /**
  * Base Service cho các Content Module (Project, News, Product, etc.)
@@ -14,7 +15,7 @@ export abstract class BaseContentService<T extends PrismaCrudBag> extends Prisma
      */
     protected async ensureSlug(
         data: any,
-        excludeId?: number,
+        excludeId?: number | bigint,
         currentSlug?: string,
         slugField: string = 'slug',
         nameField: string = 'name'
@@ -39,7 +40,6 @@ export abstract class BaseContentService<T extends PrismaCrudBag> extends Prisma
         }
 
         // 4. Kiểm tra trùng lặp trong DB
-        // Lưu ý: delegate phải hỗ trợ findFirst (mặc định Prisma delegate nào cũng có)
         const delegate = this.delegate as any;
 
         // Xây dựng condition check trùng
@@ -74,33 +74,37 @@ export abstract class BaseContentService<T extends PrismaCrudBag> extends Prisma
     /**
      * Generic: Thay đổi trạng thái (active/inactive/...)
      */
-    async changeStatus(id: number, status: string | any) {
+    async changeStatus(id: number | bigint, status: string) {
         return this.update({ id: BigInt(id) } as any, { status } as any);
     }
 
     /**
      * Generic: Thay đổi thứ tự sắp xếp
      */
-    async updateSortOrder(id: number, sortOrder: number) {
+    async updateSortOrder(id: number | bigint, sortOrder: number) {
         return this.update({ id: BigInt(id) } as any, { sort_order: sortOrder } as any);
     }
 
     /**
      * Generic: Toggle Featured (Nổi bật)
-     * Sử dụng try-catch để an toàn nếu model không có trường featured
      */
-    async toggleFeatured(id: number, featured: boolean) {
+    async toggleFeatured(id: number | bigint, featured: boolean) {
         try {
-            return await this.update({ id: BigInt(id) } as any, { featured } as any);
+            return await this.update({ id: BigInt(id) } as any, { is_featured: featured } as any);
         } catch (error) {
-            throw new Error('Model này không hỗ trợ tính năng Featured hoặc đã xảy ra lỗi DB.');
+            // Fallback nếu tên trường là featured thay vì is_featured
+            try {
+                return await this.update({ id: BigInt(id) } as any, { featured: featured } as any);
+            } catch (e) {
+                throw new Error('Model này không hỗ trợ tính năng Featured hoặc đã xảy ra lỗi DB.');
+            }
         }
     }
 
     /**
      * Generic: Tăng view count
      */
-    async incrementViewCount(id: number, field: string = 'view_count') {
+    async incrementViewCount(id: number | bigint, field: string = 'view_count') {
         // Check tồn tại trước
         const item = await (this.delegate as any).findFirst({
             where: { id: BigInt(id) },

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 
 // Import admin modules
-import { AdminBannerModule } from '@/modules/extra/banner/admin/banner/banner.module';
-import { AdminBannerLocationModule } from '@/modules/extra/banner/admin/banner-location/banner-location.module';
+import { AdminBannerModule } from '@/modules/extra/banner/admin/banner.module';
+import { AdminBannerLocationModule } from '@/modules/extra/banner/admin/banner-location.module';
 
 // Import public modules
-import { PublicBannerModule } from '@/modules/extra/banner/public/banner/banner.module';
+import { PublicBannerModule } from '@/modules/extra/banner/public/banner.module';
 
 @Module({
     imports: [

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
 // Import admin modules
-import { AdminGalleryModule } from '@/modules/introduction/gallery/admin/gallery/gallery.module';
+import { AdminGalleryModule } from '@/modules/introduction/gallery/admin/gallery.module';
 
 // Import public modules
-import { PublicGalleryModule } from '@/modules/introduction/gallery/public/gallery/gallery.module';
+import { PublicGalleryModule } from '@/modules/introduction/gallery/public/gallery.module';
 
 @Module({
   imports: [

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
 // Import admin modules
-import { AdminTestimonialModule } from '@/modules/introduction/testimonial/admin/testimonial/testimonial.module';
+import { AdminTestimonialModule } from '@/modules/introduction/testimonial/admin/testimonial.module';
 
 // Import public modules
-import { PublicTestimonialModule } from '@/modules/introduction/testimonial/public/testimonial/testimonial.module';
+import { PublicTestimonialModule } from '@/modules/introduction/testimonial/public/testimonial.module';
 
 @Module({
   imports: [
