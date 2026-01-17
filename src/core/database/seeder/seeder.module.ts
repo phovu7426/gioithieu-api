@@ -19,6 +19,7 @@ import { SeedPartners } from '@/core/database/seeder/seed-partners';
 import { SeedGallery } from '@/core/database/seeder/seed-gallery';
 import { SeedCertificates } from '@/core/database/seeder/seed-certificates';
 import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
+import { SeedPosts } from '@/core/database/seeder/seed-posts';
 
 @Module({
   imports: [PrismaModule],
@@ -45,8 +46,10 @@ import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
     SeedGallery,
     SeedCertificates,
     SeedFaqs,
+    // Post Module Seeders
+    SeedPosts,
   ],
   exports: [SeedService],
 })
-export class SeederModule {}
+export class SeederModule { }
 

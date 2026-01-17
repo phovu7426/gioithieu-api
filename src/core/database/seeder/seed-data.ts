@@ -18,6 +18,7 @@ import { SeedPartners } from '@/core/database/seeder/seed-partners';
 import { SeedGallery } from '@/core/database/seeder/seed-gallery';
 import { SeedCertificates } from '@/core/database/seeder/seed-certificates';
 import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
+import { SeedPosts } from '@/core/database/seeder/seed-posts';
 
 @Injectable()
 export class SeedService {
@@ -44,6 +45,8 @@ export class SeedService {
     private readonly seedGallery: SeedGallery,
     private readonly seedCertificates: SeedCertificates,
     private readonly seedFaqs: SeedFaqs,
+    // Post Module Seeders
+    private readonly seedPosts: SeedPosts,
   ) { }
 
   async seedAll(): Promise<void> {
@@ -85,6 +88,9 @@ export class SeedService {
       // Testimonials cần seed sau Projects vì có relation
       await this.seedTestimonials.seed();
 
+      // Post Module
+      await this.seedPosts.seed();
+
       this.logger.log('Database seeding completed successfully');
     } catch (error) {
       this.logger.error('Database seeding failed', error);
@@ -107,20 +113,20 @@ export class SeedService {
       // Clear main tables
       await this.prisma.banner.deleteMany({});
       await this.prisma.bannerLocation.deleteMany({});
-      
+
       await this.prisma.contact.deleteMany({});
-      
+
       await this.prisma.menu.deleteMany({});
-      
+
       await this.prisma.notification.deleteMany({});
-      
+
       await this.prisma.group.deleteMany({});
       await this.prisma.context.deleteMany({});
-      
+
       await this.prisma.user.deleteMany({});
       await this.prisma.role.deleteMany({});
       await this.prisma.permission.deleteMany({});
-      
+
       await this.prisma.emailConfig.deleteMany({});
       await this.prisma.generalConfig.deleteMany({});
 
@@ -133,6 +139,13 @@ export class SeedService {
       await this.prisma.partner.deleteMany({});
       await this.prisma.staff.deleteMany({});
       await this.prisma.aboutSection.deleteMany({});
+
+      // Post Module Tables
+      await this.prisma.postPosttag.deleteMany({});
+      await this.prisma.postPostcategory.deleteMany({});
+      await this.prisma.post.deleteMany({});
+      await this.prisma.postTag.deleteMany({});
+      await this.prisma.postCategory.deleteMany({});
 
       this.logger.log('Database cleared successfully');
     } catch (error) {

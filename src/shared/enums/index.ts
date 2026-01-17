@@ -17,6 +17,8 @@ export * from './types/project-status.enum';
 export * from './types/about-section-type.enum';
 export * from './types/partner-type.enum';
 export * from './types/certificate-type.enum';
+export * from './types/post-status.enum';
+export * from './types/post-type.enum';
 
 // Interfaces
 export { EnumValueMetadata } from './interfaces/enum-metadata.interface';

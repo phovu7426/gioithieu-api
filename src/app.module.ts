@@ -25,6 +25,7 @@ import { ContextModule } from '@/modules/context/context.module';
 import { GroupInterceptor } from '@/common/interceptors/group.interceptor';
 
 // New Domain Modules
+import { PostModule } from '@/modules/post/post.module';
 import { NotificationModule } from '@/modules/extra/notification/notification.module';
 import { UserManagementModule } from '@/modules/common/user-management/user-management.module';
 import { EnumModule } from '@/shared/enums';
@@ -53,6 +54,7 @@ import { HomepageModule } from '@/modules/homepage/homepage.module';
     RbacModule,
     ContextModule,
     // New Domain Modules
+    PostModule,
     NotificationModule,
     UserManagementModule,
     EnumModule,

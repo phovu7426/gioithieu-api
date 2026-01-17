@@ -46,7 +46,7 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'dashboard.manage',
       },
-      
+
       // ========== QUẢN LÝ TÀI KHOẢN (GROUP - check nhiều quyền) ==========
       {
         code: 'account-management',
@@ -105,7 +105,7 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'permission.manage',
       },
-      
+
       // ========== NHÓM & CONTEXT (GROUP) ==========
       {
         code: 'group-management',
@@ -150,7 +150,7 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'group.manage',
       },
-      
+
       // ========== CẤU HÌNH HỆ THỐNG (GROUP) ==========
       {
         code: 'config-management',
@@ -195,7 +195,7 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'config.manage',
       },
-      
+
       // ========== MENU ==========
       {
         code: 'menus',
@@ -211,7 +211,7 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'menu.manage',
       },
-      
+
       // ========== TÍNH NĂNG MỞ RỘNG ==========
       {
         code: 'extra-management',
@@ -287,7 +287,7 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'banner_location.manage',
       },
-      
+
       // ========== LIÊN HỆ ==========
       {
         code: 'contacts',
@@ -303,7 +303,66 @@ export class SeedMenus {
         show_in_menu: true,
         permission_code: 'contact.manage',
       },
-      
+
+      // ========== BÀI VIẾT (GROUP - check nhiều quyền) ==========
+      {
+        code: 'post-management',
+        name: 'Bài viết',
+        path: '/admin/posts',
+        api_path: 'api/admin/posts',
+        icon: '📝',
+        type: MenuType.group,
+        status: BasicStatus.active,
+        parent_id: null,
+        sort_order: 50,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'post.manage', // Permission chính
+        permission_codes: ['post.manage', 'post_category.manage', 'post_tag.manage'], // Nhiều quyền cho group
+      },
+      {
+        code: 'posts',
+        name: 'Bài viết',
+        path: '/admin/posts',
+        api_path: 'api/admin/posts',
+        icon: '📄',
+        type: MenuType.route,
+        status: BasicStatus.active,
+        parent_code: 'post-management',
+        sort_order: 10,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'post.manage',
+      },
+      {
+        code: 'post-categories',
+        name: 'Danh mục bài viết',
+        path: '/admin/post-categories',
+        api_path: 'api/admin/post-categories',
+        icon: '📂',
+        type: MenuType.route,
+        status: BasicStatus.active,
+        parent_code: 'post-management',
+        sort_order: 20,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'post_category.manage',
+      },
+      {
+        code: 'post-tags',
+        name: 'Thẻ bài viết',
+        path: '/admin/post-tags',
+        api_path: 'api/admin/post-tags',
+        icon: '🏷️',
+        type: MenuType.route,
+        status: BasicStatus.active,
+        parent_code: 'post-management',
+        sort_order: 30,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'post_tag.manage',
+      },
+
       // ========== GIỚI THIỆU (GROUP - check nhiều quyền) ==========
       {
         code: 'introduction',
@@ -451,7 +510,7 @@ export class SeedMenus {
     const sortedMenus = this.sortMenusByParent(menuData);
 
     for (const menuItem of sortedMenus) {
-      
+
       let parent: any | null = null;
       if (menuItem.parent_code) {
         parent = createdMenus.get(menuItem.parent_code) || null;
@@ -493,7 +552,7 @@ export class SeedMenus {
           updated_user_id: defaultUserId,
         },
       });
-      
+
       // Nếu là menu GROUP và có nhiều permissions, tạo MenuPermission records
       if (saved.type === MenuType.group && menuItem.permission_codes && Array.isArray(menuItem.permission_codes)) {
         for (const permCode of menuItem.permission_codes) {
@@ -511,7 +570,7 @@ export class SeedMenus {
           }
         }
       }
-      
+
       createdMenus.set(saved.code, saved);
       this.logger.log(`Created menu: ${saved.code}${parent ? ` (parent: ${parent.code})` : ''}${requiredPermission ? ` (permission: ${requiredPermission.code})` : ''}`);
     }

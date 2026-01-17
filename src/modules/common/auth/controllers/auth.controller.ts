@@ -97,12 +97,12 @@ export class AuthController {
   async googleAuthCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const user = req.user as any;
     const result = await this.authService.handleGoogleAuth(user);
-    
+
     if (result?.token) {
       const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
       res.cookie('auth_token', result.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
     }
-    
+
     return result;
   }
 }
