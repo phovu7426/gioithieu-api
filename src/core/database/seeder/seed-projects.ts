@@ -7,7 +7,7 @@ import { StringUtil } from '@/core/utils/string.util';
 export class SeedProjects {
   private readonly logger = new Logger(SeedProjects.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding projects...');
@@ -158,6 +158,46 @@ export class SeedProjects {
           updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
         },
       });
+    }
+
+    // ========== SEED ADDITIONAL RANDOM PROJECTS ==========
+    this.logger.log('Seeding additional random projects...');
+    const randomProjectCount = 40;
+
+    const locations = ['Quận 1, TP.HCM', 'Quận 2, TP.HCM', 'Quận 7, TP.HCM', 'Bình Dương', 'Đồng Nai', 'Long An', 'Hà Nội', 'Đà Nẵng'];
+    const statuses = [ProjectStatus.completed, ProjectStatus.in_progress, ProjectStatus.planning];
+
+    for (let i = 1; i <= randomProjectCount; i++) {
+      const name = `Dự án mẫu số ${i}: Tòa nhà cao cấp Horizon ${i}`;
+      const slug = StringUtil.toSlug(name);
+
+      await this.prisma.project.create({
+        data: {
+          name: name,
+          slug: `${slug}-${i}`,
+          description: `Mô tả chi tiết dự án mẫu số ${i}. Dự án này bao gồm các tiện ích hiện đại và không gian xanh. Tọa lạc tại vị trí đắc địa, thuận lợi cho giao thông và kinh doanh.`,
+          short_description: `Dự án mẫu ${i} với thiết kế hiện đại và tiện ích vượt trội.`,
+          location: locations[i % locations.length],
+          area: 1000 + (i * 500),
+          start_date: new Date(2020 + (i % 5), (i % 12), 1),
+          end_date: new Date(2022 + (i % 5), (i % 12), 1),
+          status: statuses[i % statuses.length],
+          client_name: `Khách hàng Doanh nghiệp ${i}`,
+          budget: 1000000000 * (i + 1),
+          images: JSON.stringify([
+            `/uploads/projects/demo-${(i % 5) + 1}.jpg`,
+            `/uploads/projects/demo-${((i + 1) % 5) + 1}.jpg`,
+          ]),
+          featured: i % 5 === 0,
+          sort_order: 10 + i,
+          meta_title: `Dự án mẫu ${i} - ${locations[i % locations.length]}`,
+          meta_description: `Thông tin dự án mẫu ${i} tại ${locations[i % locations.length]}.`,
+          created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+          updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+        }
+      });
+
+      this.logger.log(`Created random project ${i}: ${name}`);
     }
 
     this.logger.log(`Seeded ${projects.length} projects successfully`);

@@ -7,7 +7,7 @@ import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 export class SeedPartners {
   private readonly logger = new Logger(SeedPartners.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding partners...');
@@ -107,6 +107,32 @@ export class SeedPartners {
           updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
         },
       });
+    }
+
+    // ========== SEED ADDITIONAL RANDOM PARTNERS ==========
+    this.logger.log('Seeding additional random partners...');
+    const randomPartnerCount = 40;
+    const partnerTypes = [PartnerType.client, PartnerType.supplier, PartnerType.partner];
+
+    for (let i = 1; i <= randomPartnerCount; i++) {
+      const name = `Đối tác mẫu ${i}`;
+      const type = partnerTypes[i % partnerTypes.length];
+
+      await this.prisma.partner.create({
+        data: {
+          name: name,
+          logo: `/uploads/partners/demo-${(i % 5) + 1}.png`,
+          website: `https://partner${i}.com`,
+          description: `Mô tả ngắn về đối tác mẫu số ${i}. Hợp tác trong lĩnh vực cung cấp vật tư và thi công.`,
+          type: type,
+          status: BasicStatus.active,
+          sort_order: 10 + i,
+          created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+          updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+        }
+      });
+
+      this.logger.log(`Created random partner ${i}: ${name}`);
     }
 
     this.logger.log(`Seeded ${partners.length} partners successfully`);

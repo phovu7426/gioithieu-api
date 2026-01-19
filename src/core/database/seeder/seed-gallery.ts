@@ -7,7 +7,7 @@ import { StringUtil } from '@/core/utils/string.util';
 export class SeedGallery {
   private readonly logger = new Logger(SeedGallery.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding gallery...');
@@ -103,6 +103,36 @@ export class SeedGallery {
           updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
         },
       });
+    }
+
+    // ========== SEED ADDITIONAL RANDOM GALLERIES ==========
+    this.logger.log('Seeding additional random galleries...');
+    const randomGalleryCount = 40;
+
+    for (let i = 1; i <= randomGalleryCount; i++) {
+      const title = `Bộ sưu tập ảnh mẫu ${i}: Sự kiện công ty ${i}`;
+      const slug = StringUtil.toSlug(title);
+
+      await this.prisma.gallery.create({
+        data: {
+          title: title,
+          slug: `${slug}-${i}`,
+          description: `Mô tả chi tiết về bộ sưu tập ảnh số ${i}. Bao gồm các hình ảnh hoạt động và sự kiện nổi bật.`,
+          cover_image: `/uploads/gallery/demo-cover-${(i % 5) + 1}.jpg`,
+          images: JSON.stringify([
+            `/uploads/gallery/demo-${(i % 5) + 1}.jpg`,
+            `/uploads/gallery/demo-${((i + 1) % 5) + 1}.jpg`,
+            `/uploads/gallery/demo-${((i + 2) % 5) + 1}.jpg`,
+          ]),
+          featured: i % 5 === 0,
+          status: BasicStatus.active,
+          sort_order: 10 + i,
+          created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+          updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+        }
+      });
+
+      this.logger.log(`Created random gallery ${i}: ${title}`);
     }
 
     this.logger.log(`Seeded ${galleries.length} gallery items successfully`);

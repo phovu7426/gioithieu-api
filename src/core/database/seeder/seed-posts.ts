@@ -373,6 +373,83 @@ export class SeedPosts {
             this.logger.log(`Created post: ${savedPost.name} (${post.tags.length} tags)`);
         }
 
+        // ========== SEED ADDITIONAL RANDOM POSTS ==========
+        this.logger.log('Seeding additional random posts...');
+
+        const randomPostCount = 40;
+        const categoryKeys = Array.from(createdCategories.keys());
+        const tagKeys = Array.from(createdTags.keys());
+
+        for (let i = 1; i <= randomPostCount; i++) {
+            const randomCategoryName = categoryKeys[i % categoryKeys.length];
+            const category = createdCategories.get(randomCategoryName);
+
+            if (!category) continue;
+
+            const name = `Bài viết mẫu số ${i}: Xu hướng xây dựng 202${i % 5 + 5}`;
+            const slug = StringUtil.toSlug(name);
+
+            // Generate random tags (1-3 tags)
+            const randomTags: any[] = [];
+            const numTags = (i % 3) + 1;
+            for (let j = 0; j < numTags; j++) {
+                const tagKey = tagKeys[(i + j) % tagKeys.length];
+                const tag = createdTags.get(tagKey);
+                if (tag) randomTags.push(tag);
+            }
+
+            const savedPost = await this.prisma.post.create({
+                data: {
+                    name: name,
+                    slug: `${slug}-${i}`, // Ensure unique slug
+                    excerpt: `Đây là đoạn trích dẫn ngắn gọn cho bài viết mẫu số ${i}. Nội dung xoay quanh các chủ đề ${randomCategoryName}.`,
+                    content: `<h2>Nội dung chi tiết bài viết ${i}</h2>
+                    <p>Đây là nội dung giả định cho bài viết số ${i}. Bài viết này thuộc danh mục <strong>${randomCategoryName}</strong>.</p>
+                    <p>Chúng tôi tập trung vào việc cập nhật các thông tin mới nhất về <em>${randomTags.map(t => t.name).join(', ')}</em>.</p>
+                    <h3>Các điểm chính:</h3>
+                    <ul>
+                        <li>Điểm nổi bật 1 của bài viết ${i}</li>
+                        <li>Điểm nổi bật 2 của bài viết ${i}</li>
+                        <li>Điểm nổi bật 3 của bài viết ${i}</li>
+                    </ul>
+                    <p>Kết luận: Bài viết này nhằm mục đích thử nghiệm dữ liệu.</p>`,
+                    image: `/uploads/posts/demo-${(i % 5) + 1}.jpg`,
+                    cover_image: `/uploads/posts/demo-cover-${(i % 5) + 1}.jpg`,
+                    primary_postcategory_id: category.id,
+                    status: i % 10 === 0 ? PostStatus.draft : PostStatus.published, // 10% draft
+                    post_type: PostType.text,
+                    is_featured: i % 7 === 0,
+                    is_pinned: false,
+                    published_at: new Date(Date.now() - i * 86400000), // Back in time
+                    view_count: BigInt(Math.floor(Math.random() * 1000) + 50),
+                    meta_title: `Bài viết mẫu ${i} - ${randomCategoryName}`,
+                    meta_description: `Mô tả ngắn cho SEO của bài viết mẫu số ${i} thuộc chủ đề ${randomCategoryName}.`,
+                    created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+                    updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+                },
+            });
+
+            // Create post-category relationship
+            await this.prisma.postPostcategory.create({
+                data: {
+                    post_id: savedPost.id,
+                    postcategory_id: category.id,
+                },
+            });
+
+            // Create post-tag relationships
+            for (const tag of randomTags) {
+                await this.prisma.postPosttag.create({
+                    data: {
+                        post_id: savedPost.id,
+                        posttag_id: tag.id,
+                    },
+                });
+            }
+
+            this.logger.log(`Created random post ${i}: ${savedPost.name}`);
+        }
+
         this.logger.log(`✅ Posts module seeding completed`);
         this.logger.log(`   - Categories: ${createdCategories.size}`);
         this.logger.log(`   - Tags: ${createdTags.size}`);

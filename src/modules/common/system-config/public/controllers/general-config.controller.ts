@@ -5,7 +5,7 @@ import {
 import { PublicGeneralConfigService } from '../services/general-config.service';
 import { Permission } from '@/common/decorators/rbac.decorators';
 
-@Controller('public/system-config/general')
+@Controller('public/system-configs/general')
 export class PublicGeneralConfigController {
   constructor(
     private readonly generalConfigService: PublicGeneralConfigService,

@@ -6,7 +6,7 @@ import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 export class SeedStaff {
   private readonly logger = new Logger(SeedStaff.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding staff...');
@@ -125,6 +125,47 @@ export class SeedStaff {
           updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
         },
       });
+    }
+
+    // ========== SEED ADDITIONAL RANDOM STAFF ==========
+    this.logger.log('Seeding additional random staff...');
+    const randomStaffCount = 40;
+    const departments = ['Phòng Kỹ thuật', 'Phòng Thiết kế', 'Phòng Thi công', 'Phòng Kinh doanh', 'Phòng Hành chính', 'Phòng Kế toán'];
+    const positions = ['Nhân viên', 'Chuyên viên', 'Trưởng nhóm', 'Phó phòng'];
+    const lastNames = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Võ', 'Phan', 'Trương'];
+    const middleNames = ['Văn', 'Thị', 'Đức', 'Thành', 'Minh', 'Hữu'];
+    const firstNames = ['An', 'Bình', 'Cường', 'Dung', 'Đức', 'Em', 'Giang', 'Hương', 'Hùng', 'Khanh', 'Lan', 'Minh'];
+
+    for (let i = 1; i <= randomStaffCount; i++) {
+      // Generate random name
+      const lastName = lastNames[i % lastNames.length];
+      const middleName = middleNames[i % middleNames.length];
+      const firstName = firstNames[i % firstNames.length];
+      const fullName = `${lastName} ${middleName} ${firstName} ${i}`;
+
+      await this.prisma.staff.create({
+        data: {
+          name: fullName,
+          position: positions[i % positions.length],
+          department: departments[i % departments.length],
+          bio: `Nhân viên ${fullName} có nhiều năm kinh nghiệm trong lĩnh vực ${departments[i % departments.length]}. Đã tham gia nhiều dự án quan trọng của công ty.`,
+          avatar: `/uploads/staff/demo-${(i % 5) + 1}.jpg`,
+          email: `staff${i}@company.com`,
+          phone: `09${i.toString().padStart(8, '0')}`,
+          social_links: JSON.stringify({
+            linkedin: `https://linkedin.com/in/staff${i}`,
+            facebook: i % 2 === 0 ? `https://facebook.com/staff${i}` : undefined,
+          }),
+          experience: (i % 15) + 1,
+          expertise: `Kỹ năng ${i}, Kỹ năng ${(i + 1) % 10}`,
+          status: BasicStatus.active,
+          sort_order: 10 + i,
+          created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+          updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+        }
+      });
+
+      this.logger.log(`Created random staff ${i}: ${fullName}`);
     }
 
     this.logger.log(`Seeded ${staffMembers.length} staff members successfully`);

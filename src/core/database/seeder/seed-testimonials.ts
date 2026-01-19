@@ -6,7 +6,7 @@ import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 export class SeedTestimonials {
   private readonly logger = new Logger(SeedTestimonials.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding testimonials...');
@@ -96,6 +96,35 @@ export class SeedTestimonials {
           updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
         },
       });
+    }
+
+    // ========== SEED ADDITIONAL RANDOM TESTIMONIALS ==========
+    this.logger.log('Seeding additional random testimonials...');
+    const randomTestimonialCount = 40;
+    const clientPositions = ['Giám đốc', 'Trưởng phòng', 'Kỹ sư', 'Chủ đầu tư', 'Quản lý dự án'];
+    const clientCompanies = ['Công ty A', 'Công ty B', 'Tập đoàn C', 'Công ty Xây dựng D', 'Doanh nghiệp E'];
+
+    for (let i = 1; i <= randomTestimonialCount; i++) {
+      const clientName = `Khách hàng mẫu ${i}`;
+
+      await this.prisma.testimonial.create({
+        data: {
+          client_name: clientName,
+          client_position: clientPositions[i % clientPositions.length],
+          client_company: clientCompanies[i % clientCompanies.length],
+          client_avatar: `/uploads/testimonials/demo-${(i % 5) + 1}.jpg`,
+          content: `Đây là ý kiến đánh giá mẫu số ${i}. Chúng tôi rất hài lòng về dịch vụ và chất lượng công trình. Đội ngũ nhân viên chuyên nghiệp và tận tâm.`,
+          rating: 4 + (i % 2), // 4 or 5
+          project_id: null,
+          featured: i % 5 === 0,
+          status: BasicStatus.active,
+          sort_order: 10 + i,
+          created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+          updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+        }
+      });
+
+      this.logger.log(`Created random testimonial ${i}: ${clientName}`);
     }
 
     this.logger.log(`Seeded ${testimonials.length} testimonials successfully`);

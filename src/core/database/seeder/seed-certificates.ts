@@ -7,7 +7,7 @@ import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 export class SeedCertificates {
   private readonly logger = new Logger(SeedCertificates.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding certificates...');
@@ -104,6 +104,35 @@ export class SeedCertificates {
           updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
         },
       });
+    }
+
+    // ========== SEED ADDITIONAL RANDOM CERTIFICATES ==========
+    this.logger.log('Seeding additional random certificates...');
+    const randomCertificateCount = 40;
+    const certificateTypes = [CertificateType.iso, CertificateType.award, CertificateType.license, CertificateType.certification, CertificateType.other];
+
+    for (let i = 1; i <= randomCertificateCount; i++) {
+      const name = `Chứng chỉ mẫu ${i}`;
+      const type = certificateTypes[i % certificateTypes.length];
+
+      await this.prisma.certificate.create({
+        data: {
+          name: name,
+          image: `/uploads/certificates/demo-${(i % 5) + 1}.jpg`,
+          issued_by: `Tổ chức cấp chứng chỉ ${i}`,
+          issued_date: new Date(2015 + (i % 8), (i % 12), 1),
+          expiry_date: new Date(2025 + (i % 8), (i % 12), 1),
+          certificate_number: `CERT-${i}`,
+          description: `Mô tả ngắn gọn về chứng chỉ mẫu số ${i}. Chứng chỉ này công nhận năng lực của công ty.`,
+          type: type,
+          status: BasicStatus.active,
+          sort_order: 10 + i,
+          created_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+          updated_user_id: defaultUserId ? BigInt(defaultUserId) : null,
+        }
+      });
+
+      this.logger.log(`Created random certificate ${i}: ${name}`);
     }
 
     this.logger.log(`Seeded ${certificates.length} certificates successfully`);
