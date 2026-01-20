@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('public/posts/:postId/comments')
+@Permission('public')
 export class PostCommentController {
     constructor(private readonly commentService: PostCommentService) { }
 
@@ -22,6 +23,7 @@ export class PostCommentController {
 
     @Post()
     @UseGuards(JwtAuthGuard)
+    @Permission('authenticated')
     async createComment(
         @Param('postId') postId: string,
         @Body() body: { content: string; parent_id?: string },
