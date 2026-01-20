@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { Response, Request } from 'express';
 import { AuthService } from '@/modules/common/auth/services/auth.service';
@@ -14,7 +15,10 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) { }
 
   @LogRequest({ fileBaseName: 'auth_login' })
   @Permission('public')
@@ -94,15 +98,16 @@ export class AuthController {
   @Permission('public')
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async googleAuthCallback(@Req() req: Request, @Res() res: Response) {
     const user = req.user as any;
     const result = await this.authService.handleGoogleAuth(user);
 
     if (result?.token) {
-      const domain = (res.req.hostname === 'localhost') ? 'localhost' : undefined;
-      res.cookie('auth_token', result.token, { maxAge: 60 * 60 * 1000, httpOnly: false, secure: false, domain, path: '/' });
+      const frontendUrl = this.configService.get<string>('googleOAuth.frontendUrl') || 'http://localhost:3000';
+      const redirectUrl = `${frontendUrl}/auth/google/callback?token=${result.token}&refreshToken=${result.refreshToken}&expiresIn=${result.expiresIn}`;
+      return res.redirect(redirectUrl);
     }
 
-    return result;
+    return res.redirect(this.configService.get<string>('googleOAuth.frontendUrl') + '/login?error=auth_failed');
   }
 }
