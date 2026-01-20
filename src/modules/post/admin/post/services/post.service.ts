@@ -367,5 +367,65 @@ export class PostService extends PrismaCrudService<AdminPostBag> {
       orderBy: { view_date: 'asc' },
     });
   }
+
+  async getStatisticsOverview() {
+    // Lấy tổng số bài viết theo trạng thái
+    const totalPosts = await this.prisma.post.count({ where: { deleted_at: null } });
+    const publishedPosts = await this.prisma.post.count({
+      where: { status: 'published', deleted_at: null }
+    });
+    const draftPosts = await this.prisma.post.count({
+      where: { status: 'draft', deleted_at: null }
+    });
+    const scheduledPosts = await this.prisma.post.count({
+      where: { status: 'scheduled', deleted_at: null }
+    });
+
+    // Top 10 bài viết xem nhiều nhất
+    const topViewedPosts = await this.prisma.post.findMany({
+      where: { deleted_at: null, status: 'published' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        view_count: true,
+        published_at: true,
+      },
+      orderBy: { view_count: 'desc' },
+      take: 10,
+    });
+
+    // Tổng số bình luận
+    const totalComments = await (this.prisma as any).postComment.count({
+      where: { deleted_at: null },
+    });
+
+    // Số bình luận chờ duyệt (status: hidden)
+    const pendingComments = await (this.prisma as any).postComment.count({
+      where: { status: 'hidden', deleted_at: null },
+    });
+
+    // Thống kê lượt xem 30 ngày gần nhất
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentViews = await (this.prisma as any).postViewStats.aggregate({
+      where: {
+        view_date: { gte: thirtyDaysAgo },
+      },
+      _sum: { view_count: true },
+    });
+
+    return {
+      total_posts: totalPosts,
+      published_posts: publishedPosts,
+      draft_posts: draftPosts,
+      scheduled_posts: scheduledPosts,
+      total_comments: totalComments,
+      pending_comments: pendingComments,
+      total_views_last_30_days: recentViews._sum.view_count || 0,
+      top_viewed_posts: topViewedPosts,
+    };
+  }
 }
 

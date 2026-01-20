@@ -24,21 +24,16 @@ export class PostViewCronService {
         if (!isLocked) return;
 
         try {
-            // 1. Recover from previous stuck syncs (idempotency)
-            // Use scan for production safety (O(N) non-blocking)
             const stuckKeys = await this.redis.scan(`${this.BUFFER_KEY}:syncing:*`);
             for (const key of stuckKeys) {
                 this.logger.debug(`Recovering stuck sync key: ${key}`);
                 await this.processSyncKey(key);
             }
 
-            // 2. Start current sync cycle
             const workingKey = `${this.BUFFER_KEY}:syncing:${Date.now()}`;
 
-            // Atomic rename: note that RedisUtil.rename catches "no such key" internally
             await this.redis.rename(this.BUFFER_KEY, workingKey);
 
-            // Process the key (will do nothing if key doesn't exist or is empty)
             await this.processSyncKey(workingKey);
         } catch (error) {
             this.logger.error('Error in post view cron service:', error);
@@ -50,7 +45,7 @@ export class PostViewCronService {
     private async processSyncKey(workingKey: string) {
         const data = await this.redis.hgetall(workingKey);
         if (Object.keys(data).length === 0) {
-            await this.redis.del(workingKey); // Cleanup empty keys
+            await this.redis.del(workingKey);
             return;
         }
 
@@ -75,11 +70,9 @@ export class PostViewCronService {
             return;
         }
 
-        // Timezone-aware "today" (Asia/Ho_Chi_Minh)
         const vncDate = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
         vncDate.setHours(0, 0, 0, 0);
 
-        // Batch processing in chunks to avoid long DB locks
         const CHUNK_SIZE = 100;
         for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
             const chunk = entries.slice(i, i + CHUNK_SIZE);
@@ -87,13 +80,11 @@ export class PostViewCronService {
             try {
                 await this.prisma.$transaction(async (tx) => {
                     for (const item of chunk) {
-                        // Update total view_count
                         await tx.post.update({
                             where: { id: item.postId },
                             data: { view_count: { increment: item.count } },
                         });
 
-                        // Upsert daily stats
                         await tx.postViewStats.upsert({
                             where: {
                                 post_id_view_date: {

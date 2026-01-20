@@ -78,5 +78,11 @@ export class PostController {
 
     return this.postService.getViewStats(id, start, end);
   }
+
+  @Permission('post.manage')
+  @Get('statistics/overview')
+  async getStatisticsOverview() {
+    return this.postService.getStatisticsOverview();
+  }
 }
 
