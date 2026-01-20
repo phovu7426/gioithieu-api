@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { RedisUtil } from '@/core/utils/redis.util';
 
 type PublicPostBag = PrismaListBag & {
   Model: Prisma.PostGetPayload<{
@@ -21,6 +22,7 @@ type PublicPostBag = PrismaListBag & {
 export class PostService extends PrismaListService<PublicPostBag> {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redis: RedisUtil,
   ) {
     super(prisma.post, ['id', 'created_at', 'published_at', 'view_count'], 'created_at:DESC');
   }
@@ -125,14 +127,19 @@ export class PostService extends PrismaListService<PublicPostBag> {
   }
 
   /**
-   * Tăng view count cho post (không chặn nếu lỗi)
+   * Tăng view count cho post (sử dụng Redis buffer)
    */
   async incrementViewCount(postId: number): Promise<void> {
     try {
-      await this.prisma.post.update({
-        where: { id: BigInt(postId) },
-        data: { view_count: { increment: 1 } },
-      });
+      if (this.redis.isEnabled()) {
+        await this.redis.hincrby('post:views:buffer', postId.toString(), 1);
+      } else {
+        // Fallback to direct DB update if Redis is not available
+        await this.prisma.post.update({
+          where: { id: BigInt(postId) },
+          data: { view_count: { increment: 1 } },
+        });
+      }
     } catch {
       // Ignore errors khi tăng view count
     }

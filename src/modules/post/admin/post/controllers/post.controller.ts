@@ -64,5 +64,19 @@ export class PostController {
   async delete(@Param('id', ParseIntPipe) id: number) {
     return this.postService.delete(id);
   }
+
+  @Permission('post.manage')
+  @Get(':id/stats')
+  async getStats(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('start_date') startDate: string,
+    @Query('end_date') endDate: string,
+  ) {
+    // Default to last 30 days if dates not provided
+    const end = endDate || new Date().toISOString().split('T')[0];
+    const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    return this.postService.getViewStats(id, start, end);
+  }
 }
 

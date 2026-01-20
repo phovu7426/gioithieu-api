@@ -330,7 +330,7 @@ export class PostService extends PrismaCrudService<AdminPostBag> {
     return post;
   }
 
-  private async syncRelations(postId: bigint, tagIds?: number[] | null, categoryIds?: number[] | null) {
+  async syncRelations(postId: bigint, tagIds?: number[] | null, categoryIds?: number[] | null) {
     if (tagIds !== null) {
       await this.prisma.postPosttag.deleteMany({ where: { post_id: postId } });
       if (tagIds && tagIds.length > 0) {
@@ -350,6 +350,22 @@ export class PostService extends PrismaCrudService<AdminPostBag> {
         });
       }
     }
+  }
+
+  async getViewStats(postId: number, startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return (this.prisma as any).postViewStats.findMany({
+      where: {
+        post_id: BigInt(postId),
+        view_date: {
+          gte: start,
+          lte: end,
+        },
+      },
+      orderBy: { view_date: 'asc' },
+    });
   }
 }
 

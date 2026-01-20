@@ -46,6 +46,27 @@ export class RedisUtil implements OnModuleDestroy {
     await this.client.del(key);
   }
 
+  async hincrby(key: string, field: string, increment: number): Promise<number> {
+    if (!this.client) return 0;
+    return this.client.hincrby(key, field, increment);
+  }
+
+  async hgetall(key: string): Promise<Record<string, string>> {
+    if (!this.client) return {};
+    return this.client.hgetall(key);
+  }
+
+  async rename(oldKey: string, newKey: string): Promise<void> {
+    if (!this.client) return;
+    try {
+      await this.client.rename(oldKey, newKey);
+    } catch (e) {
+      if (e.message !== 'ERR no such key') {
+        throw e;
+      }
+    }
+  }
+
   async keys(pattern: string): Promise<string[]> {
     if (!this.client) return [];
     return this.client.keys(pattern);
@@ -53,7 +74,7 @@ export class RedisUtil implements OnModuleDestroy {
 
   async onModuleDestroy() {
     if (this.client) {
-      try { await this.client.quit(); } catch {}
+      try { await this.client.quit(); } catch { }
       this.client = null;
     }
   }
