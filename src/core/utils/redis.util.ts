@@ -46,6 +46,11 @@ export class RedisUtil implements OnModuleDestroy {
     await this.client.del(key);
   }
 
+  async hdel(key: string, ...fields: string[]): Promise<void> {
+    if (!this.client || fields.length === 0) return;
+    await this.client.hdel(key, ...fields);
+  }
+
   async hincrby(key: string, field: string, increment: number): Promise<number> {
     if (!this.client) return 0;
     return this.client.hincrby(key, field, increment);
@@ -70,6 +75,36 @@ export class RedisUtil implements OnModuleDestroy {
   async keys(pattern: string): Promise<string[]> {
     if (!this.client) return [];
     return this.client.keys(pattern);
+  }
+
+  async scan(pattern: string, count = 100): Promise<string[]> {
+    if (!this.client) return [];
+    const keys: string[] = [];
+    let cursor = '0';
+    do {
+      const [nextCursor, foundKeys] = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', count);
+      keys.push(...foundKeys);
+      cursor = nextCursor;
+    } while (cursor !== '0');
+    return keys;
+  }
+
+  async lock(key: string, ttlSeconds: number, token = 'locked'): Promise<boolean> {
+    if (!this.client) return false;
+    const result = await this.client.set(key, token, 'EX', ttlSeconds, 'NX');
+    return result === 'OK';
+  }
+
+  async unlock(key: string, token = 'locked'): Promise<void> {
+    if (!this.client) return;
+    const script = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `;
+    await this.client.eval(script, 1, key, token);
   }
 
   async onModuleDestroy() {
