@@ -1,7 +1,8 @@
-import { Controller, Get, Query, Patch, Param, Body, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Patch, Param, Body, Delete, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AdminPostCommentService } from '../services/comment.service';
 import { RbacGuard } from '@/common/guards/rbac.guard';
 import { Permission } from '@/common/decorators/rbac.decorators';
+import { prepareQuery } from '@/common/base/utils/list-query.helper';
 
 @Controller('admin/post-comments')
 @UseGuards(RbacGuard)
@@ -9,23 +10,14 @@ export class AdminPostCommentController {
     constructor(private readonly commentService: AdminPostCommentService) { }
 
     @Get()
-    @Permission('post:comment:view')
-    async getAllComments(
-        @Query('page') page: string = '1',
-        @Query('limit') limit: string = '10',
-        @Query('sort') sort: string = 'created_at:DESC',
-        @Query('status') status?: 'visible' | 'hidden',
-        @Query('post_id') postId?: string,
-    ) {
-        const where: any = { deleted_at: null };
-        if (status) where.status = status;
-        if (postId) where.post_id = BigInt(postId);
-
-        return this.commentService.getList(where, { page: Number(page), limit: Number(limit), sort });
+    @Permission('post.manage')
+    async getList(@Query(ValidationPipe) query: any) {
+        const { filters, options } = prepareQuery(query);
+        return this.commentService.getList(filters, options);
     }
 
     @Patch(':id/status')
-    @Permission('post:comment:edit')
+    @Permission('post.manage')
     async updateStatus(
         @Param('id') id: string,
         @Body('status') status: 'visible' | 'hidden',
@@ -34,7 +26,7 @@ export class AdminPostCommentController {
     }
 
     @Delete(':id')
-    @Permission('post:comment:delete')
+    @Permission('post.manage')
     async deleteComment(@Param('id') id: string) {
         return this.commentService.deleteComment(BigInt(id));
     }

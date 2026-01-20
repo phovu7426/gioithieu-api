@@ -24,6 +24,19 @@ export class AdminPostCommentService extends PrismaCrudService<AdminPostCommentB
         super((prisma as any).postComment, ['id', 'created_at', 'status'], 'created_at:DESC');
     }
 
+    protected override async prepareFilters(filters: any = {}) {
+        const prepared: any = { ...filters };
+
+        // Luôn lọc bỏ những comment đã bị xoá mềm
+        prepared.deleted_at = null;
+
+        if (prepared.post_id) {
+            prepared.post_id = BigInt(prepared.post_id);
+        }
+
+        return prepared;
+    }
+
     protected override prepareOptions(queryOptions: any = {}) {
         const base = super.prepareOptions(queryOptions);
         const defaultSelect: Prisma.PostCommentSelect = {
@@ -52,6 +65,6 @@ export class AdminPostCommentService extends PrismaCrudService<AdminPostCommentB
     }
 
     async deleteComment(id: number | bigint) {
-        return this.softDelete({ id: BigInt(id) } as any);
+        return this.delete({ id: BigInt(id) } as any);
     }
 }
