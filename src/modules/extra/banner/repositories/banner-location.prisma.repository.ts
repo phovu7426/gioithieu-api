@@ -1,0 +1,44 @@
+
+import { Injectable } from '@nestjs/common';
+import { BannerLocation, Prisma } from '@prisma/client';
+import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { IBannerLocationRepository, BannerLocationFilter } from './banner-location.repository.interface';
+
+@Injectable()
+export class BannerLocationPrismaRepository extends PrismaRepository<
+    BannerLocation,
+    Prisma.BannerLocationWhereInput,
+    Prisma.BannerLocationCreateInput,
+    Prisma.BannerLocationUpdateInput,
+    Prisma.BannerLocationOrderByWithRelationInput
+> implements IBannerLocationRepository {
+    constructor(private readonly prisma: PrismaService) {
+        super(prisma.bannerLocation as unknown as any);
+    }
+
+    protected buildWhere(filter: BannerLocationFilter): Prisma.BannerLocationWhereInput {
+        const where: Prisma.BannerLocationWhereInput = {};
+
+        if (filter.search) {
+            where.OR = [
+                { name: { contains: filter.search } },
+                { code: { contains: filter.search } },
+            ];
+        }
+
+        if (filter.status) {
+            where.status = filter.status as any;
+        }
+
+        where.deleted_at = null;
+
+        return where;
+    }
+
+    async findByCode(code: string): Promise<BannerLocation | null> {
+        return this.prisma.bannerLocation.findUnique({
+            where: { code },
+        });
+    }
+}

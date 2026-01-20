@@ -1,78 +1,84 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Contact } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { IContactRepository, CONTACT_REPOSITORY, ContactFilter } from '@/modules/contact/repositories/contact.repository.interface';
 import { ContactStatus } from '@/shared/enums/types/contact-status.enum';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-
-type ContactBag = PrismaCrudBag & {
-  Model: Contact;
-  Where: Prisma.ContactWhereInput;
-  Select: Prisma.ContactSelect;
-  Include: never;
-  OrderBy: Prisma.ContactOrderByWithRelationInput;
-  Create: Prisma.ContactCreateInput;
-  Update: Prisma.ContactUpdateInput;
-};
 
 @Injectable()
-export class ContactService extends PrismaCrudService<ContactBag> {
+export class ContactService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.contact, ['id', 'created_at'], 'id:DESC');
+    @Inject(CONTACT_REPOSITORY)
+    private readonly contactRepo: IContactRepository,
+  ) { }
+
+  async getList(query: any) {
+    const filter: ContactFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.status) filter.status = query.status;
+
+    const result = await this.contactRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
-  /**
-   * Gửi phản hồi cho contact
-   */
+  async getSimpleList(query: any) {
+    return this.getList({
+      ...query,
+      limit: query.limit ?? 50,
+    });
+  }
+
+  async getOne(id: number) {
+    const contact = await this.contactRepo.findById(id);
+    return this.transform(contact);
+  }
+
+  async create(data: any) {
+    const contact = await this.contactRepo.create(data);
+    return this.getOne(Number(contact.id));
+  }
+
+  async update(id: number, data: any) {
+    await this.contactRepo.update(id, data);
+    return this.getOne(id);
+  }
+
   async replyToContact(id: number, reply: string, repliedBy?: number) {
-    return this.prisma.contact.update({
-      where: { id: BigInt(id) },
-      data: {
-        reply,
-        status: ContactStatus.Replied as any,
-        replied_at: new Date(),
-        replied_by: repliedBy ? BigInt(repliedBy) : null,
-      },
-    });
+    const data = {
+      reply,
+      status: ContactStatus.Replied as any,
+      replied_at: new Date(),
+      replied_by: repliedBy ? BigInt(repliedBy) : null,
+    };
+    return this.contactRepo.update(id, data);
   }
 
-  /**
-   * Đánh dấu contact đã đọc
-   */
   async markAsRead(id: number) {
-    const contact = await this.prisma.contact.findUnique({
-      where: { id: BigInt(id) },
-    });
-    if (contact && contact.status === ContactStatus.Pending) {
-      return this.prisma.contact.update({
-        where: { id: BigInt(id) },
-        data: { status: ContactStatus.Read as any },
-      });
+    const contact = await this.contactRepo.findById(id);
+    if (contact && (contact as any).status === ContactStatus.Pending) {
+      return this.contactRepo.update(id, { status: ContactStatus.Read as any });
     }
     return contact;
   }
 
-  /**
-   * Đóng contact
-   */
   async closeContact(id: number) {
-    return this.prisma.contact.update({
-      where: { id: BigInt(id) },
-      data: { status: ContactStatus.Closed as any },
-    });
+    return this.contactRepo.update(id, { status: ContactStatus.Closed as any });
   }
 
-  /**
-   * Simple list tương tự getList nhưng limit mặc định lớn hơn
-   */
-  async getSimpleList(filters?: Prisma.ContactWhereInput, options?: any) {
-    const simpleOptions = {
-      ...options,
-      limit: options?.limit ?? 50,
-      maxLimit: options?.maxLimit ?? 1000,
-    };
-    return this.getList(filters, simpleOptions);
+  async delete(id: number) {
+    return this.contactRepo.delete(id);
+  }
+
+  private transform(contact: any) {
+    if (!contact) return contact;
+    const item = { ...contact };
+    if (item.id) item.id = Number(item.id);
+    if (item.replied_by) item.replied_by = Number(item.replied_by);
+    return item;
   }
 }
 

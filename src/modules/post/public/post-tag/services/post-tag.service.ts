@@ -1,46 +1,46 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-
-type PublicPostTagBag = PrismaListBag & {
-  Model: Prisma.PostTagGetPayload<any>;
-  Where: Prisma.PostTagWhereInput;
-  Select: Prisma.PostTagSelect;
-  Include: Prisma.PostTagInclude;
-  OrderBy: Prisma.PostTagOrderByWithRelationInput;
-};
+import { Injectable, Inject } from '@nestjs/common';
+import { IPostTagRepository, POST_TAG_REPOSITORY, PostTagFilter } from '@/modules/post/repositories/post-tag.repository.interface';
 
 @Injectable()
-export class PostTagService extends PrismaListService<PublicPostTagBag> {
+export class PostTagService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.postTag, ['id', 'created_at', 'name', 'slug'], 'created_at:DESC');
-  }
+    @Inject(POST_TAG_REPOSITORY)
+    private readonly tagRepo: IPostTagRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters: Prisma.PostTagWhereInput = {},
-    _options?: any,
-  ): Promise<Prisma.PostTagWhereInput> {
-    const prepared: Prisma.PostTagWhereInput = { ...(filters || {}) };
-    if (prepared.status === undefined) prepared.status = 'active' as any;
-    return prepared;
-  }
-
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    return {
-      ...base,
-      select: queryOptions?.select ?? {
-        id: true,
-        name: true,
-        slug: true,
-        description: true,
-        created_at: true,
-      },
-      sort: base.sort ?? 'created_at:DESC',
+  async getList(query: any) {
+    const filter: PostTagFilter = {
+      status: 'active' as any,
     };
+    if (query.search) filter.search = query.search;
+
+    const result = await this.tagRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort || 'created_at:DESC',
+      filter,
+    });
+
+    result.data = result.data.map((item) => this.transform(item));
+    return result;
+  }
+
+  async findBySlug(slug: string) {
+    const tag = await this.tagRepo.findBySlug(slug);
+    if (!tag || (tag as any).status !== 'active') return null;
+    return this.transform(tag);
+  }
+
+  async getOne(id: number) {
+    const tag = await this.tagRepo.findById(id);
+    return this.transform(tag);
+  }
+
+  private transform(tag: any) {
+    if (!tag) return tag;
+    const item = { ...tag };
+    if (item.id) item.id = Number(item.id);
+    return item;
   }
 }
 

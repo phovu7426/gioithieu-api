@@ -1,71 +1,55 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Testimonial } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { ITestimonialRepository, TESTIMONIAL_REPOSITORY, TestimonialFilter } from '@/modules/introduction/testimonial/repositories/testimonial.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-type PublicTestimonialBag = PrismaListBag & {
-  Model: Testimonial;
-  Where: Prisma.TestimonialWhereInput;
-  Select: Prisma.TestimonialSelect;
-  Include: Prisma.TestimonialInclude;
-  OrderBy: Prisma.TestimonialOrderByWithRelationInput;
-};
 
 @Injectable()
-export class PublicTestimonialService extends PrismaListService<PublicTestimonialBag> {
+export class PublicTestimonialService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.testimonial, ['id', 'created_at', 'sort_order'], 'id:DESC');
-  }
+    @Inject(TESTIMONIAL_REPOSITORY)
+    private readonly testimonialRepo: ITestimonialRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters?: Prisma.TestimonialWhereInput,
-  ): Promise<Prisma.TestimonialWhereInput | true | undefined> {
-    const prepared: Prisma.TestimonialWhereInput = {
-      ...(filters || {}),
-      status: BasicStatus.active as any,
-      deleted_at: null,
+  async getList(query: any) {
+    const filter: TestimonialFilter = {
+      status: BasicStatus.active
     };
-    return prepared;
+    if (query.search) filter.search = query.search;
+    if (query.projectId) filter.projectId = query.projectId;
+
+    const result = await this.testimonialRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.TestimonialOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      include: {
-        project: true,
-      },
-      orderBy,
-    };
-  }
-
-  async getFeatured(limit: number = 10): Promise<Testimonial[]> {
-    const result = await this.getList(
-      {
-        featured: true,
-        status: BasicStatus.active as any,
-      } as any,
-      { limit, page: 1 },
-    );
+  async getFeatured(limit: number = 10) {
+    const result = await this.getList({ featured: true, limit, page: 1 } as any);
     return result.data;
   }
 
-  async findByProject(projectId: number): Promise<Testimonial[]> {
-    const result = await this.getList(
-      {
-        project_id: BigInt(projectId),
-        status: BasicStatus.active as any,
-      } as any,
-      { limit: 100, page: 1 },
-    );
+  async findByProject(projectId: number) {
+    const result = await this.getList({ projectId, limit: 100, page: 1 } as any);
     return result.data;
+  }
+
+  private transform(testimonial: any) {
+    if (!testimonial) return testimonial;
+    const item = { ...testimonial };
+    if (item.id) item.id = Number(item.id);
+    if (item.project_id) item.project_id = Number(item.project_id);
+    if (item.project) {
+      item.project = {
+        id: Number(item.project.id),
+        name: item.project.name,
+        slug: item.project.slug,
+      };
+    }
+    return item;
   }
 }
 

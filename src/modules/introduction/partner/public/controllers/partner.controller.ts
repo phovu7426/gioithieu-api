@@ -6,13 +6,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('partners')
 export class PublicPartnerController {
-  constructor(private readonly partnerService: PublicPartnerService) {}
+  constructor(private readonly partnerService: PublicPartnerService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.partnerService.getList(filters, options);
+    return this.partnerService.getList(query);
   }
 
   @Permission('public')

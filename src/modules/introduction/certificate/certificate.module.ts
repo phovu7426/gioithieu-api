@@ -6,14 +6,19 @@ import { AdminCertificateModule } from '@/modules/introduction/certificate/admin
 // Import public modules
 import { PublicCertificateModule } from '@/modules/introduction/certificate/public/certificate.module';
 
+// Import repository module
+import { CertificateRepositoryModule } from './certificate.repository.module';
+
 @Module({
   imports: [
     // Admin modules
     AdminCertificateModule,
     // Public modules
     PublicCertificateModule,
+    // Repository module
+    CertificateRepositoryModule,
   ],
-  exports: [],
+  exports: [CertificateRepositoryModule],
 })
-export class CertificateModule {}
+export class CertificateModule { }
 

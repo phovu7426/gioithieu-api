@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { RbacCacheService } from '@/modules/rbac/services/rbac-cache.service';
+import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '../repositories/user-group.repository.interface';
+import { IUserRoleAssignmentRepository, USER_ROLE_ASSIGNMENT_REPOSITORY } from '../repositories/user-role-assignment.repository.interface';
+import { IRoleHasPermissionRepository, ROLE_HAS_PERMISSION_REPOSITORY } from '../repositories/role-has-permission.repository.interface';
+import { IRoleContextRepository, ROLE_CONTEXT_REPOSITORY } from '../repositories/role-context.repository.interface';
+import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/context/repositories/group.repository.interface';
+import { IUserRepository, USER_REPOSITORY } from '@/modules/common/user-management/repositories/user.repository.interface';
+import { IRoleRepository, ROLE_REPOSITORY } from '@/modules/common/user-management/repositories/role.repository.interface';
 
 /**
  * Service quản lý RBAC (Role-Based Access Control)
@@ -10,7 +15,20 @@ import { RbacCacheService } from '@/modules/rbac/services/rbac-cache.service';
 @Injectable()
 export class RbacService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(USER_GROUP_REPOSITORY)
+    private readonly userGroupRepo: IUserGroupRepository,
+    @Inject(USER_ROLE_ASSIGNMENT_REPOSITORY)
+    private readonly assignmentRepo: IUserRoleAssignmentRepository,
+    @Inject(ROLE_HAS_PERMISSION_REPOSITORY)
+    private readonly roleHasPermRepo: IRoleHasPermissionRepository,
+    @Inject(ROLE_CONTEXT_REPOSITORY)
+    private readonly roleContextRepo: IRoleContextRepository,
+    @Inject(GROUP_REPOSITORY)
+    private readonly groupRepo: IGroupRepository,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
+    @Inject(ROLE_REPOSITORY)
+    private readonly roleRepo: IRoleRepository,
     private readonly rbacCache: RbacCacheService,
   ) { }
 
@@ -33,14 +51,7 @@ export class RbacService {
     }
 
     // Check user thuộc group
-    const userInGroup = await this.prisma.userGroup.findUnique({
-      where: {
-        user_id_group_id: {
-          user_id: BigInt(userId),
-          group_id: BigInt(groupId),
-        },
-      },
-    });
+    const userInGroup = await this.userGroupRepo.findUnique(userId, groupId);
 
     if (!userInGroup) {
       return false; // User không thuộc group → DENY
@@ -49,8 +60,8 @@ export class RbacService {
     // Try cache first
     let cached = await this.rbacCache.getUserPermissionsInGroup(userId, groupId);
     if (!cached) {
-      // Query permissions từ user_role_assignments với Prisma
-      const assignments = await this.prisma.userRoleAssignment.findMany({
+      // Query permissions từ user_role_assignments
+      const assignments = await this.assignmentRepo.findMany({
         where: {
           user_id: BigInt(userId),
           group_id: BigInt(groupId),
@@ -67,7 +78,7 @@ export class RbacService {
           new Set(assignments.map((a) => a.role_id)),
         );
 
-        const links = await this.prisma.roleHasPermission.findMany({
+        const links = await this.roleHasPermRepo.findMany({
           where: {
             role_id: { in: roleIds },
             permission: { status: 'active' as any },
@@ -81,7 +92,7 @@ export class RbacService {
 
         const set = new Set<string>();
         for (const link of links) {
-          const perm = link.permission as any;
+          const perm = (link as any).permission;
           if (!perm) continue;
           if (perm.code) set.add(perm.code);
           if (perm.parent && perm.parent.code) {
@@ -111,8 +122,8 @@ export class RbacService {
     required: string[],
   ): Promise<boolean> {
     // Query từ system group
-    const systemAdminGroup = await this.prisma.group.findFirst({
-      where: { code: 'system', status: 'active' as any },
+    const systemAdminGroup = await this.groupRepo.findFirst({
+      where: { code: 'system', status: 'active' as any }
     });
 
     if (!systemAdminGroup) {
@@ -120,21 +131,14 @@ export class RbacService {
     }
 
     // Check user thuộc system group
-    const userInGroup = await this.prisma.userGroup.findUnique({
-      where: {
-        user_id_group_id: {
-          user_id: BigInt(userId),
-          group_id: systemAdminGroup.id,
-        },
-      },
-    });
+    const userInGroup = await this.userGroupRepo.findUnique(userId, Number(systemAdminGroup.id));
 
     if (!userInGroup) {
       return false; // User không thuộc system group → không có system permissions
     }
 
-    // Query permissions từ user_role_assignments với Prisma
-    const assignments = await this.prisma.userRoleAssignment.findMany({
+    // Query permissions từ user_role_assignments
+    const assignments = await this.assignmentRepo.findMany({
       where: {
         user_id: BigInt(userId),
         group_id: systemAdminGroup.id,
@@ -149,7 +153,7 @@ export class RbacService {
       new Set(assignments.map((a) => a.role_id)),
     );
 
-    const links = await this.prisma.roleHasPermission.findMany({
+    const links = await this.roleHasPermRepo.findMany({
       where: {
         role_id: { in: roleIds },
         permission: { status: 'active' as any },
@@ -163,7 +167,7 @@ export class RbacService {
 
     const set = new Set<string>();
     for (const link of links) {
-      const perm = link.permission as any;
+      const perm = (link as any).permission;
       if (!perm) continue;
       if (perm.code) set.add(perm.code);
       if (perm.parent && perm.parent.code) {
@@ -187,14 +191,7 @@ export class RbacService {
     groupId: number,
   ): Promise<void> {
     // Validate: User phải thuộc group
-    const userInGroup = await this.prisma.userGroup.findUnique({
-      where: {
-        user_id_group_id: {
-          user_id: BigInt(userId),
-          group_id: BigInt(groupId),
-        },
-      },
-    });
+    const userInGroup = await this.userGroupRepo.findUnique(userId, groupId);
 
     if (!userInGroup) {
       throw new BadRequestException(
@@ -203,19 +200,16 @@ export class RbacService {
     }
 
     // Validate: Role được phép trong context của group
-    const group = await this.prisma.group.findUnique({
-      where: { id: BigInt(groupId) },
-      include: { context: true },
-    });
+    const group = await this.groupRepo.findById(groupId);
 
     if (!group) {
       throw new NotFoundException('Group not found');
     }
 
-    const roleContext = await this.prisma.roleContext.findFirst({
+    const roleContext = await this.roleContextRepo.findFirst({
       where: {
         role_id: BigInt(roleId),
-        context_id: group.context_id,
+        context_id: (group as any).context_id,
       },
     });
 
@@ -226,27 +220,17 @@ export class RbacService {
     }
 
     // Check if assignment already exists
-    const existing = await this.prisma.userRoleAssignment.findUnique({
-      where: {
-        user_id_role_id_group_id: {
-          user_id: BigInt(userId),
-          role_id: BigInt(roleId),
-          group_id: BigInt(groupId),
-        },
-      },
-    });
+    const existing = await this.assignmentRepo.findUnique(userId, roleId, groupId);
 
     if (existing) {
       return; // Already assigned
     }
 
     // Insert
-    await this.prisma.userRoleAssignment.create({
-      data: {
-        user_id: BigInt(userId),
-        role_id: BigInt(roleId),
-        group_id: BigInt(groupId),
-      },
+    await this.assignmentRepo.create({
+      user_id: BigInt(userId),
+      role_id: BigInt(roleId),
+      group_id: BigInt(groupId),
     });
 
     // Clear cache
@@ -266,26 +250,14 @@ export class RbacService {
     roleIds: number[],
     skipValidation: boolean = false,
   ): Promise<void> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: BigInt(userId) },
-    });
+    const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    const group = await this.prisma.group.findUnique({
-      where: { id: BigInt(groupId) },
-      include: { context: true },
-    });
+    const group = await this.groupRepo.findById(groupId);
     if (!group) throw new NotFoundException('Group not found');
 
     // Validate: User phải thuộc group
-    const userInGroup = await this.prisma.userGroup.findUnique({
-      where: {
-        user_id_group_id: {
-          user_id: BigInt(userId),
-          group_id: BigInt(groupId),
-        },
-      },
-    });
+    const userInGroup = await this.userGroupRepo.findUnique(userId, groupId);
 
     if (!userInGroup) {
       throw new BadRequestException(
@@ -294,13 +266,13 @@ export class RbacService {
     }
 
     // Validate và fetch roles
-    let roles: Prisma.RoleGetPayload<any>[] = [];
+    let roles: any[] = [];
     if (roleIds.length > 0) {
       const roleIdsBigInt = roleIds.map((id) => BigInt(id));
-      roles = await this.prisma.role.findMany({
+      roles = await this.roleRepo.findMany({
         where: { id: { in: roleIdsBigInt } },
       });
-      
+
       if (roles.length !== roleIds.length) {
         throw new BadRequestException('Some role IDs are invalid');
       }
@@ -308,32 +280,28 @@ export class RbacService {
       // Validate roles nếu không phải system admin
       if (!skipValidation) {
         // Kiểm tra roles phải có context của group trong role_contexts
-        const roleContexts = await this.prisma.roleContext.findMany({
-          where: {
-            role_id: { in: roleIds.map((id) => BigInt(id)) },
-            context_id: group.context_id,
-          },
-        });
-
-        const validRoleIds = new Set(roleContexts.map((rc) => rc.role_id.toString()));
-        const invalidRoles = roles.filter(
-          (role) => !validRoleIds.has(role.id.toString()),
-        );
-
-        if (invalidRoles.length > 0) {
-          throw new BadRequestException(
-            `Cannot assign roles that are not available in this context. Invalid roles: ${invalidRoles.map(r => r.code).join(', ')}`
-          );
+        // We can use roleContextRepo to batch check
+        for (const roleId of roleIds) {
+          const rc = await this.roleContextRepo.findFirst({
+            where: {
+              role_id: BigInt(roleId),
+              context_id: (group as any).context_id,
+            }
+          });
+          if (!rc) {
+            const role = roles.find(r => Number(r.id) === roleId);
+            throw new BadRequestException(
+              `Cannot assign roles that are not available in this context. Invalid role: ${role?.code}`
+            );
+          }
         }
       }
     }
 
     // Xóa tất cả roles cũ trong group này
-    await this.prisma.userRoleAssignment.deleteMany({
-      where: {
-        user_id: BigInt(userId),
-        group_id: BigInt(groupId),
-      },
+    await this.assignmentRepo.deleteMany({
+      user_id: BigInt(userId),
+      group_id: BigInt(groupId),
     });
 
     // Thêm roles mới

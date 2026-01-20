@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { CertificateService } from '@/modules/introduction/certificate/admin/services/certificate.service';
 import { CertificateController } from '@/modules/introduction/certificate/admin/controllers/certificate.controller';
 import { RbacModule } from '@/modules/rbac/rbac.module';
+import { CertificateRepositoryModule } from '../certificate.repository.module';
 
 @Module({
   imports: [
     RbacModule,
+    CertificateRepositoryModule,
   ],
   controllers: [CertificateController],
   providers: [CertificateService],

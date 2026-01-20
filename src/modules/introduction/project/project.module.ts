@@ -5,9 +5,11 @@ import { AdminProjectModule } from '@/modules/introduction/project/admin/project
 
 // Import public modules
 import { PublicProjectModule } from '@/modules/introduction/project/public/project.module';
+import { ProjectRepositoryModule } from './project.repository.module';
 
 @Module({
   imports: [
+    ProjectRepositoryModule,
     // Admin modules
     AdminProjectModule,
     // Public modules
@@ -15,5 +17,5 @@ import { PublicProjectModule } from '@/modules/introduction/project/public/proje
   ],
   exports: [],
 })
-export class ProjectModule {}
+export class ProjectModule { }
 

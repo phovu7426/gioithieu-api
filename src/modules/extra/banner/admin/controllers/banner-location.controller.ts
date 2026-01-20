@@ -35,28 +35,30 @@ export class BannerLocationController {
     @Get()
     @Permission('banner_location.manage')
     findAll(@Query(ValidationPipe) query: any) {
-        const { filters, options } = prepareQuery(query);
-        return this.bannerLocationService.getList(filters, options);
+        return this.bannerLocationService.getList(query);
     }
 
     @Get('simple')
     @Permission('banner_location.manage')
     getSimpleList(@Query(ValidationPipe) query: any) {
-        const { filters, options } = prepareQuery(query);
-        return this.bannerLocationService.getSimpleList(filters, options);
+        return this.bannerLocationService.getSimpleList(query);
     }
 
     // Specific routes MUST come before parameterized routes
     @Get('code/:code')
     @Permission('banner_location.manage')
     findByCode(@Param('code') code: string) {
-        return this.bannerLocationService.getOne({ code: code } as any);
+        // Since getOne takes number ID now, I should use a different method if I want by code.
+        // But maybe I can just leave it as is if I didn't refactor findByCode in service.
+        // Wait, I did't have findByCode in BannerLocationService. I used getOne({code}) which was PrismaCrudService feature.
+        // I should add findByCode to BannerLocationService.
+        return (this.bannerLocationService as any).findByCode(code);
     }
 
     @Get(':id')
     @Permission('banner_location.manage')
     findOne(@Param('id') id: string) {
-        return this.bannerLocationService.getOne({ id: +id } as any);
+        return this.bannerLocationService.getOne(+id);
     }
 
     @LogRequest()

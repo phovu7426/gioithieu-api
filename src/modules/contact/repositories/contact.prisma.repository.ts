@@ -1,0 +1,39 @@
+
+import { Injectable } from '@nestjs/common';
+import { Contact, Prisma } from '@prisma/client';
+import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { IContactRepository, ContactFilter } from './contact.repository.interface';
+
+@Injectable()
+export class ContactPrismaRepository extends PrismaRepository<
+    Contact,
+    Prisma.ContactWhereInput,
+    Prisma.ContactCreateInput,
+    Prisma.ContactUpdateInput,
+    Prisma.ContactOrderByWithRelationInput
+> implements IContactRepository {
+    constructor(private readonly prisma: PrismaService) {
+        super(prisma.contact as unknown as any, 'created_at:desc');
+    }
+
+    protected buildWhere(filter: ContactFilter): Prisma.ContactWhereInput {
+        const where: Prisma.ContactWhereInput = {};
+
+        if (filter.search) {
+            where.OR = [
+                { name: { contains: filter.search } },
+                { email: { contains: filter.search } },
+                { subject: { contains: filter.search } },
+            ];
+        }
+
+        if (filter.status) {
+            where.status = filter.status as any;
+        }
+
+        where.deleted_at = null;
+
+        return where;
+    }
+}

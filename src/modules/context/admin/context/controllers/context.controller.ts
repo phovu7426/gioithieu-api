@@ -13,7 +13,7 @@ export class AdminContextController {
   constructor(
     private readonly contextService: AdminContextService,
     private readonly auth: AuthService,
-  ) {}
+  ) { }
 
   /**
    * Tạo context mới (chỉ system admin)
@@ -43,14 +43,7 @@ export class AdminContextController {
   @Permission('public')
   @Get()
   async getContexts(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-
-    // Backward-compatible: vẫn cho phép ?type=shop
-    if (query.type && !filters.type) {
-      (filters as any).type = query.type;
-    }
-
-    return this.contextService.getList(filters, options);
+    return this.contextService.getList(query);
   }
 
   /**

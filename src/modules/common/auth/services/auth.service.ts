@@ -1,10 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { LoginDto } from '@/modules/common/auth/dto/login.dto';
-import { RegisterDto } from '@/modules/common/auth/dto/register.dto';
 import { ConfigService } from '@nestjs/config';
 import { UserStatus } from '@/shared/enums/types/user-status.enum';
 import { RedisUtil } from '@/core/utils/redis.util';
@@ -14,12 +10,16 @@ import { AttemptLimiterService } from '@/core/security/attempt-limiter.service';
 import { safeUser } from '@/modules/common/auth/utils/user.util';
 import { ForgotPasswordDto } from '@/modules/common/auth/dto/forgot-password.dto';
 import { ResetPasswordDto } from '@/modules/common/auth/dto/reset-password.dto';
+import { LoginDto } from '@/modules/common/auth/dto/login.dto';
+import { RegisterDto } from '@/modules/common/auth/dto/register.dto';
 import * as crypto from 'crypto';
+import { IUserRepository, USER_REPOSITORY } from '@/modules/common/user-management/repositories/user.repository.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly redis: RedisUtil,
@@ -39,29 +39,22 @@ export class AuthService {
       );
     }
 
-    // Tìm user bằng email (case-insensitive)
-    const user = await this.prisma.user.findFirst({
+    // Tìm user bằng email (case-insensitive) - repo findByEmail can handle this or just findFirst
+    const user = await this.userRepo.findFirst({
       where: {
         email: {
           equals: dto.email.toLowerCase(),
         },
       },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        password: true,
-        status: true,
-      },
     });
 
     let authError: string | null = null;
 
-    if (!user || !user.password) {
+    if (!user || !(user as any).password) {
       await this.accountLockoutService.add(scope, identifier);
       authError = 'Email hoặc mật khẩu không đúng.';
     } else {
-      const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+      const isPasswordValid = await bcrypt.compare(dto.password, (user as any).password);
       if (!isPasswordValid) {
         await this.accountLockoutService.add(scope, identifier);
         authError = 'Email hoặc mật khẩu không đúng.';
@@ -76,12 +69,7 @@ export class AuthService {
 
     await this.accountLockoutService.reset(scope, identifier);
 
-    this.prisma.user
-      .update({
-        where: { id: BigInt(user!.id) },
-        data: { last_login_at: new Date() },
-      })
-      .catch(() => undefined);
+    this.userRepo.updateLastLogin(user!.id).catch(() => undefined);
 
     const numericUserId = Number(user!.id);
     const { accessToken, refreshToken, refreshJti, accessTtlSec } = this.tokenService.generateTokens(numericUserId, user!.email!);
@@ -94,44 +82,40 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    const existingByEmail = await this.prisma.user.findFirst({ where: { email: dto.email } });
+    const existingByEmail = await this.userRepo.findByEmail(dto.email);
     if (existingByEmail) {
       throw new Error('Email đã được sử dụng.');
     }
 
     if (dto.username) {
-      const existingByUsername = await this.prisma.user.findFirst({ where: { username: dto.username } });
+      const existingByUsername = await this.userRepo.findByUsername(dto.username);
       if (existingByUsername) {
         throw new Error('Tên đăng nhập đã được sử dụng.');
       }
     }
 
     if (dto.phone) {
-      const existingByPhone = await this.prisma.user.findFirst({ where: { phone: dto.phone } });
+      const existingByPhone = await this.userRepo.findByPhone(dto.phone);
       if (existingByPhone) {
         throw new Error('Số điện thoại đã được sử dụng.');
       }
     }
 
     const hashed = await bcrypt.hash(dto.password, 10);
-    const saved = await this.prisma.user.create({
-      data: {
-        username: dto.username ?? dto.email,
-        email: dto.email,
-        phone: dto.phone ?? null,
-        password: hashed,
-        name: dto.name, // Set name trong users
-        status: UserStatus.active as any,
-      },
+    const saved = await this.userRepo.create({
+      username: dto.username ?? dto.email,
+      email: dto.email,
+      phone: dto.phone ?? null,
+      password: hashed,
+      name: dto.name,
+      status: UserStatus.active as any,
     });
-    
+
     return { user: safeUser(saved) };
   }
 
   async logout(userId: number, token?: string) {
-    const user = await this.prisma.user.findFirst({
-      where: { id: BigInt(userId) },
-    });
+    const user = await this.userRepo.findById(userId);
     if (!user) {
       throw new Error('Người dùng không tồn tại');
     }
@@ -187,18 +171,13 @@ export class AuthService {
   }
 
   async me(userId: number) {
-    const user = await this.prisma.user.findFirst({
-      where: { id: BigInt(userId) },
-    });
+    const user = await this.userRepo.findById(userId);
     if (!user) throw new Error('Không thể lấy thông tin user');
     return safeUser(user);
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.prisma.user.findFirst({
-      where: { email: dto.email },
-      select: { id: true, email: true },
-    });
+    const user = await this.userRepo.findOne({ email: dto.email });
 
     if (user && user.email) {
       const token = crypto.randomBytes(32).toString('hex');
@@ -206,9 +185,6 @@ export class AuthService {
       const data = JSON.stringify({ userId: user.id.toString(), email: user.email });
 
       await this.redis.set(key, data, 3600); // 1 hour TTL
-
-      // Log token in development
-      // Removed console.log for production
     }
 
     return null;
@@ -239,12 +215,9 @@ export class AuthService {
       }
     }
 
-    let user: { id: bigint; email: string | null } | null = null;
+    let user: any = null;
     if (!resetError && userIdForReset) {
-      user = await this.prisma.user.findFirst({
-        where: { id: BigInt(userIdForReset) },
-        select: { id: true, email: true },
-      });
+      user = await this.userRepo.findById(userIdForReset);
       if (!user) resetError = 'Người dùng không tồn tại.';
     }
 
@@ -253,10 +226,7 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    await this.prisma.user.update({
-      where: { id: user!.id },
-      data: { password: hashedPassword },
-    });
+    await this.userRepo.update(user!.id, { password: hashedPassword });
     await this.redis.del(key);
     await this.accountLockoutService.reset('auth:login', user!.email!.toLowerCase());
 
@@ -282,35 +252,27 @@ export class AuthService {
 
     const now = new Date();
 
-    // Dùng upsert để tối ưu: chỉ 1 query thay vì findFirst + create/update
-    const dbUser = await this.prisma.user.upsert({
-      where: { email },
-      create: {
+    // Dùng upsert
+    const dbUser = await this.userRepo.upsert(
+      { email },
+      {
         email,
         username,
         name: fullName,
         image: user.picture ?? null,
         status: UserStatus.active as any,
         googleId: user.googleId,
-        email_verified_at: now, // Google email đã được xác thực
+        email_verified_at: now,
         last_login_at: now,
       },
-      update: {
+      {
         last_login_at: now,
-        email_verified_at: now, // Luôn cập nhật email_verified_at khi login bằng Google
+        email_verified_at: now,
         ...(user.picture && { image: user.picture }),
         ...(fullName && { name: fullName }),
         ...(user.googleId && { googleId: user.googleId }),
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        status: true,
-        image: true,
-        name: true,
-      },
-    });
+      }
+    );
 
     // Kiểm tra status
     if (dbUser.status !== UserStatus.active) {

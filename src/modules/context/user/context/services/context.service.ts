@@ -1,77 +1,77 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { IContextRepository, CONTEXT_REPOSITORY } from '@/modules/context/repositories/context.repository.interface';
+import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/context/repositories/group.repository.interface';
+import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '@/modules/rbac/repositories/user-group.repository.interface';
 
 @Injectable()
 export class UserContextService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+    @Inject(CONTEXT_REPOSITORY)
+    private readonly contextRepo: IContextRepository,
+    @Inject(GROUP_REPOSITORY)
+    private readonly groupRepo: IGroupRepository,
+    @Inject(USER_GROUP_REPOSITORY)
+    private readonly userGroupRepo: IUserGroupRepository,
+  ) { }
 
-  /**
-   * Lấy tất cả contexts mà user có quyền truy cập (thông qua groups)
-   */
-  async getUserContexts(userId: number): Promise<Prisma.ContextGetPayload<any>[]> {
-    const userGroups = await this.prisma.userGroup.findMany({
+  async getUserContexts(userId: number) {
+    const userGroups = await this.userGroupRepo.findMany({
       where: { user_id: BigInt(userId) },
-      select: { group_id: true },
     });
 
     if (!userGroups.length) return [];
 
     const groupIds = Array.from(new Set(userGroups.map((ug) => ug.group_id)));
 
-    const groups = await this.prisma.group.findMany({
+    const groups = await this.groupRepo.findMany({
       where: {
-        id: { in: groupIds },
+        id: { in: groupIds.map(id => BigInt(id)) },
         status: 'active' as any,
-      },
-      select: { context_id: true },
+      } as any,
     });
 
     const contextIds = Array.from(new Set(groups.map((g) => g.context_id)));
     if (!contextIds.length) return [];
 
-    const contexts = await this.prisma.context.findMany({
+    const contexts = await this.contextRepo.findMany({
       where: {
         id: { in: contextIds },
         status: 'active' as any,
-      },
+      } as any,
     });
 
-    return contexts as any;
+    return contexts.map(ctx => this.transform(ctx));
   }
 
-  /**
-   * Lấy các contexts được phép truy cập
-   * - System context (id=1) luôn được phép cho mọi user đã authenticated
-   * - Các contexts khác chỉ được phép nếu user có role trong đó
-   */
-  async getUserContextsForTransfer(userId: number): Promise<Prisma.ContextGetPayload<any>[]> {
-    // Lấy system context (id=1) - luôn được phép
-    const systemContext = await this.prisma.context.findFirst({
+  async getUserContextsForTransfer(userId: number) {
+    const systemContext = await this.contextRepo.findFirst({
       where: {
         id: BigInt(1),
         status: 'active' as any,
       },
     });
 
-    // Lấy các contexts mà user có quyền truy cập (có role)
     const userContexts = await this.getUserContexts(userId);
 
-    // Gộp lại và loại bỏ trùng lặp (nếu system context đã có trong userContexts)
-    const allContexts: Prisma.ContextGetPayload<any>[] = [];
+    const allContexts: any[] = [];
     if (systemContext) {
-      allContexts.push(systemContext as any);
+      allContexts.push(this.transform(systemContext));
     }
     allContexts.push(...userContexts);
-    
-    // Loại bỏ trùng lặp dựa trên ID
+
     const uniqueContexts = allContexts.filter(
       (ctx, index, self) => index === self.findIndex((c) => Number(c.id) === Number(ctx.id)),
     );
 
     return uniqueContexts;
+  }
+
+  private transform(context: any) {
+    if (!context) return context;
+    const item = { ...context };
+    if (item.id) item.id = Number(item.id);
+    if (item.ref_id) item.ref_id = Number(item.ref_id);
+    return item;
   }
 }
 

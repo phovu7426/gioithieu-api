@@ -1,134 +1,71 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Banner, BannerLocation } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { IBannerRepository, BANNER_REPOSITORY } from '@/modules/extra/banner/repositories/banner.repository.interface';
+import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY } from '@/modules/extra/banner/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-type PublicBannerBag = PrismaListBag & {
-    Model: Banner;
-    Where: Prisma.BannerWhereInput;
-    Select: Prisma.BannerSelect;
-    Include: Prisma.BannerInclude;
-    OrderBy: Prisma.BannerOrderByWithRelationInput;
-};
 
 @Injectable()
-export class PublicBannerService extends PrismaListService<PublicBannerBag> {
+export class PublicBannerService {
     constructor(
-        private readonly prisma: PrismaService,
-    ) {
-        super(prisma.banner, ['id', 'created_at', 'sort_order'], 'id:DESC');
-    }
+        @Inject(BANNER_REPOSITORY)
+        private readonly bannerRepo: IBannerRepository,
+        @Inject(BANNER_LOCATION_REPOSITORY)
+        private readonly locationRepo: IBannerLocationRepository,
+    ) { }
 
-    /**
-     * Override prepareFilters để thêm filter active banners + date range
-     * Lọc: status = active, start_date <= now, end_date >= now (hoặc null)
-     */
-    protected override async prepareFilters(
-        filters?: Prisma.BannerWhereInput,
-    ): Promise<Prisma.BannerWhereInput | true | undefined> {
-        const now = new Date();
-        const prepared: Prisma.BannerWhereInput = {
-            ...(filters || {}),
-            status: BasicStatus.active as any,
-            start_date: {
-                lte: now,
-            } as any,
-            end_date: {
-                gte: now,
-            } as any,
-        };
+    async findByLocationCode(locationCode: string) {
+        const location = await this.locationRepo.findByCode(locationCode);
 
-        return prepared;
-    }
-
-    /**
-     * Override prepareOptions để set default sort
-     */
-    protected override prepareOptions(queryOptions: any = {}) {
-        const base = super.prepareOptions(queryOptions);
-
-        const include: Prisma.BannerInclude = queryOptions?.include ?? {
-            location: true,
-        };
-
-        const orderBy: Prisma.BannerOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-            { sort_order: 'asc' },
-            { created_at: 'desc' },
-        ];
-
-        return {
-            ...base,
-            include,
-            orderBy,
-        };
-    }
-
-    async findByLocationCode(locationCode: string): Promise<PublicBannerBag['Model'][]> {
-        const location = await this.prisma.bannerLocation.findFirst({
-            where: {
-                code: locationCode,
-                status: BasicStatus.active as any,
-            },
-        });
-
-        if (!location) {
-            throw new NotFoundException(`Vị trí banner với mã "${locationCode}" không tồn tại hoặc không hoạt động`);
+        if (!location || (location as any).status !== BasicStatus.active) {
+            throw new NotFoundException(`Vị trí banner with code "${locationCode}" not found or inactive`);
         }
 
-        // Tận dụng getList với filters
-        const result = await this.getList(
-            { location_id: location.id } as any,
-            { limit: 1000, page: 1 },
-        );
-
-        return result.data;
+        const banners = await this.bannerRepo.findAllByLocation(locationCode);
+        return banners.map(item => this.transform(item));
     }
 
-    async findActiveBanners(locationCode?: string): Promise<{
-        [locationCode: string]: PublicBannerBag['Model'][];
-    }> {
-        const where: Prisma.BannerLocationWhereInput = {
-            status: BasicStatus.active as any,
-            ...(locationCode ? { code: locationCode } : {}),
-        };
+    async findActiveBanners(locationCode?: string) {
+        const query: any = { status: BasicStatus.active };
+        if (locationCode) query.search = locationCode; // repository buildWhere uses search for code too
 
-        const locations = await this.prisma.bannerLocation.findMany({
-            where,
+        const locations = await this.locationRepo.findAll({
+            filter: { status: BasicStatus.active, search: locationCode },
+            limit: 1000
         });
 
-        const result: { [locationCode: string]: PublicBannerBag['Model'][] } = {};
+        const result: { [locationCode: string]: any[] } = {};
 
-        // Tận dụng getList cho mỗi location
-        for (const location of locations) {
-            const bannerResult = await this.getList(
-                { location_id: location.id } as any,
-                { limit: 1000, page: 1 },
-            );
-
-            if (bannerResult.data.length > 0) {
-                result[location.code] = bannerResult.data;
+        for (const location of locations.data) {
+            const banners = await this.bannerRepo.findAllByLocation((location as any).code);
+            if (banners.length > 0) {
+                result[(location as any).code] = banners.map(item => this.transform(item));
             }
         }
 
         return result;
     }
 
-    async findBannerById(id: number): Promise<PublicBannerBag['Model']> {
-        // Tận dụng getOne với relations và filters
-        const banner = await this.getOne(
-            { id: BigInt(id), status: BasicStatus.active as any } as any,
-            {
-                include: {
-                    location: true,
-                },
-            },
-        );
+    async findBannerById(id: number) {
+        const banner = await this.bannerRepo.findById(id);
 
-        if (!banner) {
-            throw new NotFoundException(`Banner với ID ${id} không tồn tại hoặc không hoạt động`);
+        if (!banner || (banner as any).status !== BasicStatus.active) {
+            throw new NotFoundException(`Banner with ID ${id} not found or inactive`);
         }
 
-        return banner;
+        return this.transform(banner);
+    }
+
+    private transform(banner: any) {
+        if (!banner) return banner;
+        const item = { ...banner };
+        if (item.id) item.id = Number(item.id);
+        if (item.location_id) item.location_id = Number(item.location_id);
+        if (item.location) {
+            item.location = {
+                id: Number(item.location.id),
+                name: item.location.name,
+                code: item.location.code,
+            };
+        }
+        return item;
     }
 }

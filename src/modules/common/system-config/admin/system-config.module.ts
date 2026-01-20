@@ -4,8 +4,10 @@ import { EmailConfigController } from './controllers/email-config.controller';
 import { GeneralConfigService } from './services/general-config.service';
 import { EmailConfigService } from './services/email-config.service';
 
+import { SystemConfigRepositoryModule } from '../system-config.repository.module';
+
 @Module({
-  imports: [],
+  imports: [SystemConfigRepositoryModule],
   controllers: [
     GeneralConfigController,
     EmailConfigController,
@@ -19,4 +21,4 @@ import { EmailConfigService } from './services/email-config.service';
     EmailConfigService,
   ],
 })
-export class AdminSystemConfigModule {}
+export class AdminSystemConfigModule { }

@@ -5,13 +5,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('faqs')
 export class PublicFaqController {
-  constructor(private readonly faqService: PublicFaqService) {}
+  constructor(private readonly faqService: PublicFaqService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.faqService.getList(filters, options);
+    return this.faqService.getList(query);
   }
 
   @Permission('public')
@@ -23,7 +22,7 @@ export class PublicFaqController {
   @Permission('public')
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    const faq = await this.faqService.getOne({ id: BigInt(id) } as any);
+    const faq = await this.faqService.getOne(+id);
     // Increment view count
     await this.faqService.incrementViewCount(Number(id));
     return faq;

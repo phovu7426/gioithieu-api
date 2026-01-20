@@ -15,7 +15,7 @@ export class PostCommentController {
         @Query('page') page: string = '1',
         @Query('limit') limit: string = '10',
     ) {
-        return this.commentService.getCommentsByPost(BigInt(postId), {
+        return this.commentService.getCommentsByPost(Number(postId), {
             page: parseInt(page),
             limit: parseInt(limit),
         });
@@ -30,10 +30,10 @@ export class PostCommentController {
         @Req() req: any,
     ) {
         return this.commentService.createComment({
-            post_id: BigInt(postId),
+            post_id: Number(postId),
             user_id: req.user.id,
             content: body.content,
-            parent_id: body.parent_id ? BigInt(body.parent_id) : undefined,
+            parent_id: body.parent_id ? Number(body.parent_id) : undefined,
         });
     }
 }

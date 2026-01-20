@@ -6,13 +6,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('about-sections')
 export class PublicAboutController {
-  constructor(private readonly aboutService: PublicAboutService) {}
+  constructor(private readonly aboutService: PublicAboutService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.aboutService.getList(filters, options);
+    return this.aboutService.getList(query);
   }
 
   @Permission('public')

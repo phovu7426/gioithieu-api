@@ -35,15 +35,13 @@ export class BannerController {
     @Get()
     @Permission('banner.manage')
     findAll(@Query(ValidationPipe) query: any) {
-        const { filters, options } = prepareQuery(query);
-        return this.bannerService.getList(filters, options);
+        return this.bannerService.getList(query);
     }
 
     @Get('simple')
     @Permission('banner.manage')
     getSimpleList(@Query(ValidationPipe) query: any) {
-        const { filters, options } = prepareQuery(query);
-        return this.bannerService.getSimpleList(filters, options);
+        return this.bannerService.getSimpleList(query);
     }
 
     // Specific routes MUST come before parameterized routes
@@ -56,7 +54,7 @@ export class BannerController {
     @Get(':id')
     @Permission('banner.manage')
     findOne(@Param('id') id: string) {
-        return this.bannerService.getOne({ id: +id } as any);
+        return this.bannerService.getOne(+id);
     }
 
     @LogRequest()

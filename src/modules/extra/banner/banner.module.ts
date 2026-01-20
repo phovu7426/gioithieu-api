@@ -6,9 +6,11 @@ import { AdminBannerLocationModule } from '@/modules/extra/banner/admin/banner-l
 
 // Import public modules
 import { PublicBannerModule } from '@/modules/extra/banner/public/banner.module';
+import { BannerRepositoryModule } from './banner.repository.module';
 
 @Module({
     imports: [
+        BannerRepositoryModule,
         // Admin modules
         AdminBannerModule,
         AdminBannerLocationModule,

@@ -1,50 +1,56 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, AboutSection } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { IAboutRepository, ABOUT_REPOSITORY, AboutFilter } from '@/modules/common/about/repositories/about.repository.interface';
 import { StringUtil } from '@/core/utils/string.util';
 
-type AdminAboutBag = PrismaCrudBag & {
-  Model: AboutSection;
-  Where: Prisma.AboutSectionWhereInput;
-  Select: Prisma.AboutSectionSelect;
-  Include: Record<string, never>;
-  OrderBy: Prisma.AboutSectionOrderByWithRelationInput;
-  Create: Prisma.AboutSectionCreateInput;
-  Update: Prisma.AboutSectionUpdateInput;
-};
-
 @Injectable()
-export class AboutService extends PrismaCrudService<AdminAboutBag> {
+export class AboutService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.aboutSection, ['id', 'created_at', 'sort_order'], 'id:DESC');
+    @Inject(ABOUT_REPOSITORY)
+    private readonly aboutRepo: IAboutRepository,
+  ) { }
+
+  async getList(query: any) {
+    const filter: AboutFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.section_type) filter.section_type = query.section_type;
+    if (query.status) filter.status = query.status;
+
+    const result = await this.aboutRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort || 'sort_order:ASC,created_at:DESC',
+      filter,
+    });
+
+    result.data = result.data.map((item) => this.transform(item));
+    return result;
   }
 
-  protected override async beforeCreate(createDto: AdminAboutBag['Create']): Promise<AdminAboutBag['Create']> {
-    const payload = { ...createDto };
-    await this.ensureSlug(payload);
-    return payload;
+  async getOne(id: number) {
+    const about = await this.aboutRepo.findById(id);
+    return this.transform(about);
   }
 
-  protected override async beforeUpdate(
-    where: Prisma.AboutSectionWhereInput,
-    updateDto: AdminAboutBag['Update'],
-  ): Promise<AdminAboutBag['Update']> {
-    const payload = { ...updateDto };
-    const id = (where as any).id ? BigInt((where as any).id) : null;
-    const current = id
-      ? await this.prisma.aboutSection.findFirst({ where: { id } })
-      : null;
-    await this.ensureSlug(payload, id ? Number(id) : undefined, current?.slug || undefined);
-    return payload;
+  async create(data: any) {
+    await this.ensureSlug(data);
+    const about = await this.aboutRepo.create(data);
+    return this.getOne(Number(about.id));
+  }
+
+  async update(id: number, data: any) {
+    const current = await this.aboutRepo.findById(id);
+    await this.ensureSlug(data, id, current?.slug);
+    await this.aboutRepo.update(id, data);
+    return this.getOne(id);
+  }
+
+  async delete(id: number) {
+    return this.aboutRepo.delete(id);
   }
 
   private async ensureSlug(data: any, excludeId?: number, currentSlug?: string): Promise<void> {
     if (data.title && !data.slug) {
       data.slug = StringUtil.toSlug(data.title);
-      return;
     }
 
     if (data.slug) {
@@ -56,19 +62,18 @@ export class AboutService extends PrismaCrudService<AdminAboutBag> {
         return;
       }
 
-      const existing = await this.prisma.aboutSection.findFirst({
-        where: {
-          slug: normalizedSlug,
-          deleted_at: null,
-          ...(excludeId ? { id: { not: BigInt(excludeId) } } : {}),
-        },
+      const existing = await this.aboutRepo.findOne({
+        slug: normalizedSlug,
+        deleted_at: null,
+        ...(excludeId ? { id: { not: BigInt(excludeId) } } : {}),
       });
 
       if (existing) {
         let counter = 1;
         let uniqueSlug = `${normalizedSlug}-${counter}`;
-        while (await this.prisma.aboutSection.findFirst({
-          where: { slug: uniqueSlug, deleted_at: null },
+        while (await this.aboutRepo.findOne({
+          slug: uniqueSlug,
+          deleted_at: null,
         })) {
           counter++;
           uniqueSlug = `${normalizedSlug}-${counter}`;
@@ -80,16 +85,11 @@ export class AboutService extends PrismaCrudService<AdminAboutBag> {
     }
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.AboutSectionOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      orderBy,
-    };
+  private transform(about: any) {
+    if (!about) return about;
+    const item = { ...about };
+    if (item.id) item.id = Number(item.id);
+    return item;
   }
 }
 

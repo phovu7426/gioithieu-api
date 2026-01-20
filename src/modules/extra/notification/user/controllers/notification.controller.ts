@@ -6,6 +6,7 @@ import {
   Query,
   UseGuards,
   Request,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RbacGuard } from '@/common/guards/rbac.guard';
@@ -28,22 +29,20 @@ export class NotificationController {
     @Request() req: { user: AuthUser },
     @Query() query: GetNotificationsDto,
   ) {
-    const { filters, options } = prepareQuery(query);
-    return this.notificationService.getList(filters, options);
+    return this.notificationService.getList({ ...query, userId: req.user.id });
   }
 
   @Get('unread')
   @Permission('notification.manage')
   async getUnread(@Request() req: { user: AuthUser }) {
-    return this.notificationService.getList({ is_read: false });
+    return this.notificationService.getList({ isRead: false, userId: req.user.id });
   }
 
   @Get('unread/count')
   @Permission('notification.manage')
   async getUnreadCount(@Request() req: { user: AuthUser }) {
     const result = await this.notificationService.getList(
-      { user_id: req.user.id, is_read: false, status: BasicStatus.active },
-      { page: 1, limit: 1 }
+      { userId: req.user.id, isRead: false, status: BasicStatus.active, page: 1, limit: 1 },
     );
     return { success: true, data: { count: result.meta?.totalItems || 0 }, message: 'Unread count retrieved successfully' };
   }
@@ -54,7 +53,12 @@ export class NotificationController {
     @Param('id') id: string,
     @Request() req: { user: AuthUser },
   ) {
-    return this.notificationService.getOne({ id: +id, user_id: req.user.id });
+    // Current getOne only takes ID, we should ensure user owns it.
+    const notification = await this.notificationService.getOne(+id);
+    if (!notification || notification.user_id !== req.user.id) {
+      throw new NotFoundException('Notification not found');
+    }
+    return notification;
   }
 
   @LogRequest()

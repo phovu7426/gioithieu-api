@@ -22,7 +22,7 @@ export class ContactController {
   constructor(
     private readonly contactService: ContactService,
     private readonly auth: AuthService,
-  ) {}
+  ) { }
 
   @Permission('contact.manage')
   @LogRequest()
@@ -34,21 +34,19 @@ export class ContactController {
   @Permission('contact.manage')
   @Get()
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.contactService.getList(filters, options);
+    return this.contactService.getList(query);
   }
 
   @Permission('contact.manage')
   @Get('simple')
   getSimpleList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.contactService.getSimpleList(filters, options);
+    return this.contactService.getSimpleList(query);
   }
 
   @Permission('contact.manage')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.contactService.getOne({ id: +id } as any);
+    return this.contactService.getOne(+id);
   }
 
   @Permission('contact.manage')

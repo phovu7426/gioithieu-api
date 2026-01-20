@@ -1,0 +1,48 @@
+
+import { Injectable } from '@nestjs/common';
+import { Gallery, Prisma } from '@prisma/client';
+import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { IGalleryRepository, GalleryFilter } from './gallery.repository.interface';
+
+@Injectable()
+export class GalleryPrismaRepository extends PrismaRepository<
+    Gallery,
+    Prisma.GalleryWhereInput,
+    Prisma.GalleryCreateInput,
+    Prisma.GalleryUpdateInput,
+    Prisma.GalleryOrderByWithRelationInput
+> implements IGalleryRepository {
+    constructor(private readonly prisma: PrismaService) {
+        super(prisma.gallery as unknown as any, 'sort_order:asc');
+    }
+
+    protected buildWhere(filter: GalleryFilter): Prisma.GalleryWhereInput {
+        const where: Prisma.GalleryWhereInput = {};
+
+        if (filter.search) {
+            where.OR = [
+                { title: { contains: filter.search } },
+                { slug: { contains: filter.search } },
+            ];
+        }
+
+        if (filter.status) {
+            where.status = filter.status as any;
+        }
+
+        if (filter.isFeatured !== undefined) {
+            where.featured = filter.isFeatured;
+        }
+
+        where.deleted_at = null;
+
+        return where;
+    }
+
+    async findBySlug(slug: string): Promise<Gallery | null> {
+        return this.prisma.gallery.findFirst({
+            where: { slug, deleted_at: null },
+        });
+    }
+}

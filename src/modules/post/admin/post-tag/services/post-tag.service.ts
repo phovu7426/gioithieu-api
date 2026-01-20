@@ -1,69 +1,51 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { PostTag } from '@prisma/client';
 import { StringUtil } from '@/core/utils/string.util';
-
-type AdminPostTagBag = PrismaCrudBag & {
-  Model: Prisma.PostTagGetPayload<any>;
-  Where: Prisma.PostTagWhereInput;
-  Select: Prisma.PostTagSelect;
-  Include: Prisma.PostTagInclude;
-  OrderBy: Prisma.PostTagOrderByWithRelationInput;
-  Create: Prisma.PostTagUncheckedCreateInput;
-  Update: Prisma.PostTagUncheckedUpdateInput;
-};
+import { IPostTagRepository, POST_TAG_REPOSITORY, PostTagFilter } from '@/modules/post/repositories/post-tag.repository.interface';
 
 @Injectable()
-export class PostTagService extends PrismaCrudService<AdminPostTagBag> {
+export class PostTagService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.postTag, ['id', 'created_at', 'name', 'slug'], 'id:DESC');
+    @Inject(POST_TAG_REPOSITORY)
+    private readonly tagRepo: IPostTagRepository,
+  ) { }
+
+  async getList(query: any) {
+    const filter: PostTagFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.status !== undefined) filter.status = query.status;
+
+    return this.tagRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
   }
 
-  protected override async beforeCreate(createDto: AdminPostTagBag['Create']): Promise<AdminPostTagBag['Create']> {
-    const payload: any = { ...createDto };
+  async getSimpleList(query: any) {
+    return this.getList({ ...query, limit: 1000 });
+  }
+
+  async getOne(id: number) {
+    return this.tagRepo.findById(id);
+  }
+
+  async create(data: any) {
+    const payload = { ...data };
     this.normalizeSlug(payload);
-    return payload;
+    return this.tagRepo.create(payload);
   }
 
-  protected override async beforeUpdate(
-    where: Prisma.PostTagWhereInput,
-    updateDto: AdminPostTagBag['Update'],
-  ): Promise<AdminPostTagBag['Update']> {
-    const payload: any = { ...updateDto };
-    this.normalizeSlug(payload);
-    if ((where as any).id !== undefined) {
-      (where as any).id = this.toBigInt((where as any).id);
-    }
-    return payload;
-  }
-
-  override async getOne(where: Prisma.PostTagWhereInput, options?: any) {
-    const normalizedWhere = { ...(where || {}) } as Prisma.PostTagWhereInput;
-    if ((normalizedWhere as any).id !== undefined) {
-      (normalizedWhere as any).id = this.toBigInt((normalizedWhere as any).id);
-    }
-    return super.getOne(normalizedWhere, options);
-  }
-
-  async getSimpleList(filters?: Prisma.PostTagWhereInput, options?: any) {
-    const simpleOptions = {
-      ...options,
-      limit: options?.limit ?? 50,
-      maxLimit: options?.maxLimit ?? 1000,
-    };
-    return this.getList(filters, simpleOptions);
-  }
-
-  // Giữ API cũ cho controller
-  async update(id: number, data: AdminPostTagBag['Update']) {
-    return super.update({ id: this.toBigInt(id) } as any, data);
+  async update(id: number, data: any) {
+    const payload = { ...data };
+    const current = await this.tagRepo.findById(id);
+    this.normalizeSlug(payload, current?.slug);
+    return this.tagRepo.update(id, payload);
   }
 
   async delete(id: number) {
-    return super.delete({ id: this.toBigInt(id) } as any);
+    return this.tagRepo.delete(id);
   }
 
   private normalizeSlug(data: any, currentSlug?: string) {
@@ -79,14 +61,6 @@ export class PostTagService extends PrismaCrudService<AdminPostTagBag> {
         data.slug = normalized;
       }
     }
-  }
-
-  private toBigInt(value?: number | string | bigint | null): bigint | null {
-    if (value === null || value === undefined) return null;
-    if (typeof value === 'bigint') return value;
-    const num = typeof value === 'string' ? Number(value) : value;
-    if (Number.isNaN(num)) return null;
-    return BigInt(num);
   }
 }
 

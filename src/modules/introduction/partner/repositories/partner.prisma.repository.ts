@@ -1,0 +1,42 @@
+
+import { Injectable } from '@nestjs/common';
+import { Partner, Prisma } from '@prisma/client';
+import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { IPartnerRepository, PartnerFilter } from './partner.repository.interface';
+
+@Injectable()
+export class PartnerPrismaRepository extends PrismaRepository<
+    Partner,
+    Prisma.PartnerWhereInput,
+    Prisma.PartnerCreateInput,
+    Prisma.PartnerUpdateInput,
+    Prisma.PartnerOrderByWithRelationInput
+> implements IPartnerRepository {
+    constructor(private readonly prisma: PrismaService) {
+        super(prisma.partner as unknown as any, 'sort_order:asc');
+    }
+
+    protected buildWhere(filter: PartnerFilter): Prisma.PartnerWhereInput {
+        const where: Prisma.PartnerWhereInput = {};
+
+        if (filter.search) {
+            where.OR = [
+                { name: { contains: filter.search } },
+                { description: { contains: filter.search } },
+            ];
+        }
+
+        if (filter.status) {
+            where.status = filter.status as any;
+        }
+
+        if (filter.type) {
+            where.type = filter.type as any;
+        }
+
+        where.deleted_at = null;
+
+        return where;
+    }
+}

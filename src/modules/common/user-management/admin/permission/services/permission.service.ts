@@ -1,137 +1,100 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, BadRequestException, Inject, NotFoundException } from '@nestjs/common';
+import { IPermissionRepository, PERMISSION_REPOSITORY, PermissionFilter } from '@/modules/common/user-management/repositories/permission.repository.interface';
 import { RbacCacheService } from '@/modules/rbac/services/rbac-cache.service';
 
-type PermissionBag = PrismaCrudBag & {
-  Model: Prisma.PermissionGetPayload<any>;
-  Where: Prisma.PermissionWhereInput;
-  Select: Prisma.PermissionSelect;
-  Include: Prisma.PermissionInclude;
-  OrderBy: Prisma.PermissionOrderByWithRelationInput;
-  Create: Prisma.PermissionUncheckedCreateInput & { parent_id?: number | null };
-  Update: Prisma.PermissionUncheckedUpdateInput & { parent_id?: number | null };
-};
-
 @Injectable()
-export class PermissionService extends PrismaCrudService<PermissionBag> {
+export class PermissionService {
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(PERMISSION_REPOSITORY)
+    private readonly permissionRepo: IPermissionRepository,
     private readonly rbacCache: RbacCacheService,
-  ) {
-    super(prisma.permission, ['id', 'created_at', 'code'], 'id:DESC');
+  ) { }
+
+  async getList(query: any) {
+    const filter: PermissionFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.status) filter.status = query.status;
+    if (query.scope) filter.scope = query.scope;
+    if (query.parentId !== undefined) filter.parentId = query.parentId;
+
+    const result = await this.permissionRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map((item) => this.transform(item));
+    return result;
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    return {
-      ...base,
-      include: {
-        parent: true,
-        children: true,
-      },
-    };
+  async getSimpleList(query: any) {
+    return this.getList({ ...query, limit: 1000 });
   }
 
-  /**
-   * Wrapper create với audit id (giữ nguyên signature của base create)
-   */
-  async createWithAudit(data: PermissionBag['Create'], createdBy?: number) {
-    const payload: PermissionBag['Create'] = {
-      ...data,
-      ...(createdBy ? { created_user_id: BigInt(createdBy), updated_user_id: BigInt(createdBy) } : {}),
-    };
-    return super.create(payload);
+  async getOne(id: number) {
+    const permission = await this.permissionRepo.findById(id);
+    return this.transform(permission);
   }
 
-  /**
-   * Wrapper update bằng id number + audit
-   */
-  async updateWithAudit(id: number, data: PermissionBag['Update'], updatedBy?: number) {
-    const payload: PermissionBag['Update'] = {
-      ...data,
-      ...(updatedBy ? { updated_user_id: BigInt(updatedBy) } : {}),
-    };
-    return super.update({ id: BigInt(id) } as any, payload);
-  }
-
-  /**
-   * Wrapper delete bằng id number
-   */
-  async deleteById(id: number) {
-    return super.delete({ id: BigInt(id) } as any);
-  }
-
-  /**
-   * Ensure code unique, handle parent_id
-   */
-  protected override async beforeCreate(createDto: PermissionBag['Create']): Promise<PermissionBag['Create']> {
-    const payload: any = { ...createDto };
+  async create(data: any, createdBy?: number) {
+    const payload = { ...data };
+    if (createdBy) {
+      payload.created_user_id = BigInt(createdBy);
+      payload.updated_user_id = BigInt(createdBy);
+    }
 
     if (payload.code) {
-      const exists = await this.prisma.permission.findFirst({ where: { code: payload.code } });
-      if (exists) {
-        throw new BadRequestException('Permission code already exists');
-      }
+      const exists = await this.permissionRepo.findByCode(payload.code);
+      if (exists) throw new BadRequestException('Permission code already exists');
     }
 
-    if (payload.parent_id !== undefined) {
-      if (payload.parent_id === null) {
-        payload.parent_id = null;
-      } else {
-        const parent = await this.prisma.permission.findUnique({ where: { id: BigInt(payload.parent_id) } });
-        payload.parent_id = parent ? BigInt(payload.parent_id) : null;
-      }
+    if (payload.parent_id) {
+      payload.parent_id = BigInt(payload.parent_id);
     }
 
-    return payload;
+    const permission = await this.permissionRepo.create(payload);
+    return this.getOne(Number(permission.id));
   }
 
-  /**
-   * Validate & normalize before update
-   */
-  protected override async beforeUpdate(where: Prisma.PermissionWhereInput, updateDto: PermissionBag['Update']): Promise<PermissionBag['Update']> {
-    const payload: any = { ...updateDto };
-    const permissionId = (where as any).id ? BigInt((where as any).id) : null;
-    const current = permissionId
-      ? await this.prisma.permission.findUnique({ where: { id: permissionId } })
-      : null;
+  async createWithAudit(data: any, createdBy?: number) {
+    return this.create(data, createdBy);
+  }
 
-    if (payload.code && payload.code !== current?.code) {
-      const exists = await this.prisma.permission.findFirst({ where: { code: payload.code } });
-      if (exists) {
-        throw new BadRequestException('Permission code already exists');
-      }
+  async update(id: number, data: any, updatedBy?: number) {
+    const payload = { ...data };
+    if (updatedBy) payload.updated_user_id = BigInt(updatedBy);
+
+    const current = await this.permissionRepo.findById(id);
+    if (!current) throw new NotFoundException('Permission not found');
+
+    if (payload.code && payload.code !== current.code) {
+      const exists = await this.permissionRepo.findByCode(payload.code);
+      if (exists) throw new BadRequestException('Permission code already exists');
     }
 
-    if (payload.parent_id !== undefined) {
-      if (payload.parent_id === null) {
-        payload.parent_id = null;
-      } else {
-        const parent = await this.prisma.permission.findUnique({ where: { id: BigInt(payload.parent_id) } });
-        payload.parent_id = parent ? BigInt(payload.parent_id) : null;
-      }
+    if (payload.parent_id) {
+      payload.parent_id = BigInt(payload.parent_id);
     }
+
+    await this.permissionRepo.update(id, payload);
 
     if (this.rbacCache && typeof this.rbacCache.bumpVersion === 'function') {
       await this.rbacCache.bumpVersion().catch(() => undefined);
     }
 
-    return payload;
+    return this.getOne(id);
   }
 
-  /**
-   * Check children before delete
-   */
-  protected override async beforeDelete(where: Prisma.PermissionWhereInput): Promise<boolean> {
-    const permissionId = (where as any).id ? BigInt((where as any).id) : null;
-    if (!permissionId) return true;
+  async updateWithAudit(id: number, data: any, updatedBy?: number) {
+    return this.update(id, data, updatedBy);
+  }
 
-    const childrenCount = await this.prisma.permission.count({ where: { parent_id: permissionId } });
-    if (childrenCount > 0) {
-      throw new BadRequestException('Cannot delete permission with children');
-    }
+  async delete(id: number) {
+    const childrenCount = await this.permissionRepo.count({ parent_id: BigInt(id), deleted_at: null });
+    if (childrenCount > 0) throw new BadRequestException('Cannot delete permission with children');
+
+    await this.permissionRepo.delete(id);
 
     if (this.rbacCache && typeof this.rbacCache.bumpVersion === 'function') {
       await this.rbacCache.bumpVersion().catch(() => undefined);
@@ -139,41 +102,23 @@ export class PermissionService extends PrismaCrudService<PermissionBag> {
     return true;
   }
 
-  /**
-   * Simple list tương tự getList nhưng limit mặc định lớn hơn
-   */
-  async getSimpleList(filters?: Prisma.PermissionWhereInput, options?: any) {
-    const simpleOptions = {
-      ...options,
-      limit: options?.limit ?? 50,
-      maxLimit: options?.maxLimit ?? 1000,
-    };
-    return this.getList(filters, simpleOptions);
-  }
-
-  /**
-   * Làm gọn dữ liệu trả về
-   */
-  protected override async afterGetList(data: any[]): Promise<any[]> {
-    return data.map((item) => this.transform(item));
-  }
-
-  protected override async afterGetOne(entity: any): Promise<any> {
-    return this.transform(entity);
+  async deleteById(id: number) {
+    return this.delete(id);
   }
 
   private transform(permission: any) {
     if (!permission) return permission;
-    if (permission.parent) {
-      const { id, code, name, status } = permission.parent;
-      permission.parent = { id, code, name, status };
+    const item = { ...permission };
+    if (item.parent) {
+      const { id, code, name, status } = item.parent;
+      item.parent = { id, code, name, status };
     }
-    if (permission.children) {
-      permission.children = (permission.children as any[]).map((child) => {
+    if (item.children) {
+      item.children = (item.children as any[]).map((child) => {
         const { id, code, name, status } = child;
         return { id, code, name, status };
       });
     }
-    return permission;
+    return item;
   }
 }

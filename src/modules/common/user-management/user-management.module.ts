@@ -9,6 +9,7 @@ import { AdminPermissionModule } from '@/modules/common/user-management/admin/pe
 
 // Import user modules
 import { UserUserModule } from '@/modules/common/user-management/user/user/user.module';
+import { UserRepositoryModule } from './user.repository.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserUserModule } from '@/modules/common/user-management/user/user/user.
     AdminPermissionModule,
     // User modules
     UserUserModule,
+    UserRepositoryModule,
   ],
   providers: [
     // Shared services
@@ -28,4 +30,4 @@ import { UserUserModule } from '@/modules/common/user-management/user/user/user.
     UserService,
   ],
 })
-export class UserManagementModule {}
+export class UserManagementModule { }

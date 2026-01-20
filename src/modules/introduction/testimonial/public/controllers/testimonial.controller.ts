@@ -5,13 +5,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('testimonials')
 export class PublicTestimonialController {
-  constructor(private readonly testimonialService: PublicTestimonialService) {}
+  constructor(private readonly testimonialService: PublicTestimonialService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.testimonialService.getList(filters, options);
+    return this.testimonialService.getList(query);
   }
 
   @Permission('public')

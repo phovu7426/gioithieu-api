@@ -1,68 +1,51 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, AboutSection } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { IAboutRepository, ABOUT_REPOSITORY, AboutFilter } from '@/modules/common/about/repositories/about.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { AboutSectionType } from '@/shared/enums/types/about-section-type.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-type PublicAboutBag = PrismaListBag & {
-  Model: AboutSection;
-  Where: Prisma.AboutSectionWhereInput;
-  Select: Prisma.AboutSectionSelect;
-  Include: Record<string, never>;
-  OrderBy: Prisma.AboutSectionOrderByWithRelationInput;
-};
 
 @Injectable()
-export class PublicAboutService extends PrismaListService<PublicAboutBag> {
+export class PublicAboutService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.aboutSection, ['id', 'created_at', 'sort_order'], 'id:DESC');
-  }
+    @Inject(ABOUT_REPOSITORY)
+    private readonly aboutRepo: IAboutRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters?: Prisma.AboutSectionWhereInput,
-  ): Promise<Prisma.AboutSectionWhereInput | true | undefined> {
-    const prepared: Prisma.AboutSectionWhereInput = {
-      ...(filters || {}),
-      status: BasicStatus.active as any,
-      deleted_at: null,
+  async getList(query: any) {
+    const filter: AboutFilter = {
+      status: BasicStatus.active
     };
-    return prepared;
-  }
+    if (query.section_type) filter.section_type = query.section_type;
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.AboutSectionOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      orderBy,
-    };
-  }
-
-  async findBySlug(slug: string): Promise<AboutSection | null> {
-    return this.prisma.aboutSection.findFirst({
-      where: {
-        slug,
-        status: BasicStatus.active as any,
-        deleted_at: null,
-      },
+    const result = await this.aboutRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort || 'sort_order:ASC,created_at:DESC',
+      filter,
     });
+
+    result.data = result.data.map((item) => this.transform(item));
+    return result;
   }
 
-  async findByType(type: AboutSectionType): Promise<AboutSection[]> {
-    const result = await this.getList(
-      {
-        section_type: type as any,
-        status: BasicStatus.active as any,
-      } as any,
-      { limit: 100, page: 1 },
-    );
+  async findBySlug(slug: string): Promise<any | null> {
+    const about = await this.aboutRepo.findBySlug(slug);
+    return this.transform(about);
+  }
+
+  async findByType(type: AboutSectionType): Promise<any[]> {
+    const result = await this.getList({
+      section_type: type,
+      limit: 100,
+      page: 1,
+    });
     return result.data;
+  }
+
+  private transform(about: any) {
+    if (!about) return about;
+    const item = { ...about };
+    if (item.id) item.id = Number(item.id);
+    return item;
   }
 }
 

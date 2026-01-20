@@ -22,7 +22,7 @@ import { RbacGuard } from '@/common/guards/rbac.guard';
 @Controller('admin/faqs')
 @UseGuards(JwtAuthGuard, RbacGuard)
 export class FaqController {
-  constructor(private readonly faqService: FaqService) {}
+  constructor(private readonly faqService: FaqService) { }
 
   @LogRequest()
   @Post()
@@ -34,26 +34,25 @@ export class FaqController {
   @Get()
   @Permission('faq.manage')
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.faqService.getList(filters, options);
+    return this.faqService.getList(query);
   }
 
   @Get(':id')
   @Permission('faq.manage')
   findOne(@Param('id') id: string) {
-    return this.faqService.getOne({ id: BigInt(id) } as any);
+    return this.faqService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('faq.manage')
   update(@Param('id') id: string, @Body(ValidationPipe) updateFaqDto: UpdateFaqDto) {
-    return this.faqService.update({ id: BigInt(id) } as any, updateFaqDto);
+    return this.faqService.update(+id, updateFaqDto);
   }
 
   @Delete(':id')
   @Permission('faq.manage')
   remove(@Param('id') id: string) {
-    return this.faqService.delete({ id: BigInt(id) } as any);
+    return this.faqService.delete(+id);
   }
 }
 

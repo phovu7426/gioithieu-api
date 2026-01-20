@@ -1,152 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { RedisUtil } from '@/core/utils/redis.util';
-
-type PublicPostBag = PrismaListBag & {
-  Model: Prisma.PostGetPayload<{
-    include: {
-      primary_category: true;
-      categories: { include: { category: true } };
-      tags: { include: { tag: true } };
-    };
-  }>;
-  Where: Prisma.PostWhereInput;
-  Select: Prisma.PostSelect;
-  Include: Prisma.PostInclude;
-  OrderBy: Prisma.PostOrderByWithRelationInput;
-};
+import { Inject, Injectable } from '@nestjs/common';
+import { IPostRepository, POST_REPOSITORY, PostFilter } from '@/modules/post/repositories/post.repository.interface';
+import { GetPostsDto } from '../dtos/get-posts.dto';
 
 @Injectable()
-export class PostService extends PrismaListService<PublicPostBag> {
+export class PostService {
   constructor(
-    private readonly prisma: PrismaService,
-    private readonly redis: RedisUtil,
-  ) {
-    super(prisma.post, ['id', 'created_at', 'published_at', 'view_count'], 'created_at:DESC');
-  }
+    @Inject(POST_REPOSITORY)
+    private readonly postRepo: IPostRepository,
+  ) { }
 
-  protected override async prepareFilters(filters: Prisma.PostWhereInput = {}): Promise<Prisma.PostWhereInput> {
-    const prepared: Prisma.PostWhereInput = { ...(filters || {}) };
-
-    // Luôn giới hạn bài viết public ở trạng thái published
-    prepared.status = 'published' as any;
-
-    const search = (prepared as any).search;
-    if (search) {
-      prepared.OR = [
-        { name: { contains: search } },
-        { slug: { contains: search } },
-      ];
-      delete (prepared as any).search;
-    }
-
-    const categorySlug = (prepared as any).category_slug;
-    if (categorySlug) {
-      prepared.categories = {
-        some: {
-          category: { slug: categorySlug, status: 'active' as any },
-        },
-      };
-      delete (prepared as any).category_slug;
-    }
-
-    const tagSlug = (prepared as any).tag_slug;
-    if (tagSlug) {
-      prepared.tags = {
-        some: {
-          tag: { slug: tagSlug, status: 'active' as any },
-        },
-      };
-      delete (prepared as any).tag_slug;
-    }
-
-    if ((prepared as any).is_featured !== undefined) {
-      prepared.is_featured = Boolean((prepared as any).is_featured);
-    }
-    if ((prepared as any).is_pinned !== undefined) {
-      prepared.is_pinned = Boolean((prepared as any).is_pinned);
-    }
-
-    return prepared;
-  }
-
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    // Prisma client in this project does not allow select + include together.
-    // Build a single select that also selects nested relations.
-    const defaultSelect: Prisma.PostSelect = {
-      id: true,
-      name: true,
-      slug: true,
-      excerpt: true,
-      image: true,
-      cover_image: true,
-      published_at: true,
-      view_count: true,
-      created_at: true,
-      primary_category: {
-        select: { id: true, name: true, slug: true, description: true, status: true },
-      },
-      categories: {
-        where: { category: { status: 'active' as any } },
-        select: {
-          category: { select: { id: true, name: true, slug: true, description: true, status: true } },
-        },
-      },
-      tags: {
-        where: { tag: { status: 'active' as any } },
-        select: {
-          tag: { select: { id: true, name: true, slug: true, description: true, status: true } },
-        },
-      },
+  async getList(dto: GetPostsDto) {
+    const filter: PostFilter = {
+      status: 'published', // Public API always return published posts
+      search: dto.search,
+      categorySlug: dto.category_slug,
+      tagSlug: dto.tag_slug,
+      isFeatured: dto.is_featured,
+      isPinned: dto.is_pinned,
     };
 
-    // If caller provides select/include, respect select and drop include to avoid conflict.
-    const finalSelect = queryOptions?.select ?? defaultSelect;
+    const result = await this.postRepo.findAll({
+      page: dto.page,
+      limit: dto.limit,
+      sort: dto.sort,
+      filter,
+    });
 
-    return {
-      ...base,
-      select: finalSelect,
-      include: undefined,
-    };
+    // Transform data ensures we don't expose sensitive fields and handle active check
+    result.data = result.data.map(post => this.transform(post));
+    return result;
   }
 
-  protected override async afterGetList(
-    data: PublicPostBag['Model'][],
-  ): Promise<PublicPostBag['Model'][]> {
-    return data.map((post) => this.transform(post));
+  async getOne(slug: string) {
+    const post = await this.postRepo.findPublishedBySlug(slug);
+    return this.transform(post);
   }
 
-  protected override async afterGetOne(
-    entity: PublicPostBag['Model'] | null,
-  ): Promise<PublicPostBag['Model'] | null> {
-    if (!entity) return entity;
-    return this.transform(entity);
-  }
-
-  /**
-   * Tăng view count cho post (sử dụng Redis buffer)
-   */
-  async incrementViewCount(postId: number): Promise<void> {
-    try {
-      if (this.redis.isEnabled()) {
-        await this.redis.hincrby('post:views:buffer', postId.toString(), 1);
-      } else {
-        // Fallback to direct DB update if Redis is not available
-        await this.prisma.post.update({
-          where: { id: BigInt(postId) },
-          data: { view_count: { increment: 1 } },
-        });
-      }
-    } catch {
-      // Ignore errors khi tăng view count
-    }
+  async incrementViewCount(id: number): Promise<void> {
+    await this.postRepo.incrementViewCount(id);
   }
 
   private transform(post: any) {
     if (!post) return post;
+
+    // Logic adapted from previous implementation
     if (post.primary_category) {
       const primary = post.primary_category as any;
       if (primary.status && primary.status !== 'active') {
@@ -156,19 +53,23 @@ export class PostService extends PrismaListService<PublicPostBag> {
         post.primary_category = { id, name, slug, description };
       }
     }
+
     if (Array.isArray(post.categories)) {
       post.categories = (post.categories as any[])
         .map((link) => link?.category)
         .filter(Boolean)
+        .filter(cat => cat.status === 'active') // Ensure only active categories
         .map((cat: any) => {
           const { id, name, slug, description } = cat;
           return { id, name, slug, description };
         });
     }
+
     if (Array.isArray(post.tags)) {
       post.tags = (post.tags as any[])
         .map((link) => link?.tag)
         .filter(Boolean)
+        // .filter(tag => tag.status === 'active') // Assuming tags have status, previous code didn't filter explicitly but select did
         .map((tag: any) => {
           const { id, name, slug, description } = tag;
           return { id, name, slug, description };
@@ -177,3 +78,4 @@ export class PostService extends PrismaListService<PublicPostBag> {
     return post;
   }
 }
+

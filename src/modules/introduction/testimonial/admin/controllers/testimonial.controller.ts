@@ -23,7 +23,7 @@ import { RbacGuard } from '@/common/guards/rbac.guard';
 @Controller('admin/testimonials')
 @UseGuards(JwtAuthGuard, RbacGuard)
 export class TestimonialController {
-  constructor(private readonly testimonialService: TestimonialService) {}
+  constructor(private readonly testimonialService: TestimonialService) { }
 
   @LogRequest()
   @Post()
@@ -35,26 +35,25 @@ export class TestimonialController {
   @Get()
   @Permission('testimonial.manage')
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.testimonialService.getList(filters, options);
+    return this.testimonialService.getList(query);
   }
 
   @Get(':id')
   @Permission('testimonial.manage')
   findOne(@Param('id') id: string) {
-    return this.testimonialService.getOne({ id: BigInt(id) } as any);
+    return this.testimonialService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('testimonial.manage')
   update(@Param('id') id: string, @Body(ValidationPipe) updateTestimonialDto: UpdateTestimonialDto) {
-    return this.testimonialService.update({ id: BigInt(id) } as any, updateTestimonialDto);
+    return this.testimonialService.update(+id, updateTestimonialDto);
   }
 
   @Delete(':id')
   @Permission('testimonial.manage')
   remove(@Param('id') id: string) {
-    return this.testimonialService.delete({ id: BigInt(id) } as any);
+    return this.testimonialService.delete(+id);
   }
 
   @Patch(':id/featured')

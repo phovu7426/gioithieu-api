@@ -6,14 +6,19 @@ import { AdminFaqModule } from '@/modules/common/faq/admin/faq.module';
 // Import public modules
 import { PublicFaqModule } from '@/modules/common/faq/public/faq.module';
 
+// Import repository module
+import { FaqRepositoryModule } from './faq.repository.module';
+
 @Module({
   imports: [
     // Admin modules
     AdminFaqModule,
     // Public modules
     PublicFaqModule,
+    // Repository module
+    FaqRepositoryModule,
   ],
-  exports: [],
+  exports: [FaqRepositoryModule],
 })
-export class FaqModule {}
+export class FaqModule { }
 

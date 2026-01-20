@@ -5,9 +5,11 @@ import { AdminStaffModule } from '@/modules/introduction/staff/admin/staff.modul
 
 // Import public modules
 import { PublicStaffModule } from '@/modules/introduction/staff/public/staff.module';
+import { StaffRepositoryModule } from './staff.repository.module';
 
 @Module({
   imports: [
+    StaffRepositoryModule,
     // Admin modules
     AdminStaffModule,
     // Public modules
@@ -15,5 +17,5 @@ import { PublicStaffModule } from '@/modules/introduction/staff/public/staff.mod
   ],
   exports: [],
 })
-export class StaffModule {}
+export class StaffModule { }
 

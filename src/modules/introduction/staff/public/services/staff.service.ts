@@ -1,57 +1,48 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Staff } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { IStaffRepository, STAFF_REPOSITORY, StaffFilter } from '@/modules/introduction/staff/repositories/staff.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-type PublicStaffBag = PrismaListBag & {
-  Model: Staff;
-  Where: Prisma.StaffWhereInput;
-  Select: Prisma.StaffSelect;
-  Include: Record<string, never>;
-  OrderBy: Prisma.StaffOrderByWithRelationInput;
-};
 
 @Injectable()
-export class PublicStaffService extends PrismaListService<PublicStaffBag> {
+export class PublicStaffService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.staff, ['id', 'created_at', 'sort_order'], 'id:DESC');
-  }
+    @Inject(STAFF_REPOSITORY)
+    private readonly staffRepo: IStaffRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters?: Prisma.StaffWhereInput,
-  ): Promise<Prisma.StaffWhereInput | true | undefined> {
-    const prepared: Prisma.StaffWhereInput = {
-      ...(filters || {}),
-      status: BasicStatus.active as any,
-      deleted_at: null,
+  async getList(query: any) {
+    const filter: StaffFilter = {
+      status: BasicStatus.active
     };
-    return prepared;
+    if (query.search) filter.search = query.search;
+    if (query.department) filter.department = query.department;
+
+    const result = await this.staffRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.StaffOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      orderBy,
-    };
-  }
-
-  async findByDepartment(department: string): Promise<Staff[]> {
-    const result = await this.getList(
-      {
-        department,
-        status: BasicStatus.active as any,
-      } as any,
-      { limit: 100, page: 1 },
-    );
+  async findByDepartment(department: string) {
+    const result = await this.getList({ department, limit: 100, page: 1 } as any);
     return result.data;
+  }
+
+  async getOne(id: number) {
+    const staff = await this.staffRepo.findById(id);
+    if (!staff || (staff as any).status !== BasicStatus.active) return null;
+    return this.transform(staff);
+  }
+
+  private transform(staff: any) {
+    if (!staff) return staff;
+    const item = { ...staff };
+    if (item.id) item.id = Number(item.id);
+    return item;
   }
 }
 

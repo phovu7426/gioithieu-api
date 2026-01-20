@@ -13,20 +13,18 @@ export class AdminMenuController {
   constructor(
     private readonly service: MenuService,
     private readonly auth: AuthService,
-  ) {}
+  ) { }
 
   @Permission('menu.manage')
   @Get()
   async getList(@Query(ValidationPipe) query: QueryMenuDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.service.getList(filters, options);
+    return this.service.getList(query);
   }
 
   @Permission('menu.manage')
   @Get('simple')
   async getSimpleList(@Query(ValidationPipe) query: QueryMenuDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.service.getSimpleList(filters, options);
+    return this.service.getSimpleList(query);
   }
 
   @Permission('menu.manage')
@@ -38,7 +36,7 @@ export class AdminMenuController {
   @Permission('menu.manage')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.getOne({ id } as any);
+    return this.service.getOne(id);
   }
 
   @LogRequest()

@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ContextController } from './controllers/context.controller';
 import { UserContextService } from './services/context.service';
+import { ContextRepositoryModule } from '../../context.repository.module';
+
+import { RbacRepositoryModule } from '@/modules/rbac/rbac.repository.module';
 
 @Module({
-  imports: [],
+  imports: [ContextRepositoryModule, RbacRepositoryModule],
   controllers: [ContextController],
   providers: [UserContextService],
   exports: [UserContextService],
 })
-export class UserContextModule {}
+export class UserContextModule { }
 

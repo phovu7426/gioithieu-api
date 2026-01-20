@@ -12,8 +12,7 @@ export class AdminPostCommentController {
     @Get()
     @Permission('post.manage')
     async getList(@Query(ValidationPipe) query: any) {
-        const { filters, options } = prepareQuery(query);
-        return this.commentService.getList(filters, options);
+        return this.commentService.getList(query);
     }
 
     @Patch(':id/status')
@@ -22,12 +21,12 @@ export class AdminPostCommentController {
         @Param('id') id: string,
         @Body('status') status: 'visible' | 'hidden',
     ) {
-        return this.commentService.updateCommentStatus(BigInt(id), status);
+        return this.commentService.updateCommentStatus(Number(id), status);
     }
 
     @Delete(':id')
     @Permission('post.manage')
     async deleteComment(@Param('id') id: string) {
-        return this.commentService.deleteComment(BigInt(id));
+        return this.commentService.deleteComment(Number(id));
     }
 }

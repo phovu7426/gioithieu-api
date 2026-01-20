@@ -1,51 +1,37 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Gallery } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { Gallery } from '@prisma/client';
+import { IGalleryRepository, GALLERY_REPOSITORY } from '@/modules/introduction/gallery/repositories/gallery.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-
-type PublicGalleryBag = PrismaListBag & {
-  Model: Gallery;
-  Where: Prisma.GalleryWhereInput;
-  Select: Prisma.GallerySelect;
-  Include: Record<string, never>;
-  OrderBy: Prisma.GalleryOrderByWithRelationInput;
-};
 
 @Injectable()
-export class PublicGalleryService extends PrismaListService<PublicGalleryBag> {
+export class PublicGalleryService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.gallery, ['id', 'created_at', 'sort_order'], 'id:DESC');
-  }
+    @Inject(GALLERY_REPOSITORY)
+    private readonly galleryRepo: IGalleryRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters?: Prisma.GalleryWhereInput,
-  ): Promise<Prisma.GalleryWhereInput | true | undefined> {
-    const prepared: Prisma.GalleryWhereInput = {
-      ...(filters || {}),
+  async getList(query: any) {
+    const filter: any = {
+      ...(query.filter || {}),
       status: BasicStatus.active as any,
       deleted_at: null,
     };
-    return prepared;
-  }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.GalleryOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      orderBy,
-    };
+    if (query.featured) filter.featured = true;
+
+    const result = await this.galleryRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort || 'sort_order:asc,created_at:desc',
+      filter,
+    });
+
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
   async findBySlug(slug: string): Promise<Gallery | null> {
-    const gallery = await this.prisma.gallery.findFirst({
+    const gallery = await this.galleryRepo.findFirst({
       where: {
         slug,
         status: BasicStatus.active as any,
@@ -53,18 +39,23 @@ export class PublicGalleryService extends PrismaListService<PublicGalleryBag> {
       },
     });
 
-    return gallery ? gallery : null;
+    return gallery ? this.transform(gallery) : null;
   }
 
   async getFeatured(limit: number = 10): Promise<Gallery[]> {
-    const result = await this.getList(
-      {
-        featured: true,
-        status: BasicStatus.active as any,
-      } as any,
-      { limit, page: 1 },
-    );
+    const result = await this.getList({
+      featured: true,
+      limit,
+      page: 1,
+    });
     return result.data;
+  }
+
+  private transform(gallery: any) {
+    if (!gallery) return gallery;
+    const item = { ...gallery };
+    if (item.id) item.id = Number(item.id);
+    return item;
   }
 }
 

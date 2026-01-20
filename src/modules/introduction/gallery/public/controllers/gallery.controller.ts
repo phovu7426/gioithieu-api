@@ -5,13 +5,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('gallery')
 export class PublicGalleryController {
-  constructor(private readonly galleryService: PublicGalleryService) {}
+  constructor(private readonly galleryService: PublicGalleryService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.galleryService.getList(filters, options);
+    return this.galleryService.getList(query);
   }
 
   @Permission('public')

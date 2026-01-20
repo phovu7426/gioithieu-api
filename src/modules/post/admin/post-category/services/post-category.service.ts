@@ -1,127 +1,80 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { PostCategory } from '@prisma/client';
 import { StringUtil } from '@/core/utils/string.util';
-
-type AdminPostCategoryBag = PrismaCrudBag & {
-  Model: Prisma.PostCategoryGetPayload<{
-    include: {
-      parent: true;
-      children: true;
-    };
-  }>;
-  Where: Prisma.PostCategoryWhereInput;
-  Select: Prisma.PostCategorySelect;
-  Include: Prisma.PostCategoryInclude;
-  OrderBy: Prisma.PostCategoryOrderByWithRelationInput;
-  Create: Prisma.PostCategoryUncheckedCreateInput;
-  Update: Prisma.PostCategoryUncheckedUpdateInput;
-};
+import { IPostCategoryRepository, POST_CATEGORY_REPOSITORY, PostCategoryFilter } from '@/modules/post/repositories/post-category.repository.interface';
 
 @Injectable()
-export class PostCategoryService extends PrismaCrudService<AdminPostCategoryBag> {
+export class PostCategoryService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.postCategory, ['id', 'sort_order', 'created_at', 'name', 'slug'], 'id:DESC');
+    @Inject(POST_CATEGORY_REPOSITORY)
+    private readonly categoryRepo: IPostCategoryRepository,
+  ) { }
+
+  async getList(query: any) {
+    const filter: PostCategoryFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.status !== undefined) filter.status = query.status;
+    if (query.parentId !== undefined) filter.parentId = query.parentId;
+
+    const result = await this.categoryRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map((item) => this.transform(item));
+    return result;
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    // Prisma client in this project does not allow select + include together.
-    // Build a single select that also selects nested relations.
-    const defaultSelect: Prisma.PostCategorySelect = {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      image: true,
-      sort_order: true,
-      status: true,
-      created_at: true,
-      updated_at: true,
-      parent: { select: { id: true, name: true, slug: true } },
-      children: { select: { id: true, name: true, slug: true } },
-    };
-
-    const finalSelect = queryOptions?.select ?? defaultSelect;
-
-    return {
-      ...base,
-      select: finalSelect,
-      include: undefined,
-    };
+  async getSimpleList(query: any) {
+    return this.getList({
+      ...query,
+      limit: 1000,
+      sort: query.sort ?? 'sort_order:ASC'
+    });
   }
 
-  protected override async beforeCreate(createDto: AdminPostCategoryBag['Create']): Promise<AdminPostCategoryBag['Create']> {
-    const payload: any = { ...createDto };
+  async getOne(id: number) {
+    const category = await this.categoryRepo.findById(id);
+    return this.transform(category);
+  }
+
+  async create(data: any) {
+    const payload = { ...data };
     this.normalizeSlug(payload);
     payload.parent_id = this.toBigInt(payload.parent_id);
-    return payload;
+    const category = await this.categoryRepo.create(payload);
+    return this.getOne(Number(category.id));
   }
 
-  protected override async beforeUpdate(
-    where: Prisma.PostCategoryWhereInput,
-    updateDto: AdminPostCategoryBag['Update'],
-  ): Promise<AdminPostCategoryBag['Update']> {
-    const payload: any = { ...updateDto };
-    this.normalizeSlug(payload);
+  async update(id: number, data: any) {
+    const payload = { ...data };
+    const current = await this.categoryRepo.findById(id);
+    this.normalizeSlug(payload, current?.slug);
     payload.parent_id = this.toBigInt(payload.parent_id);
-    if ((where as any).id !== undefined) {
-      (where as any).id = this.toBigInt((where as any).id);
-    }
-    return payload;
-  }
-
-  protected override async afterGetList(data: AdminPostCategoryBag['Model'][]): Promise<AdminPostCategoryBag['Model'][]> {
-    return data.map((item) => this.transform(item));
-  }
-
-  protected override async afterGetOne(entity: AdminPostCategoryBag['Model'] | null): Promise<AdminPostCategoryBag['Model'] | null> {
-    if (!entity) return entity;
-    return this.transform(entity);
-  }
-
-  override async getOne(where: Prisma.PostCategoryWhereInput, options?: any) {
-    const normalizedWhere = { ...(where || {}) } as Prisma.PostCategoryWhereInput;
-    if ((normalizedWhere as any).id !== undefined) {
-      (normalizedWhere as any).id = this.toBigInt((normalizedWhere as any).id);
-    }
-    return super.getOne(normalizedWhere, options);
-  }
-
-  async getSimpleList(filters?: Prisma.PostCategoryWhereInput, options?: any) {
-    const simpleOptions = {
-      ...options,
-      limit: options?.limit ?? 50,
-      maxLimit: options?.maxLimit ?? 1000,
-      sort: options?.sort ?? 'sort_order:ASC',
-    };
-    return this.getList(filters, simpleOptions);
-  }
-
-  // Giữ API cũ cho controller
-  async update(id: number, data: AdminPostCategoryBag['Update']) {
-    return super.update({ id: this.toBigInt(id) } as any, data);
+    await this.categoryRepo.update(id, payload);
+    return this.getOne(id);
   }
 
   async delete(id: number) {
-    return super.delete({ id: this.toBigInt(id) } as any);
+    return this.categoryRepo.delete(id);
   }
 
   private transform(category: any) {
-    if (category?.parent) {
-      const { id, name, slug } = category.parent;
-      category.parent = { id, name, slug };
+    if (!category) return category;
+    const item = { ...category };
+    if (item.parent) {
+      const { id, name, slug } = item.parent;
+      item.parent = { id, name, slug };
     }
-    if (Array.isArray(category?.children)) {
-      category.children = category.children.map((child: any) => {
+    if (Array.isArray(item.children)) {
+      item.children = item.children.map((child: any) => {
         const { id, name, slug } = child;
         return { id, name, slug };
       });
     }
-    return category;
+    return item;
   }
 
   private normalizeSlug(data: any, currentSlug?: string) {

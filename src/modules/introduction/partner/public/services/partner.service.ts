@@ -1,58 +1,43 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Partner } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, Inject } from '@nestjs/common';
+import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/repositories/partner.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { PartnerType } from '@/shared/enums/types/partner-type.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-type PublicPartnerBag = PrismaListBag & {
-  Model: Partner;
-  Where: Prisma.PartnerWhereInput;
-  Select: Prisma.PartnerSelect;
-  Include: Record<string, never>;
-  OrderBy: Prisma.PartnerOrderByWithRelationInput;
-};
 
 @Injectable()
-export class PublicPartnerService extends PrismaListService<PublicPartnerBag> {
+export class PublicPartnerService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.partner, ['id', 'created_at', 'sort_order'], 'id:DESC');
-  }
+    @Inject(PARTNER_REPOSITORY)
+    private readonly partnerRepo: IPartnerRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters?: Prisma.PartnerWhereInput,
-  ): Promise<Prisma.PartnerWhereInput | true | undefined> {
-    const prepared: Prisma.PartnerWhereInput = {
-      ...(filters || {}),
-      status: BasicStatus.active as any,
-      deleted_at: null,
+  async getList(query: any) {
+    const filter: PartnerFilter = {
+      status: BasicStatus.active
     };
-    return prepared;
+    if (query.search) filter.search = query.search;
+    if (query.type) filter.type = query.type;
+
+    const result = await this.partnerRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.PartnerOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      orderBy,
-    };
-  }
-
-  async findByType(type: PartnerType): Promise<Partner[]> {
-    const result = await this.getList(
-      {
-        type: type as any,
-        status: BasicStatus.active as any,
-      } as any,
-      { limit: 100, page: 1 },
-    );
+  async findByType(type: PartnerType) {
+    const result = await this.getList({ type, limit: 100, page: 1 } as any);
     return result.data;
+  }
+
+  private transform(partner: any) {
+    if (!partner) return partner;
+    const item = { ...partner };
+    if (item.id) item.id = Number(item.id);
+    return item;
   }
 }
 

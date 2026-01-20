@@ -5,9 +5,11 @@ import { AdminContactModule } from '@/modules/contact/admin/contact.module';
 
 // Import public modules
 import { PublicContactModule } from '@/modules/contact/public/contact.module';
+import { ContactRepositoryModule } from './contact.repository.module';
 
 @Module({
   imports: [
+    ContactRepositoryModule,
     // Admin modules
     AdminContactModule,
     // Public modules
@@ -15,5 +17,5 @@ import { PublicContactModule } from '@/modules/contact/public/contact.module';
   ],
   exports: [],
 })
-export class ContactModule {}
+export class ContactModule { }
 

@@ -4,12 +4,16 @@ import { NotificationController as AdminNotificationController } from '@/modules
 import { NotificationController as UserNotificationController } from '@/modules/extra/notification/user/controllers/notification.controller';
 import { RbacModule } from '@/modules/rbac/rbac.module';
 
+// Import repository module
+import { NotificationRepositoryModule } from './notification.repository.module';
+
 @Module({
   imports: [
     RbacModule,
+    NotificationRepositoryModule,
   ],
   controllers: [AdminNotificationController, UserNotificationController],
   providers: [NotificationService],
-  exports: [NotificationService],
+  exports: [NotificationService, NotificationRepositoryModule],
 })
 export class NotificationModule { }

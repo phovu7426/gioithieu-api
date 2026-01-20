@@ -1,90 +1,61 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Faq } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { PrismaListService, PrismaListBag } from '@/common/base/services/prisma/prisma-list.service';
-
-type PublicFaqBag = PrismaListBag & {
-  Model: Faq;
-  Where: Prisma.FaqWhereInput;
-  Select: Prisma.FaqSelect;
-  Include: Record<string, never>;
-  OrderBy: Prisma.FaqOrderByWithRelationInput;
-};
+import { Injectable, Inject } from '@nestjs/common';
+import { IFaqRepository, FAQ_REPOSITORY, FaqFilter } from '@/modules/common/faq/repositories/faq.repository.interface';
 
 @Injectable()
-export class PublicFaqService extends PrismaListService<PublicFaqBag> {
+export class PublicFaqService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.faq, ['id', 'created_at', 'sort_order'], 'id:DESC');
-  }
+    @Inject(FAQ_REPOSITORY)
+    private readonly faqRepo: IFaqRepository,
+  ) { }
 
-  protected override async prepareFilters(
-    filters?: Prisma.FaqWhereInput,
-  ): Promise<Prisma.FaqWhereInput | true | undefined> {
-    const prepared: Prisma.FaqWhereInput = {
-      ...(filters || {}),
-      status: BasicStatus.active as any,
-      deleted_at: null,
+  async getList(query: any) {
+    const filter: FaqFilter = {
+      status: 'active',
     };
-    return prepared;
+    if (query.search) filter.search = query.search;
+
+    const result = await this.faqRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort || 'sort_order:asc,created_at:desc',
+      filter,
+    });
+
+    result.data = result.data.map((item) => this.transform(item));
+    return result;
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.FaqOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      orderBy,
-    };
+  async getOne(id: number) {
+    const faq = await this.faqRepo.findById(id);
+    if (!faq || (faq as any).status !== 'active') return null;
+    return this.transform(faq);
   }
 
-  async getPopular(limit: number = 10): Promise<Faq[]> {
-    const result = await this.getList(
-      {
-        status: BasicStatus.active as any,
-      } as any,
-      {
-        limit,
-        page: 1,
-        orderBy: [{ view_count: 'desc' }],
-      },
-    );
-    return result.data;
+  async getPopular(limit: number = 10) {
+    const result = await this.faqRepo.findAll({
+      page: 1,
+      limit,
+      sort: 'view_count:desc',
+      filter: { status: 'active' },
+    });
+    return result.data.map(item => this.transform(item));
   }
 
   async incrementViewCount(id: number) {
-    const faq = await this.prisma.faq.findFirst({
-      where: { id: BigInt(id) },
-    });
-
-    if (!faq) {
-      return null;
-    }
-
-    return this.prisma.faq.update({
-      where: { id: BigInt(id) },
-      data: { view_count: { increment: 1 } },
-    });
+    return this.faqRepo.incrementViewCount(id);
   }
 
   async incrementHelpfulCount(id: number) {
-    const faq = await this.prisma.faq.findFirst({
-      where: { id: BigInt(id) },
-    });
+    return this.faqRepo.incrementHelpfulCount(id);
+  }
 
-    if (!faq) {
-      return null;
-    }
-
-    return this.prisma.faq.update({
-      where: { id: BigInt(id) },
-      data: { helpful_count: { increment: 1 } },
-    });
+  private transform(faq: any) {
+    if (!faq) return faq;
+    const item = { ...faq };
+    if (item.id) item.id = Number(item.id);
+    if (item.view_count) item.view_count = Number(item.view_count);
+    if (item.helpful_count) item.helpful_count = Number(item.helpful_count);
+    return item;
   }
 }
 

@@ -1,104 +1,90 @@
-import { Injectable, ConflictException } from '@nestjs/common';
-import { Prisma, BannerLocation } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, ConflictException, Inject, NotFoundException } from '@nestjs/common';
+import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY, BannerLocationFilter } from '@/modules/extra/banner/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-
-type BannerLocationBag = PrismaCrudBag & {
-    Model: BannerLocation;
-    Where: Prisma.BannerLocationWhereInput;
-    Select: Prisma.BannerLocationSelect;
-    Include: Prisma.BannerLocationInclude;
-    OrderBy: Prisma.BannerLocationOrderByWithRelationInput;
-    Create: Prisma.BannerLocationCreateInput;
-    Update: Prisma.BannerLocationUpdateInput;
-};
 
 @Injectable()
-export class BannerLocationService extends PrismaCrudService<BannerLocationBag> {
+export class BannerLocationService {
     constructor(
-        private readonly prisma: PrismaService,
-    ) {
-        super(prisma.bannerLocation, ['id', 'created_at'], 'created_at:DESC');
+        @Inject(BANNER_LOCATION_REPOSITORY)
+        private readonly locationRepo: IBannerLocationRepository,
+    ) { }
+
+    async getList(query: any) {
+        const filter: BannerLocationFilter = {};
+        if (query.search) filter.search = query.search;
+        if (query.status) filter.status = query.status;
+
+        const result = await this.locationRepo.findAll({
+            page: query.page,
+            limit: query.limit,
+            sort: query.sort,
+            filter,
+        });
+
+        result.data = result.data.map(item => this.transform(item));
+        return result;
     }
 
-    /**
-     * Hook: Validate code unique trước khi tạo
-     */
-    protected override async beforeCreate(createDto: BannerLocationBag['Create']): Promise<BannerLocationBag['Create']> {
-        const payload = { ...createDto };
+    async getSimpleList(query: any) {
+        return this.getList({
+            ...query,
+            limit: query.limit ?? 50,
+        });
+    }
+
+    async getOne(id: number) {
+        const location = await this.locationRepo.findById(id);
+        return this.transform(location);
+    }
+
+    async create(data: any) {
+        const payload = { ...data };
 
         if (payload.code) {
-            const existingLocation = await this.prisma.bannerLocation.findFirst({
-                where: { code: payload.code },
-            });
-
-            if (existingLocation) {
+            const exists = await this.locationRepo.findByCode(payload.code);
+            if (exists) {
                 throw new ConflictException(`Mã vị trí banner "${payload.code}" đã tồn tại`);
             }
         }
 
-        return payload;
+        const location = await this.locationRepo.create(payload);
+        return this.getOne(Number(location.id));
     }
 
-    /**
-     * Hook: Validate code unique trước khi cập nhật
-     */
-    protected override async beforeUpdate(
-        where: Prisma.BannerLocationWhereInput,
-        updateDto: BannerLocationBag['Update'],
-    ): Promise<BannerLocationBag['Update']> {
-        const payload = { ...updateDto };
-        const id = (where as any).id ? BigInt((where as any).id) : null;
-        const current = id
-            ? await this.prisma.bannerLocation.findFirst({ where: { id } })
-            : null;
+    async update(id: number, data: any) {
+        const payload = { ...data };
 
-        if (payload.code && payload.code !== current?.code) {
-            const existingLocation = await this.prisma.bannerLocation.findFirst({
-                where: { code: payload.code },
-            });
+        const current = await this.locationRepo.findById(id);
+        if (!current) throw new NotFoundException('Banner location not found');
 
-            if (existingLocation) {
+        if (payload.code && payload.code !== (current as any).code) {
+            const exists = await this.locationRepo.findByCode(payload.code);
+            if (exists) {
                 throw new ConflictException(`Mã vị trí banner "${payload.code}" đã tồn tại`);
             }
         }
 
-        return payload;
+        await this.locationRepo.update(id, payload);
+        return this.getOne(id);
     }
 
-    /**
-     * Override prepareOptions để thêm sort mặc định
-     */
-    protected override prepareOptions(queryOptions: any = {}) {
-        const base = super.prepareOptions(queryOptions);
-
-        const orderBy: Prisma.BannerLocationOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-            { created_at: 'desc' },
-        ];
-
-        return {
-            ...base,
-            orderBy,
-        };
+    async findByCode(code: string) {
+        const location = await this.locationRepo.findByCode(code);
+        return this.transform(location);
     }
 
-    /**
-     * Thay đổi trạng thái banner location
-     */
+    async delete(id: number) {
+        return this.locationRepo.delete(id);
+    }
+
     async changeStatus(id: number, status: BasicStatus) {
-        return this.update({ id: BigInt(id) } as any, { status: status as any } as any);
+        return this.update(id, { status: status as any });
     }
 
-  /**
-   * Simple list tương tự getList nhưng limit mặc định lớn hơn
-   */
-  async getSimpleList(filters?: Prisma.BannerLocationWhereInput, options?: any) {
-    const simpleOptions = {
-      ...options,
-      limit: options?.limit ?? 50,
-      maxLimit: options?.maxLimit ?? 1000,
-    };
-    return this.getList(filters, simpleOptions);
-  }
+    private transform(location: any) {
+        if (!location) return location;
+        const item = { ...location };
+        if (item.id) item.id = Number(item.id);
+        return item;
+    }
 }

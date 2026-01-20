@@ -6,14 +6,19 @@ import { AdminGalleryModule } from '@/modules/introduction/gallery/admin/gallery
 // Import public modules
 import { PublicGalleryModule } from '@/modules/introduction/gallery/public/gallery.module';
 
+// Import repository module
+import { GalleryRepositoryModule } from './gallery.repository.module';
+
 @Module({
   imports: [
     // Admin modules
     AdminGalleryModule,
     // Public modules
     PublicGalleryModule,
+    // Repository module
+    GalleryRepositoryModule,
   ],
-  exports: [],
+  exports: [GalleryRepositoryModule],
 })
-export class GalleryModule {}
+export class GalleryModule { }
 

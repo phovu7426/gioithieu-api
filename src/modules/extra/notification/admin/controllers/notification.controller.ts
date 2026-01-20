@@ -34,21 +34,19 @@ export class NotificationController {
   @Get()
   @Permission('notification.manage')
   async getList(@Query() query: GetNotificationsDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.notificationService.getList(filters, { ...options, sort: 'created_at:DESC' });
+    return this.notificationService.getList(query);
   }
 
   @Get('simple')
   @Permission('notification.manage')
   async getSimpleList(@Query() query: GetNotificationsDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.notificationService.getSimpleList(filters, { ...options, sort: 'created_at:DESC' });
+    return this.notificationService.getSimpleList(query);
   }
 
   @Get(':id')
   @Permission('notification.manage')
   async getOne(@Param('id') id: string) {
-    return this.notificationService.getOne({ id: +id });
+    return this.notificationService.getOne(+id);
   }
 
   @LogRequest()

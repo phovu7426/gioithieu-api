@@ -18,14 +18,13 @@ export class PostTagController {
   @Permission('public')
   @Get()
   async getList(@Query(ValidationPipe) query: GetTagsDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.postTagService.getList(filters, options);
+    return this.postTagService.getList(query);
   }
 
   @Permission('public')
   @Get(':slug')
   async getBySlug(@Param(ValidationPipe) dto: GetTagDto) {
-    return this.postTagService.getOne({ slug: dto.slug, status: 'published' } as any);
+    return this.postTagService.findBySlug(dto.slug);
   }
 }
 

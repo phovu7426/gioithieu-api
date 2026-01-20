@@ -22,7 +22,7 @@ import { RbacGuard } from '@/common/guards/rbac.guard';
 @Controller('admin/gallery')
 @UseGuards(JwtAuthGuard, RbacGuard)
 export class GalleryController {
-  constructor(private readonly galleryService: GalleryService) {}
+  constructor(private readonly galleryService: GalleryService) { }
 
   @LogRequest()
   @Post()
@@ -34,26 +34,25 @@ export class GalleryController {
   @Get()
   @Permission('gallery.manage')
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.galleryService.getList(filters, options);
+    return this.galleryService.getList(query);
   }
 
   @Get(':id')
   @Permission('gallery.manage')
   findOne(@Param('id') id: string) {
-    return this.galleryService.getOne({ id: BigInt(id) } as any);
+    return this.galleryService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('gallery.manage')
   update(@Param('id') id: string, @Body(ValidationPipe) updateGalleryDto: UpdateGalleryDto) {
-    return this.galleryService.update({ id: BigInt(id) } as any, updateGalleryDto);
+    return this.galleryService.update(+id, updateGalleryDto);
   }
 
   @Delete(':id')
   @Permission('gallery.manage')
   remove(@Param('id') id: string) {
-    return this.galleryService.delete({ id: BigInt(id) } as any);
+    return this.galleryService.delete(+id);
   }
 }
 

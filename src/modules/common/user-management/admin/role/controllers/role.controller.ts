@@ -14,23 +14,19 @@ export class RoleController {
   @Permission('role.manage')
   @Get()
   async getList(@Query() query: any) {
-    // Tách pagination options ra khỏi filters
-    const { page, limit, sort, ...filters } = query;
-    return this.service.getList(filters, { page, limit, sort });
+    return this.service.getList(query);
   }
 
   @Permission('role.manage')
   @Get('simple')
   async getSimpleList(@Query() query: any) {
-    // Tách pagination options ra khỏi filters
-    const { page, limit, sort, ...filters } = query;
-    return this.service.getSimpleList(filters, { page, limit, sort });
+    return this.service.getSimpleList(query);
   }
 
   @Permission('role.manage')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.getOne({ id: BigInt(id) } as any);
+    return this.service.getOne(id);
   }
 
   @LogRequest()

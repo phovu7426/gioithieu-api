@@ -9,9 +9,16 @@ import { AdminGroupModule } from '@/modules/context/admin/group/group.module';
 import { UserContextModule } from '@/modules/context/user/context/context.module';
 import { UserGroupModule } from '@/modules/context/user/group/group.module';
 
+// Import repository module
+import { ContextRepositoryModule } from './context.repository.module';
+
+import { RbacRepositoryModule } from '@/modules/rbac/rbac.repository.module';
+
 @Module({
   imports: [
     RbacModule,
+    ContextRepositoryModule,
+    RbacRepositoryModule,
     // Admin modules
     AdminContextModule,
     AdminGroupModule,
@@ -19,7 +26,7 @@ import { UserGroupModule } from '@/modules/context/user/group/group.module';
     UserContextModule,
     UserGroupModule,
   ],
-  exports: [AdminContextModule, AdminGroupModule, UserContextModule, UserGroupModule],
+  exports: [ContextRepositoryModule, AdminContextModule, AdminGroupModule, UserContextModule, UserGroupModule],
 })
-export class ContextModule {}
+export class ContextModule { }
 

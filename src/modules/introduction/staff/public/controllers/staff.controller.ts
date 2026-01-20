@@ -5,13 +5,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('staff')
 export class PublicStaffController {
-  constructor(private readonly staffService: PublicStaffService) {}
+  constructor(private readonly staffService: PublicStaffService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.staffService.getList(filters, options);
+    return this.staffService.getList(query);
   }
 
   @Permission('public')
@@ -23,7 +22,7 @@ export class PublicStaffController {
   @Permission('public')
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.staffService.getOne({ id: BigInt(id) } as any);
+    return this.staffService.getOne(+id);
   }
 }
 

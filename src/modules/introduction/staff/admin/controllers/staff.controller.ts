@@ -22,7 +22,7 @@ import { RbacGuard } from '@/common/guards/rbac.guard';
 @Controller('admin/staff')
 @UseGuards(JwtAuthGuard, RbacGuard)
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(private readonly staffService: StaffService) { }
 
   @LogRequest()
   @Post()
@@ -34,26 +34,25 @@ export class StaffController {
   @Get()
   @Permission('staff.manage')
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.staffService.getList(filters, options);
+    return this.staffService.getList(query);
   }
 
   @Get(':id')
   @Permission('staff.manage')
   findOne(@Param('id') id: string) {
-    return this.staffService.getOne({ id: BigInt(id) } as any);
+    return this.staffService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('staff.manage')
   update(@Param('id') id: string, @Body(ValidationPipe) updateStaffDto: UpdateStaffDto) {
-    return this.staffService.update({ id: BigInt(id) } as any, updateStaffDto);
+    return this.staffService.update(+id, updateStaffDto);
   }
 
   @Delete(':id')
   @Permission('staff.manage')
   remove(@Param('id') id: string) {
-    return this.staffService.delete({ id: BigInt(id) } as any);
+    return this.staffService.delete(+id);
   }
 }
 

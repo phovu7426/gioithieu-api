@@ -19,23 +19,23 @@ export class PostController {
   @Permission('public')
   @Get()
   async getList(@Query(ValidationPipe) query: GetPostsDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.postService.getList(filters, options);
+    return this.postService.getList(query);
   }
 
   @Permission('public')
   @Get('featured')
   async getFeatured(@Query('limit') limit?: string) {
-    return this.postService.getList(
-      { is_featured: true },
-      { page: 1, limit: limit ? parseInt(limit, 10) : 5 }
-    );
+    const dto = new GetPostsDto();
+    dto.is_featured = true;
+    dto.page = 1;
+    dto.limit = limit ? parseInt(limit, 10) : 5;
+    return this.postService.getList(dto);
   }
 
   @Permission('public')
   @Get(':slug')
   async getBySlug(@Param(ValidationPipe) dto: GetPostDto) {
-    return this.postService.getOne({ slug: dto.slug, status: 'published' } as any);
+    return this.postService.getOne(dto.slug);
   }
 }
 

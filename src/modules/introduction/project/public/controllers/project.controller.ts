@@ -5,13 +5,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('projects')
 export class PublicProjectController {
-  constructor(private readonly projectService: PublicProjectService) {}
+  constructor(private readonly projectService: PublicProjectService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.projectService.getList(filters, options);
+    return this.projectService.getList(query);
   }
 
   @Permission('public')

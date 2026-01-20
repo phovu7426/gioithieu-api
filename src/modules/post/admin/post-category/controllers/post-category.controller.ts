@@ -24,21 +24,19 @@ export class PostCategoryController {
   @Permission('post_category.manage')
   @Get()
   async getList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.postCategoryService.getList(filters, options);
+    return this.postCategoryService.getList(query);
   }
 
   @Permission('post_category.manage')
   @Get('simple')
   async getSimpleList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.postCategoryService.getSimpleList(filters, options);
+    return this.postCategoryService.getSimpleList(query);
   }
 
   @Permission('post_category.manage')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.postCategoryService.getOne({ id });
+    return this.postCategoryService.getOne(id);
   }
 
   @Permission('post_category.manage')

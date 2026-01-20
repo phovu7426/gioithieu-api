@@ -22,7 +22,7 @@ import { RbacGuard } from '@/common/guards/rbac.guard';
 @Controller('admin/partners')
 @UseGuards(JwtAuthGuard, RbacGuard)
 export class PartnerController {
-  constructor(private readonly partnerService: PartnerService) {}
+  constructor(private readonly partnerService: PartnerService) { }
 
   @LogRequest()
   @Post()
@@ -34,26 +34,25 @@ export class PartnerController {
   @Get()
   @Permission('partner.manage')
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.partnerService.getList(filters, options);
+    return this.partnerService.getList(query);
   }
 
   @Get(':id')
   @Permission('partner.manage')
   findOne(@Param('id') id: string) {
-    return this.partnerService.getOne({ id: BigInt(id) } as any);
+    return this.partnerService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('partner.manage')
   update(@Param('id') id: string, @Body(ValidationPipe) updatePartnerDto: UpdatePartnerDto) {
-    return this.partnerService.update({ id: BigInt(id) } as any, updatePartnerDto);
+    return this.partnerService.update(+id, updatePartnerDto);
   }
 
   @Delete(':id')
   @Permission('partner.manage')
   remove(@Param('id') id: string) {
-    return this.partnerService.delete({ id: BigInt(id) } as any);
+    return this.partnerService.delete(+id);
   }
 }
 

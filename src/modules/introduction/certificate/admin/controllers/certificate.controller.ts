@@ -22,7 +22,7 @@ import { RbacGuard } from '@/common/guards/rbac.guard';
 @Controller('admin/certificates')
 @UseGuards(JwtAuthGuard, RbacGuard)
 export class CertificateController {
-  constructor(private readonly certificateService: CertificateService) {}
+  constructor(private readonly certificateService: CertificateService) { }
 
   @LogRequest()
   @Post()
@@ -34,26 +34,25 @@ export class CertificateController {
   @Get()
   @Permission('certificate.manage')
   findAll(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.certificateService.getList(filters, options);
+    return this.certificateService.getList(query);
   }
 
   @Get(':id')
   @Permission('certificate.manage')
   findOne(@Param('id') id: string) {
-    return this.certificateService.getOne({ id: BigInt(id) } as any);
+    return this.certificateService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('certificate.manage')
   update(@Param('id') id: string, @Body(ValidationPipe) updateCertificateDto: UpdateCertificateDto) {
-    return this.certificateService.update({ id: BigInt(id) } as any, updateCertificateDto);
+    return this.certificateService.update(+id, updateCertificateDto);
   }
 
   @Delete(':id')
   @Permission('certificate.manage')
   remove(@Param('id') id: string) {
-    return this.certificateService.delete({ id: BigInt(id) } as any);
+    return this.certificateService.delete(+id);
   }
 }
 

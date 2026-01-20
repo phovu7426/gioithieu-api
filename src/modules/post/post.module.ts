@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PostRepositoryModule } from './post.repository.module';
 
 // Import shared services
 import { PostService } from '@/modules/post/admin/post/services/post.service';
@@ -22,6 +23,7 @@ import { PublicPostCommentModule } from '@/modules/post/public/comment/comment.m
 
 @Module({
   imports: [
+    PostRepositoryModule,
     // Admin modules
     AdminPostModule,
     AdminPostCategoryModule,

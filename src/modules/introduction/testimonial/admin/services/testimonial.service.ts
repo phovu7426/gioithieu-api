@@ -1,80 +1,86 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Testimonial } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-
-type AdminTestimonialBag = PrismaCrudBag & {
-  Model: Testimonial;
-  Where: Prisma.TestimonialWhereInput;
-  Select: Prisma.TestimonialSelect;
-  Include: Prisma.TestimonialInclude;
-  OrderBy: Prisma.TestimonialOrderByWithRelationInput;
-  Create: Prisma.TestimonialCreateInput;
-  Update: Prisma.TestimonialUpdateInput;
-};
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { ITestimonialRepository, TESTIMONIAL_REPOSITORY, TestimonialFilter } from '@/modules/introduction/testimonial/repositories/testimonial.repository.interface';
+import { IProjectRepository, PROJECT_REPOSITORY } from '@/modules/introduction/project/repositories/project.repository.interface';
 
 @Injectable()
-export class TestimonialService extends PrismaCrudService<AdminTestimonialBag> {
+export class TestimonialService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.testimonial, ['id', 'created_at', 'sort_order'], 'id:DESC');
+    @Inject(TESTIMONIAL_REPOSITORY)
+    private readonly testimonialRepo: ITestimonialRepository,
+    @Inject(PROJECT_REPOSITORY)
+    private readonly projectRepo: IProjectRepository,
+  ) { }
+
+  async getList(query: any) {
+    const filter: TestimonialFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.status) filter.status = query.status;
+    if (query.projectId) filter.projectId = query.projectId;
+
+    const result = await this.testimonialRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort,
+      filter,
+    });
+
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
-  protected override async beforeCreate(createDto: AdminTestimonialBag['Create']): Promise<AdminTestimonialBag['Create']> {
-    const payload = { ...createDto };
+  async getSimpleList(query: any) {
+    return this.getList({
+      ...query,
+      limit: query.limit ?? 50,
+    });
+  }
 
-    // Validate project_id if provided
+  async getOne(id: number) {
+    const testimonial = await this.testimonialRepo.findById(id);
+    return this.transform(testimonial);
+  }
+
+  async create(data: any) {
+    const payload = { ...data };
     if (payload.project_id) {
-      const project = await this.prisma.project.findFirst({
-        where: { id: BigInt(payload.project_id as any) },
-      });
-
-      if (!project) {
-        throw new NotFoundException(`Project with ID ${payload.project_id} not found`);
-      }
+      const project = await this.projectRepo.findById(payload.project_id);
+      if (!project) throw new NotFoundException(`Project with ID ${payload.project_id} not found`);
     }
-
-    return payload;
+    const testimonial = await this.testimonialRepo.create(payload);
+    return this.getOne(Number(testimonial.id));
   }
 
-  protected override async beforeUpdate(
-    where: Prisma.TestimonialWhereInput,
-    updateDto: AdminTestimonialBag['Update'],
-  ): Promise<AdminTestimonialBag['Update']> {
-    const payload = { ...updateDto };
-
-    // Validate project_id if provided
+  async update(id: number, data: any) {
+    const payload = { ...data };
     if (payload.project_id) {
-      const project = await this.prisma.project.findFirst({
-        where: { id: BigInt(payload.project_id as any) },
-      });
-
-      if (!project) {
-        throw new NotFoundException(`Project with ID ${payload.project_id} not found`);
-      }
+      const project = await this.projectRepo.findById(payload.project_id);
+      if (!project) throw new NotFoundException(`Project with ID ${payload.project_id} not found`);
     }
-
-    return payload;
+    await this.testimonialRepo.update(id, payload);
+    return this.getOne(id);
   }
 
-  protected override prepareOptions(queryOptions: any = {}) {
-    const base = super.prepareOptions(queryOptions);
-    const orderBy: Prisma.TestimonialOrderByWithRelationInput[] = queryOptions?.orderBy ?? [
-      { sort_order: 'asc' },
-      { created_at: 'desc' },
-    ];
-    return {
-      ...base,
-      include: {
-        project: true,
-      },
-      orderBy,
-    };
+  async delete(id: number) {
+    return this.testimonialRepo.delete(id);
   }
 
   async toggleFeatured(id: number, featured: boolean) {
-    return this.update({ id: BigInt(id) } as any, { featured } as any);
+    return this.update(id, { featured });
+  }
+
+  private transform(testimonial: any) {
+    if (!testimonial) return testimonial;
+    const item = { ...testimonial };
+    if (item.id) item.id = Number(item.id);
+    if (item.project_id) item.project_id = Number(item.project_id);
+    if (item.project) {
+      item.project = {
+        id: Number(item.project.id),
+        name: item.project.name,
+        slug: item.project.slug,
+      };
+    }
+    return item;
   }
 }
 

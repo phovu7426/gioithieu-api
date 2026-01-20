@@ -6,13 +6,12 @@ import { Permission } from '@/common/decorators/rbac.decorators';
 
 @Controller('certificates')
 export class PublicCertificateController {
-  constructor(private readonly certificateService: PublicCertificateService) {}
+  constructor(private readonly certificateService: PublicCertificateService) { }
 
   @Permission('public')
   @Get()
   findAll(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.certificateService.getList(filters, options);
+    return this.certificateService.getList(query);
   }
 
   @Permission('public')

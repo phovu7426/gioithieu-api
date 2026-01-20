@@ -12,21 +12,19 @@ export class PermissionController {
   @Permission('permission.manage')
   @Get()
   async getList(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.service.getList(filters, options);
+    return this.service.getList(query);
   }
 
   @Permission('permission.manage')
   @Get('simple')
   async getSimpleList(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.service.getSimpleList(filters, options);
+    return this.service.getSimpleList(query);
   }
 
   @Permission('permission.manage')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.service.getOne({ id } as any);
+    return this.service.getOne(id);
   }
 
   @Permission('permission.manage')

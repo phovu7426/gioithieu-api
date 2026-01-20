@@ -18,14 +18,13 @@ export class PostCategoryController {
   @Permission('public')
   @Get()
   async getList(@Query(ValidationPipe) query: GetCategoriesDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.postCategoryService.getList(filters, options);
+    return this.postCategoryService.getList(query);
   }
 
   @Permission('public')
   @Get(':slug')
   async getBySlug(@Param(ValidationPipe) dto: GetCategoryDto) {
-    return this.postCategoryService.getOne({ slug: dto.slug, status: 'published' } as any);
+    return this.postCategoryService.findBySlug(dto.slug);
   }
 }
 

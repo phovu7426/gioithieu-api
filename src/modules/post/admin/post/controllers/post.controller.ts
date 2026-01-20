@@ -13,6 +13,7 @@ import {
 import { PostService } from '@/modules/post/admin/post/services/post.service';
 import { CreatePostDto } from '@/modules/post/admin/post/dtos/create-post.dto';
 import { UpdatePostDto } from '@/modules/post/admin/post/dtos/update-post.dto';
+import { GetPostsDto } from '@/modules/post/admin/post/dtos/get-posts.dto';
 import { prepareQuery } from '@/common/base/utils/list-query.helper';
 import { LogRequest } from '@/common/decorators/log-request.decorator';
 import { Permission } from '@/common/decorators/rbac.decorators';
@@ -23,22 +24,20 @@ export class PostController {
 
   @Permission('post.manage')
   @Get()
-  async getList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.postService.getList(filters, options);
+  async getList(@Query(ValidationPipe) query: GetPostsDto) {
+    return this.postService.getList(query);
   }
 
   @Permission('post.manage')
   @Get('simple')
   async getSimpleList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.postService.getSimpleList(filters, options);
+    return this.postService.getSimpleList(query);
   }
 
   @Permission('post.manage')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.postService.getOne({ id });
+    return this.postService.getOne(id);
   }
 
   @Permission('post.manage')

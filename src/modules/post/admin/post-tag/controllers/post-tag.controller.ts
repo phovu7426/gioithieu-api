@@ -24,21 +24,19 @@ export class PostTagController {
   @Permission('post_tag.manage')
   @Get()
   async getList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.postTagService.getList(filters, options);
+    return this.postTagService.getList(query);
   }
 
   @Permission('post_tag.manage')
   @Get('simple')
   async getSimpleList(@Query(ValidationPipe) query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.postTagService.getSimpleList(filters, options);
+    return this.postTagService.getSimpleList(query);
   }
 
   @Permission('post_tag.manage')
   @Get(':id')
   async getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.postTagService.getOne({ id });
+    return this.postTagService.getOne(id);
   }
 
   @Permission('post_tag.manage')

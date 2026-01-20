@@ -9,26 +9,24 @@ import { prepareQuery } from '@/common/base/utils/list-query.helper';
 
 @Controller('admin/users')
 export class UserController {
-  constructor(private readonly service: UserService) {}
+  constructor(private readonly service: UserService) { }
 
   @Permission('user.manage')
   @Get()
   getList(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.service.getList(filters, options);
+    return this.service.getList(query);
   }
 
   @Permission('user.manage')
   @Get('simple')
   getSimpleList(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.service.getSimpleList(filters, options);
+    return this.service.getSimpleList(query);
   }
 
   @Permission('user.manage')
   @Get(':id')
   getOne(@Param('id') id: string) {
-    return this.service.getOne({ id: Number(id) } as any);
+    return this.service.getOne(Number(id));
   }
 
   @Permission('user.manage')

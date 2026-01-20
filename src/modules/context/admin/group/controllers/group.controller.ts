@@ -13,7 +13,7 @@ export class AdminGroupController {
   constructor(
     private readonly groupService: AdminGroupService,
     private readonly auth: AuthService,
-  ) {}
+  ) { }
 
   /**
    * Tạo group mới (chỉ system admin)
@@ -50,14 +50,7 @@ export class AdminGroupController {
   @Permission('public')
   @Get()
   async getGroups(@Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-
-    // Backward-compatible: vẫn cho phép ?type=shop
-    if (query.type && !filters.type) {
-      (filters as any).type = query.type;
-    }
-
-    return this.groupService.getList(filters, options);
+    return this.groupService.getList(query);
   }
 
   /**
@@ -66,8 +59,7 @@ export class AdminGroupController {
   @Permission('public')
   @Get('type/:type')
   async getGroupsByType(@Param('type') type: string, @Query() query: any) {
-    const { filters, options } = prepareQuery(query);
-    return this.groupService.getList({ ...(filters as any), type } as any, options);
+    return this.groupService.getList({ ...query, type });
   }
 
   /**

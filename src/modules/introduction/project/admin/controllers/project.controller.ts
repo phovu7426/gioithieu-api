@@ -38,44 +38,43 @@ export class ProjectController {
   @Get()
   @Permission('project.manage')
   findAll(@Query(ValidationPipe) query: GetProjectsDto) {
-    const { filters, options } = prepareQuery(query);
-    return this.projectService.getList(filters, options);
+    return this.projectService.getList(query);
   }
 
   @Get(':id')
   @Permission('project.manage')
-  findOne(@Param('id', ParseBigIntPipe) id: bigint) {
-    return this.projectService.getOne({ id: id } as any);
+  findOne(@Param('id') id: string) {
+    return this.projectService.getOne(+id);
   }
 
   @Put(':id')
   @Permission('project.manage')
-  update(@Param('id', ParseBigIntPipe) id: bigint, @Body(ValidationPipe) updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update({ id: id } as any, updateProjectDto);
+  update(@Param('id') id: string, @Body(ValidationPipe) updateProjectDto: UpdateProjectDto) {
+    return this.projectService.update(+id, updateProjectDto);
   }
 
   @Delete(':id')
   @Permission('project.manage')
-  remove(@Param('id', ParseBigIntPipe) id: bigint) {
-    return this.projectService.delete({ id: id } as any);
+  remove(@Param('id') id: string) {
+    return this.projectService.delete(+id);
   }
 
   @Patch(':id/status')
   @Permission('project.manage')
-  changeStatus(@Param('id', ParseBigIntPipe) id: bigint, @Body('status') status: ProjectStatus) {
-    return this.projectService.changeStatus(id, status);
+  changeStatus(@Param('id') id: string, @Body('status') status: ProjectStatus) {
+    return this.projectService.changeStatus(+id, status);
   }
 
   @Patch(':id/featured')
   @Permission('project.manage')
-  toggleFeatured(@Param('id', ParseBigIntPipe) id: bigint, @Body('featured') featured: boolean) {
-    return this.projectService.toggleFeatured(id, featured);
+  toggleFeatured(@Param('id') id: string, @Body('featured') featured: boolean) {
+    return this.projectService.toggleFeatured(+id, featured);
   }
 
   @Patch(':id/sort-order')
   @Permission('project.manage')
-  updateSortOrder(@Param('id', ParseBigIntPipe) id: bigint, @Body('sort_order') sortOrder: number) {
-    return this.projectService.updateSortOrder(id, sortOrder);
+  updateSortOrder(@Param('id') id: string, @Body('sort_order') sortOrder: number) {
+    return this.projectService.updateSortOrder(+id, sortOrder);
   }
 }
 

@@ -1,156 +1,90 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaCrudService, PrismaCrudBag } from '@/common/base/services/prisma/prisma-crud.service';
-
-type NotificationBag = PrismaCrudBag & {
-  Model: Prisma.NotificationGetPayload<any>;
-  Where: Prisma.NotificationWhereInput;
-  Select: Prisma.NotificationSelect;
-  Include: Prisma.NotificationInclude;
-  OrderBy: Prisma.NotificationOrderByWithRelationInput;
-  Create: Prisma.NotificationUncheckedCreateInput & { user_id?: number };
-  Update: Prisma.NotificationUncheckedUpdateInput;
-};
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { INotificationRepository, NOTIFICATION_REPOSITORY, NotificationFilter } from '@/modules/extra/notification/repositories/notification.repository.interface';
 
 @Injectable()
-export class NotificationService extends PrismaCrudService<NotificationBag> {
+export class NotificationService {
   constructor(
-    private readonly prisma: PrismaService,
-  ) {
-    super(prisma.notification, ['id', 'created_at'], 'created_at:DESC');
-  }
+    @Inject(NOTIFICATION_REPOSITORY)
+    private readonly notificationRepo: INotificationRepository,
+  ) { }
 
-  /**
-   * Mark notification as read for user
-   */
-  async markAsReadForUser(id: number, userId: number) {
-    const notification = await this.prisma.notification.findFirst({
-      where: {
-        id: BigInt(id),
-        user_id: BigInt(userId),
-        deleted_at: null,
-      },
+  async getList(query: any) {
+    const filter: NotificationFilter = {};
+    if (query.search) filter.search = query.search;
+    if (query.userId) filter.userId = query.userId;
+    if (query.isRead !== undefined) filter.isRead = query.isRead;
+    if (query.type) filter.type = query.type;
+    if (query.status) filter.status = query.status;
+
+    const result = await this.notificationRepo.findAll({
+      page: query.page,
+      limit: query.limit,
+      sort: query.sort || 'created_at:desc',
+      filter,
     });
 
-    if (!notification) {
-      throw new NotFoundException('Notification not found');
-    }
-    
-    const updated = await this.prisma.notification.update({
-      where: { id: BigInt(id) },
-      data: {
-        is_read: true,
-        read_at: new Date(),
-      },
-    });
-    
-    return this.convertBigIntFields(updated);
+    result.data = result.data.map(item => this.transform(item));
+    return result;
   }
 
-  /**
-   * Mark all notifications as read for user
-   */
-  async markAllAsReadForUser(userId: number) {
-    await this.prisma.notification.updateMany({
-      where: {
-        user_id: BigInt(userId),
-        is_read: false,
-        deleted_at: null,
-      },
-      data: {
-        is_read: true,
-        read_at: new Date(),
-      },
+  async getSimpleList(query: any) {
+    return this.getList({
+      ...query,
+      limit: query.limit ?? 50,
     });
   }
 
-  /**
-   * Override beforeCreate to handle BigInt conversion
-   */
-  protected override async beforeCreate(createDto: NotificationBag['Create']): Promise<NotificationBag['Create']> {
-    const payload: any = { ...createDto };
-    if (payload.user_id !== undefined) {
-      payload.user_id = BigInt(payload.user_id);
-    }
-    if (payload.created_user_id !== undefined && payload.created_user_id !== null) {
-      payload.created_user_id = BigInt(payload.created_user_id);
-    }
-    if (payload.updated_user_id !== undefined && payload.updated_user_id !== null) {
-      payload.updated_user_id = BigInt(payload.updated_user_id);
-    }
-    return payload;
+  async getOne(id: number) {
+    const notification = await this.notificationRepo.findById(id);
+    return this.transform(notification);
   }
 
-  /**
-   * Override beforeUpdate to handle BigInt conversion
-   */
-  protected override async beforeUpdate(_where: Prisma.NotificationWhereInput, updateDto: NotificationBag['Update']): Promise<NotificationBag['Update']> {
-    const payload: any = { ...updateDto };
-    if (payload.user_id !== undefined && payload.user_id !== null) {
-      payload.user_id = BigInt(payload.user_id);
-    }
-    if (payload.created_user_id !== undefined && payload.created_user_id !== null) {
-      payload.created_user_id = BigInt(payload.created_user_id);
-    }
-    if (payload.updated_user_id !== undefined && payload.updated_user_id !== null) {
-      payload.updated_user_id = BigInt(payload.updated_user_id);
-    }
-    return payload;
-  }
-
-  /**
-   * Override getOne to handle BigInt conversion
-   */
-  protected override async afterGetOne(entity: any, _where?: any, _options?: any): Promise<any> {
-    if (!entity) return null;
-    return this.convertBigIntFields(entity);
-  }
-
-  /**
-   * Override getList to handle BigInt conversion
-   */
-  protected override async afterGetList(data: any[], _filters?: any, _options?: any): Promise<any[]> {
-    return data.map(item => this.convertBigIntFields(item));
-  }
-
-  /**
-   * Convert BigInt fields to number for JSON serialization
-   */
-  private convertBigIntFields(entity: any): any {
-    if (!entity) return entity;
-    const converted = { ...entity };
-    if (converted.id) converted.id = Number(converted.id);
-    if (converted.user_id) converted.user_id = Number(converted.user_id);
-    if (converted.created_user_id) converted.created_user_id = Number(converted.created_user_id);
-    if (converted.updated_user_id) converted.updated_user_id = Number(converted.updated_user_id);
-    return converted;
-  }
-
-  /**
-   * Simple list giống getList nhưng limit mặc định lớn hơn
-   */
-  async getSimpleList(filters?: any, options?: any) {
-    const simpleOptions = {
-      ...options,
-      limit: options?.limit ?? 50,
-      maxLimit: options?.maxLimit ?? 1000,
+  async create(data: any) {
+    const payload = {
+      ...data,
+      user_id: data.user_id ? BigInt(data.user_id) : null,
     };
-    return this.getList(filters, simpleOptions);
+    const notification = await this.notificationRepo.create(payload);
+    return this.getOne(Number(notification.id));
   }
 
-  /**
-   * Wrapper update/delete để nhận id dạng number (giữ API cũ)
-   */
-  async update(id: number, data: NotificationBag['Update']) {
-    return super.update({ id: BigInt(id) } as any, data);
+  async update(id: number, data: any) {
+    const payload = {
+      ...data,
+      user_id: data.user_id ? BigInt(data.user_id) : null,
+    };
+    await this.notificationRepo.update(id, payload);
+    return this.getOne(id);
   }
 
   async delete(id: number) {
-    return super.delete({ id: BigInt(id) } as any);
+    return this.notificationRepo.delete(id);
   }
 
   async restore(id: number) {
-    return super.restore({ id: BigInt(id) } as any);
+    return this.notificationRepo.update(id, { deleted_at: null } as any);
+  }
+
+  async markAsReadForUser(id: number, userId: number) {
+    const notification = await this.notificationRepo.findById(id);
+    if (!notification || Number(notification.user_id) !== userId) {
+      throw new NotFoundException('Notification not found');
+    }
+    const updated = await this.notificationRepo.markAsRead(id);
+    return this.transform(updated);
+  }
+
+  async markAllAsReadForUser(userId: number) {
+    await this.notificationRepo.markAllAsRead(userId);
+  }
+
+  private transform(notification: any) {
+    if (!notification) return notification;
+    const item = { ...notification };
+    if (item.id) item.id = Number(item.id);
+    if (item.user_id) item.user_id = Number(item.user_id);
+    if (item.created_user_id) item.created_user_id = Number(item.created_user_id);
+    if (item.updated_user_id) item.updated_user_id = Number(item.updated_user_id);
+    return item;
   }
 }
