@@ -5,7 +5,7 @@ import { NotificationController as UserNotificationController } from '@/modules/
 import { RbacModule } from '@/modules/rbac/rbac.module';
 
 // Import repository module
-import { NotificationRepositoryModule } from './notification.repository.module';
+import { NotificationRepositoryModule } from '@/modules/extra/notification/notification.repository.module';
 
 @Module({
   imports: [

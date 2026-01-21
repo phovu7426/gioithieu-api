@@ -3,9 +3,12 @@ import { ProjectService } from '@/modules/introduction/project/admin/services/pr
 import { ProjectController } from '@/modules/introduction/project/admin/controllers/project.controller';
 import { RbacModule } from '@/modules/rbac/rbac.module';
 
+import { ProjectRepositoryModule } from '@/modules/introduction/project/project.repository.module';
+
 @Module({
   imports: [
     RbacModule,
+    ProjectRepositoryModule,
   ],
   controllers: [ProjectController],
   providers: [ProjectService],

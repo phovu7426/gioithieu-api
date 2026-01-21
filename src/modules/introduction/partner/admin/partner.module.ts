@@ -3,9 +3,12 @@ import { PartnerService } from '@/modules/introduction/partner/admin/services/pa
 import { PartnerController } from '@/modules/introduction/partner/admin/controllers/partner.controller';
 import { RbacModule } from '@/modules/rbac/rbac.module';
 
+import { PartnerRepositoryModule } from '@/modules/introduction/partner/partner.repository.module';
+
 @Module({
   imports: [
     RbacModule,
+    PartnerRepositoryModule,
   ],
   controllers: [PartnerController],
   providers: [PartnerService],

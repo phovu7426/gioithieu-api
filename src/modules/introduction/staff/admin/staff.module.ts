@@ -3,9 +3,12 @@ import { StaffService } from '@/modules/introduction/staff/admin/services/staff.
 import { StaffController } from '@/modules/introduction/staff/admin/controllers/staff.controller';
 import { RbacModule } from '@/modules/rbac/rbac.module';
 
+import { StaffRepositoryModule } from '@/modules/introduction/staff/staff.repository.module';
+
 @Module({
   imports: [
     RbacModule,
+    StaffRepositoryModule,
   ],
   controllers: [StaffController],
   providers: [StaffService],
