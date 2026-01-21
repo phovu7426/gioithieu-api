@@ -1,80 +1,57 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Put,
-  Param,
-  Delete,
-  Query,
-  Patch,
-  ValidationPipe,
-  UseGuards,
-} from '@nestjs/common';
-import { ProjectService } from '@/modules/introduction/project/admin/services/project.service';
-import { CreateProjectDto } from '@/modules/introduction/project/admin/dtos/create-project.dto';
-import { UpdateProjectDto } from '@/modules/introduction/project/admin/dtos/update-project.dto';
-import { GetProjectsDto } from '@/modules/introduction/project/admin/dtos/get-projects.dto';
-import { ProjectStatus } from '@/shared/enums/types/project-status.enum';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { Controller, Get, Post, Put, Delete, Body, Param, ValidationPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { CreateProjectUseCase } from '@/application/use-cases/introduction/project/commands/create-project/create-project.usecase';
+import { UpdateProjectUseCase } from '@/application/use-cases/introduction/project/commands/update-project/update-project.usecase';
+import { DeleteProjectUseCase } from '@/application/use-cases/introduction/project/commands/delete-project/delete-project.usecase';
+import { ListProjectsUseCase } from '@/application/use-cases/introduction/project/queries/admin/list-projects.usecase';
+import { GetProjectUseCase } from '@/application/use-cases/introduction/project/queries/admin/get-project.usecase';
+import { CreateProjectDto } from '@/application/use-cases/introduction/project/commands/create-project/create-project.dto';
+import { UpdateProjectDto } from '@/application/use-cases/introduction/project/commands/update-project/update-project.dto';
 import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
-import { ParseBigIntPipe } from '@/common/pipes/parse-bigint.pipe';
 
+@ApiTags('Admin / Introduction / Projects')
 @Controller('admin/projects')
-@UseGuards(JwtAuthGuard, RbacGuard)
-export class ProjectController {
-  constructor(private readonly projectService: ProjectService) { }
+export class AdminProjectController {
+  constructor(
+    private readonly listUseCase: ListProjectsUseCase,
+    private readonly getUseCase: GetProjectUseCase,
+    private readonly createUseCase: CreateProjectUseCase,
+    private readonly updateUseCase: UpdateProjectUseCase,
+    private readonly deleteUseCase: DeleteProjectUseCase,
+  ) { }
 
-  @LogRequest()
-  @Post()
+  @ApiOperation({ summary: 'List all projects' })
   @Permission('project.manage')
-  create(@Body(ValidationPipe) createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
-  }
-
   @Get()
-  @Permission('project.manage')
-  findAll(@Query(ValidationPipe) query: GetProjectsDto) {
-    return this.projectService.getList(query);
+  async findAll() {
+    return this.listUseCase.execute();
   }
 
+  @ApiOperation({ summary: 'Get project by ID' })
+  @Permission('project.manage')
   @Get(':id')
-  @Permission('project.manage')
-  findOne(@Param('id') id: string) {
-    return this.projectService.getOne(+id);
+  async findOne(@Param('id') id: string) {
+    return this.getUseCase.execute(BigInt(id));
   }
 
+  @ApiOperation({ summary: 'Create new project' })
+  @Permission('project.manage')
+  @Post()
+  async create(@Body(ValidationPipe) dto: CreateProjectDto) {
+    return this.createUseCase.execute(dto);
+  }
+
+  @ApiOperation({ summary: 'Update project' })
+  @Permission('project.manage')
   @Put(':id')
-  @Permission('project.manage')
-  update(@Param('id') id: string, @Body(ValidationPipe) updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
+  async update(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateProjectDto) {
+    return this.updateUseCase.execute(BigInt(id), dto);
   }
 
+  @ApiOperation({ summary: 'Delete project' })
+  @Permission('project.manage')
   @Delete(':id')
-  @Permission('project.manage')
-  remove(@Param('id') id: string) {
-    return this.projectService.delete(+id);
-  }
-
-  @Patch(':id/status')
-  @Permission('project.manage')
-  changeStatus(@Param('id') id: string, @Body('status') status: ProjectStatus) {
-    return this.projectService.changeStatus(+id, status);
-  }
-
-  @Patch(':id/featured')
-  @Permission('project.manage')
-  toggleFeatured(@Param('id') id: string, @Body('featured') featured: boolean) {
-    return this.projectService.toggleFeatured(+id, featured);
-  }
-
-  @Patch(':id/sort-order')
-  @Permission('project.manage')
-  updateSortOrder(@Param('id') id: string, @Body('sort_order') sortOrder: number) {
-    return this.projectService.updateSortOrder(+id, sortOrder);
+  async delete(@Param('id') id: string) {
+    return this.deleteUseCase.execute(BigInt(id));
   }
 }
-

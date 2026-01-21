@@ -1,32 +1,15 @@
-import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
-import { PublicProjectService } from '@/modules/introduction/project/public/services/project.service';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { Controller, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ListActiveProjectsUseCase } from '@/application/use-cases/introduction/project/queries/public/list-active-projects.usecase';
 
+@ApiTags('Public / Projects')
 @Controller('projects')
 export class PublicProjectController {
-  constructor(private readonly projectService: PublicProjectService) { }
+  constructor(private readonly listActiveUseCase: ListActiveProjectsUseCase) { }
 
-  @Permission('public')
+  @ApiOperation({ summary: 'Get all active projects' })
   @Get()
-  findAll(@Query() query: any) {
-    return this.projectService.getList(query);
-  }
-
-  @Permission('public')
-  @Get('featured')
-  getFeatured(@Query('limit') limit?: number) {
-    return this.projectService.getFeatured(limit ? Number(limit) : 10);
-  }
-
-  @Permission('public')
-  @Get(':slug')
-  async findOne(@Param('slug') slug: string) {
-    const project = await this.projectService.findBySlug(slug);
-    if (!project) {
-      throw new NotFoundException(`Project with slug "${slug}" not found`);
-    }
-    return project;
+  async findAll() {
+    return this.listActiveUseCase.execute();
   }
 }
-

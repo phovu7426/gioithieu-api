@@ -1,14 +1,19 @@
 import { Module } from '@nestjs/common';
-import { PublicCertificateService } from '@/modules/introduction/certificate/public/services/certificate.service';
 import { PublicCertificateController } from '@/modules/introduction/certificate/public/controllers/certificate.controller';
-
-import { CertificateRepositoryModule } from '@/modules/introduction/certificate/certificate.repository.module';
+import { CertificateRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/certificate-repository.module';
+import { GetPublicCertificateUseCase } from '@/application/use-cases/certificate/queries/public/get-certificate/get-public-certificate.usecase';
+import { ListPublicCertificatesUseCase } from '@/application/use-cases/certificate/queries/public/list-certificates/list-public-certificates.usecase';
 
 @Module({
   imports: [CertificateRepositoryModule],
   controllers: [PublicCertificateController],
-  providers: [PublicCertificateService],
-  exports: [PublicCertificateService],
+  providers: [
+    GetPublicCertificateUseCase,
+    ListPublicCertificatesUseCase,
+  ],
+  exports: [
+    GetPublicCertificateUseCase,
+    ListPublicCertificatesUseCase,
+  ],
 })
 export class PublicCertificateModule { }
-

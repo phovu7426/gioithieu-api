@@ -1,14 +1,23 @@
 import { Module } from '@nestjs/common';
-import { PublicTestimonialService } from '@/modules/introduction/testimonial/public/services/testimonial.service';
 import { PublicTestimonialController } from '@/modules/introduction/testimonial/public/controllers/testimonial.controller';
-
-import { TestimonialRepositoryModule } from '@/modules/introduction/testimonial/testimonial.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { ListActiveTestimonialsUseCase } from '@/application/use-cases/introduction/testimonial/queries/public/list-active-testimonials.usecase';
+import { ListFeaturedTestimonialsUseCase } from '@/application/use-cases/introduction/testimonial/queries/public/list-featured-testimonials.usecase';
+import { ListProjectTestimonialsUseCase } from '@/application/use-cases/introduction/testimonial/queries/public/list-project-testimonials.usecase';
 
 @Module({
-  imports: [TestimonialRepositoryModule],
+  imports: [IntroductionRepositoryModule],
   controllers: [PublicTestimonialController],
-  providers: [PublicTestimonialService],
-  exports: [PublicTestimonialService],
+  providers: [
+    ListActiveTestimonialsUseCase,
+    ListFeaturedTestimonialsUseCase,
+    ListProjectTestimonialsUseCase,
+  ],
+  exports: [
+    ListActiveTestimonialsUseCase,
+    ListFeaturedTestimonialsUseCase,
+    ListProjectTestimonialsUseCase,
+  ],
 })
 export class PublicTestimonialModule { }
 

@@ -1,32 +1,29 @@
-import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
-import { PublicGalleryService } from '@/modules/introduction/gallery/public/services/gallery.service';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { Controller, Get, Param } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ListActiveGalleriesUseCase } from '@/application/use-cases/introduction/gallery/queries/public/list-active-galleries.usecase';
+import { GetPublicGalleryUseCase } from '@/application/use-cases/introduction/gallery/queries/public/get-public-gallery.usecase';
 import { Permission } from '@/common/decorators/rbac.decorators';
 
-@Controller('gallery')
+@ApiTags('Public / Gallery')
+@Controller('galleries')
 export class PublicGalleryController {
-  constructor(private readonly galleryService: PublicGalleryService) { }
+  constructor(
+    private readonly listActiveUseCase: ListActiveGalleriesUseCase,
+    private readonly getBySlugUseCase: GetPublicGalleryUseCase,
+  ) { }
 
+  @ApiOperation({ summary: 'List all active galleries' })
   @Permission('public')
   @Get()
-  findAll(@Query() query: any) {
-    return this.galleryService.getList(query);
+  findAll() {
+    return this.listActiveUseCase.execute();
   }
 
-  @Permission('public')
-  @Get('featured')
-  getFeatured(@Query('limit') limit?: number) {
-    return this.galleryService.getFeatured(limit ? Number(limit) : 10);
-  }
-
+  @ApiOperation({ summary: 'Get gallery by slug' })
   @Permission('public')
   @Get(':slug')
   async findOne(@Param('slug') slug: string) {
-    const gallery = await this.galleryService.findBySlug(slug);
-    if (!gallery) {
-      throw new NotFoundException(`Gallery with slug "${slug}" not found`);
-    }
-    return gallery;
+    return this.getBySlugUseCase.execute(slug);
   }
 }
 

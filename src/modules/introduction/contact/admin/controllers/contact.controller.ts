@@ -6,88 +6,93 @@ import {
   Put,
   Param,
   Delete,
-  Query,
   ValidationPipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ContactService } from '@/modules/introduction/contact/admin/services/contact.service';
-import { CreateContactDto } from '@/modules/introduction/contact/admin/dtos/create-contact.dto';
-import { UpdateContactDto } from '@/modules/introduction/contact/admin/dtos/update-contact.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { CreateContactUseCase } from '@/application/use-cases/introduction/contact/commands/create-contact/create-contact.usecase';
+import { ReplyToContactUseCase } from '@/application/use-cases/introduction/contact/commands/reply-contact/reply-contact.usecase';
+import { MarkContactReadUseCase } from '@/application/use-cases/introduction/contact/commands/mark-read/mark-read.usecase';
+import { CloseContactUseCase } from '@/application/use-cases/introduction/contact/commands/close-contact/close-contact.usecase';
+import { ListContactsUseCase } from '@/application/use-cases/introduction/contact/queries/admin/list-contacts.usecase';
+import { CreateContactDto } from '@/application/use-cases/introduction/contact/commands/create-contact/create-contact.dto';
 import { LogRequest } from '@/common/decorators/log-request.decorator';
 import { Permission } from '@/common/decorators/rbac.decorators';
-import { AuthService } from '@/common/services/auth.service';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RbacGuard } from '@/common/guards/rbac.guard';
 
+import { GetContactUseCase } from '@/application/use-cases/introduction/contact/queries/admin/get-contact.usecase';
+import { DeleteContactUseCase } from '@/application/use-cases/introduction/contact/commands/delete-contact/delete-contact.usecase';
+
+@ApiTags('Admin / Introduction / Contact')
 @Controller('admin/contacts')
+@UseGuards(JwtAuthGuard, RbacGuard)
 export class ContactController {
   constructor(
-    private readonly contactService: ContactService,
-    private readonly auth: AuthService,
+    private readonly listUseCase: ListContactsUseCase,
+    private readonly getUseCase: GetContactUseCase,
+    private readonly createUseCase: CreateContactUseCase,
+    private readonly deleteUseCase: DeleteContactUseCase,
+    private readonly replyUseCase: ReplyToContactUseCase,
+    private readonly markReadUseCase: MarkContactReadUseCase,
+    private readonly closeUseCase: CloseContactUseCase,
   ) { }
 
   @Permission('contact.manage')
   @LogRequest()
   @Post()
-  create(@Body(ValidationPipe) createContactDto: CreateContactDto) {
-    return this.contactService.create(createContactDto);
+  @ApiOperation({ summary: 'Create new contact' })
+  create(@Body(ValidationPipe) dto: CreateContactDto) {
+    return this.createUseCase.execute(dto);
   }
 
   @Permission('contact.manage')
   @Get()
-  findAll(@Query(ValidationPipe) query: any) {
-    return this.contactService.getList(query);
-  }
-
-  @Permission('contact.manage')
-  @Get('simple')
-  getSimpleList(@Query(ValidationPipe) query: any) {
-    return this.contactService.getSimpleList(query);
+  @ApiOperation({ summary: 'List all contacts' })
+  findAll() {
+    return this.listUseCase.execute();
   }
 
   @Permission('contact.manage')
   @Get(':id')
+  @ApiOperation({ summary: 'Get contact by ID' })
   findOne(@Param('id') id: string) {
-    return this.contactService.getOne(+id);
-  }
-
-  @Permission('contact.manage')
-  @LogRequest()
-  @Put(':id')
-  update(
-    @Param('id') id: string,
-    @Body(ValidationPipe) updateContactDto: UpdateContactDto,
-  ) {
-    return this.contactService.update(+id, updateContactDto);
+    return this.getUseCase.execute(BigInt(id));
   }
 
   @Permission('contact.manage')
   @LogRequest()
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete contact' })
   remove(@Param('id') id: string) {
-    return this.contactService.delete(+id);
+    return this.deleteUseCase.execute(BigInt(id));
   }
 
   @Permission('contact.manage')
   @LogRequest()
   @Put(':id/reply')
+  @ApiOperation({ summary: 'Reply to contact' })
   reply(
     @Param('id') id: string,
     @Body('reply') reply: string,
   ) {
-    return this.contactService.replyToContact(+id, reply, this.auth.id() || undefined);
+    return this.replyUseCase.execute(BigInt(id), reply);
   }
 
   @Permission('contact.manage')
   @LogRequest()
   @Put(':id/read')
+  @ApiOperation({ summary: 'Mark contact as read' })
   markAsRead(@Param('id') id: string) {
-    return this.contactService.markAsRead(+id);
+    return this.markReadUseCase.execute(BigInt(id));
   }
 
   @Permission('contact.manage')
   @LogRequest()
   @Put(':id/close')
+  @ApiOperation({ summary: 'Close contact' })
   close(@Param('id') id: string) {
-    return this.contactService.closeContact(+id);
+    return this.closeUseCase.execute(BigInt(id));
   }
 }
 

@@ -5,11 +5,8 @@ import { AdminTestimonialModule } from '@/modules/introduction/testimonial/admin
 
 // Import public modules
 import { PublicTestimonialModule } from '@/modules/introduction/testimonial/public/testimonial.module';
-import { TestimonialRepositoryModule } from './testimonial.repository.module';
-
 @Module({
   imports: [
-    TestimonialRepositoryModule,
     // Admin modules
     AdminTestimonialModule,
     // Public modules

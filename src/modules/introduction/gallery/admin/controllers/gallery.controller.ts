@@ -1,58 +1,60 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Put,
-  Param,
-  Delete,
-  Query,
-  ValidationPipe,
-  UseGuards,
-} from '@nestjs/common';
-import { GalleryService } from '@/modules/introduction/gallery/admin/services/gallery.service';
-import { CreateGalleryDto } from '@/modules/introduction/gallery/admin/dtos/create-gallery.dto';
-import { UpdateGalleryDto } from '@/modules/introduction/gallery/admin/dtos/update-gallery.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { Controller, Get, Post, Body, Put, Delete, Param, ValidationPipe, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { CreateGalleryUseCase } from '@/application/use-cases/introduction/gallery/commands/create-gallery/create-gallery.usecase';
+import { UpdateGalleryUseCase } from '@/application/use-cases/introduction/gallery/commands/update-gallery/update-gallery.usecase';
+import { DeleteGalleryUseCase } from '@/application/use-cases/introduction/gallery/commands/delete-gallery/delete-gallery.usecase';
+import { ListGalleriesUseCase } from '@/application/use-cases/introduction/gallery/queries/admin/list-galleries.usecase';
+import { GetGalleryUseCase } from '@/application/use-cases/introduction/gallery/queries/admin/get-gallery.usecase';
+import { CreateGalleryDto } from '@/application/use-cases/introduction/gallery/commands/create-gallery/create-gallery.dto';
+import { UpdateGalleryDto } from '@/application/use-cases/introduction/gallery/commands/update-gallery/update-gallery.dto';
 import { Permission } from '@/common/decorators/rbac.decorators';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RbacGuard } from '@/common/guards/rbac.guard';
 
-@Controller('admin/gallery')
+@ApiTags('Admin / Introduction / Gallery')
+@Controller('admin/galleries')
 @UseGuards(JwtAuthGuard, RbacGuard)
-export class GalleryController {
-  constructor(private readonly galleryService: GalleryService) { }
+export class AdminGalleryController {
+  constructor(
+    private readonly listUseCase: ListGalleriesUseCase,
+    private readonly getUseCase: GetGalleryUseCase,
+    private readonly createUseCase: CreateGalleryUseCase,
+    private readonly updateUseCase: UpdateGalleryUseCase,
+    private readonly deleteUseCase: DeleteGalleryUseCase,
+  ) { }
 
-  @LogRequest()
-  @Post()
+  @ApiOperation({ summary: 'List all galleries' })
   @Permission('gallery.manage')
-  create(@Body(ValidationPipe) createGalleryDto: CreateGalleryDto) {
-    return this.galleryService.create(createGalleryDto);
-  }
-
   @Get()
-  @Permission('gallery.manage')
-  findAll(@Query(ValidationPipe) query: any) {
-    return this.galleryService.getList(query);
+  async findAll() {
+    return this.listUseCase.execute();
   }
 
+  @ApiOperation({ summary: 'Get gallery by ID' })
+  @Permission('gallery.manage')
   @Get(':id')
-  @Permission('gallery.manage')
-  findOne(@Param('id') id: string) {
-    return this.galleryService.getOne(+id);
+  async findOne(@Param('id') id: string) {
+    return this.getUseCase.execute(BigInt(id));
   }
 
+  @ApiOperation({ summary: 'Create new gallery' })
+  @Permission('gallery.manage')
+  @Post()
+  async create(@Body(ValidationPipe) dto: CreateGalleryDto) {
+    return this.createUseCase.execute(dto);
+  }
+
+  @ApiOperation({ summary: 'Update gallery' })
+  @Permission('gallery.manage')
   @Put(':id')
-  @Permission('gallery.manage')
-  update(@Param('id') id: string, @Body(ValidationPipe) updateGalleryDto: UpdateGalleryDto) {
-    return this.galleryService.update(+id, updateGalleryDto);
+  async update(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateGalleryDto) {
+    return this.updateUseCase.execute(BigInt(id), dto);
   }
 
-  @Delete(':id')
+  @ApiOperation({ summary: 'Delete gallery' })
   @Permission('gallery.manage')
-  remove(@Param('id') id: string) {
-    return this.galleryService.delete(+id);
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.deleteUseCase.execute(BigInt(id));
   }
 }
-

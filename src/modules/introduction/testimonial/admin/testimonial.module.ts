@@ -1,20 +1,36 @@
 import { Module } from '@nestjs/common';
-import { TestimonialService } from '@/modules/introduction/testimonial/admin/services/testimonial.service';
 import { TestimonialController } from '@/modules/introduction/testimonial/admin/controllers/testimonial.controller';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
-
-import { TestimonialRepositoryModule } from '@/modules/introduction/testimonial/testimonial.repository.module';
-import { ProjectRepositoryModule } from '@/modules/introduction/project/project.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { CreateTestimonialUseCase } from '@/application/use-cases/introduction/testimonial/commands/create-testimonial/create-testimonial.usecase';
+import { UpdateTestimonialUseCase } from '@/application/use-cases/introduction/testimonial/commands/update-testimonial/update-testimonial.usecase';
+import { DeleteTestimonialUseCase } from '@/application/use-cases/introduction/testimonial/commands/delete-testimonial/delete-testimonial.usecase';
+import { ToggleTestimonialFeaturedUseCase } from '@/application/use-cases/introduction/testimonial/commands/toggle-featured/toggle-featured.usecase';
+import { ListTestimonialsUseCase } from '@/application/use-cases/introduction/testimonial/queries/admin/list-testimonials.usecase';
+import { GetTestimonialUseCase } from '@/application/use-cases/introduction/testimonial/queries/admin/get-testimonial.usecase';
 
 @Module({
   imports: [
     RbacModule,
-    TestimonialRepositoryModule,
-    ProjectRepositoryModule,
+    IntroductionRepositoryModule,
   ],
   controllers: [TestimonialController],
-  providers: [TestimonialService],
-  exports: [TestimonialService],
+  providers: [
+    ListTestimonialsUseCase,
+    GetTestimonialUseCase,
+    CreateTestimonialUseCase,
+    UpdateTestimonialUseCase,
+    DeleteTestimonialUseCase,
+    ToggleTestimonialFeaturedUseCase,
+  ],
+  exports: [
+    ListTestimonialsUseCase,
+    GetTestimonialUseCase,
+    CreateTestimonialUseCase,
+    UpdateTestimonialUseCase,
+    DeleteTestimonialUseCase,
+    ToggleTestimonialFeaturedUseCase,
+  ],
 })
 export class AdminTestimonialModule { }
 

@@ -7,7 +7,7 @@ import * as bcrypt from 'bcryptjs';
 export class SeedUsers {
   private readonly logger = new Logger(SeedUsers.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding users...');
@@ -17,11 +17,10 @@ export class SeedUsers {
     const systemUserExists = await this.prisma.user.findFirst({ where: { email: 'systemuser@example.com' } });
     const shopAdminExists = await this.prisma.user.findFirst({ where: { email: 'shopadmin@example.com' } });
     const shopUserExists = await this.prisma.user.findFirst({ where: { email: 'shopuser@example.com' } });
-    const comicAdminExists = await this.prisma.user.findFirst({ where: { email: 'comicadmin@example.com' } });
-    const comicUserExists = await this.prisma.user.findFirst({ where: { email: 'comicuser@example.com' } });
+
 
     // Nếu tất cả users đã tồn tại thì skip (production-safe)
-    if (systemAdminExists && systemUserExists && shopAdminExists && shopUserExists && comicAdminExists && comicUserExists) {
+    if (systemAdminExists && systemUserExists && shopAdminExists && shopUserExists) {
       this.logger.log('All required users already exist, skip seeding (production-safe)');
       return;
     }
@@ -62,17 +61,14 @@ export class SeedUsers {
     const shopContext = await this.prisma.context.findFirst({ where: { code: 'shop' } });
     const shop1Group = shopContext ? await this.prisma.group.findFirst({ where: { code: 'shop1', context_id: shopContext.id } }) : null;
 
-    // Get comic context và first comic group
-    const comicContext = await this.prisma.context.findFirst({ where: { code: 'comic' } });
-    const comic1Group = comicContext ? await this.prisma.group.findFirst({ where: { code: 'truyen1', context_id: comicContext.id } }) : null;
+
 
     // Get roles
     const systemRole = await this.prisma.role.findFirst({ where: { code: 'system' } });
     const systemManagerRole = await this.prisma.role.findFirst({ where: { code: 'system_manager' } });
     const shopAdminRole = await this.prisma.role.findFirst({ where: { code: 'shop_admin' } });
     const shopManagerRole = await this.prisma.role.findFirst({ where: { code: 'shop_manager' } });
-    const comicAdminRole = await this.prisma.role.findFirst({ where: { code: 'comic_admin' } });
-    const comicManagerRole = await this.prisma.role.findFirst({ where: { code: 'comic_manager' } });
+
 
     // Get all permissions (cần để tạo custom roles)
     const allPermissions = await this.prisma.permission.findMany({ where: { status: 'active' } });
@@ -180,7 +176,7 @@ export class SeedUsers {
         });
         this.logger.log(`✅ Updated existing shopadmin password`);
       }
-      
+
       await this.assignUserToGroup(Number(savedShopAdmin.id), Number(shop1Group.id), Number(shopAdminRole.id));
       this.logger.log(`✅ Assigned shopadmin to shop1 group with shop_admin role (có user.manage)`);
 
@@ -214,64 +210,7 @@ export class SeedUsers {
       }
     }
 
-    // ========== COMIC CONTEXT USERS (tương tự shop) ==========
-    if (comic1Group && comicAdminRole) {
-      // 1. comicadmin: comic admin full quyền của context (trừ vai trò, quyền, phân quyền, hệ thống, payment, shipping)
-      let savedComicAdmin = comicAdminExists;
-      if (!savedComicAdmin) {
-        savedComicAdmin = await this.prisma.user.create({
-          data: {
-            username: 'comicadmin',
-            email: 'comicadmin@example.com',
-            password: hashedPassword,
-            status: UserStatus.active,
-            email_verified_at: new Date(),
-          },
-        });
-        this.logger.log(`✅ Created comicadmin user (comic admin full quyền)`);
-      } else {
-        savedComicAdmin = await this.prisma.user.update({
-          where: { id: savedComicAdmin.id },
-          data: {
-            password: hashedPassword,
-            status: UserStatus.active,
-          },
-        });
-        this.logger.log(`✅ Updated existing comicadmin password`);
-      }
-      
-      await this.assignUserToGroup(Number(savedComicAdmin.id), Number(comic1Group.id), Number(comicAdminRole.id));
-      this.logger.log(`✅ Assigned comicadmin to truyện1 group with comic_admin role (có user.manage)`);
 
-      // 2. comicuser: comic manager (giống comic_admin trừ user.manage)
-      let savedComicUser = comicUserExists;
-      if (!savedComicUser) {
-        savedComicUser = await this.prisma.user.create({
-          data: {
-            username: 'comicuser',
-            email: 'comicuser@example.com',
-            password: hashedPassword,
-            status: UserStatus.active,
-            email_verified_at: new Date(),
-          },
-        });
-        this.logger.log(`✅ Created comicuser user`);
-      } else {
-        savedComicUser = await this.prisma.user.update({
-          where: { id: savedComicUser.id },
-          data: {
-            password: hashedPassword,
-            status: UserStatus.active,
-          },
-        });
-        this.logger.log(`✅ Updated existing comicuser password`);
-      }
-
-      if (comicManagerRole) {
-        await this.assignUserToGroup(Number(savedComicUser.id), Number(comic1Group.id), Number(comicManagerRole.id));
-        this.logger.log(`✅ Assigned comicuser to truyện1 group with comic_manager role (trừ user.manage)`);
-      }
-    }
 
     this.logger.log(`✅ Users seeding completed`);
   }
@@ -298,10 +237,10 @@ export class SeedUsers {
 
     // Gán role cho user trong group
     const existingAssignment = await this.prisma.userRoleAssignment.findFirst({
-      where: { 
-        user_id: BigInt(userId), 
-        role_id: BigInt(roleId), 
-        group_id: BigInt(groupId) 
+      where: {
+        user_id: BigInt(userId),
+        role_id: BigInt(roleId),
+        group_id: BigInt(groupId)
       },
     });
 

@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
-import { PublicContactService } from '@/modules/introduction/contact/public/services/contact.service';
 import { PublicContactController } from '@/modules/introduction/contact/public/controllers/contact.controller';
-
-import { ContactRepositoryModule } from '@/modules/introduction/contact/contact.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { CreateContactUseCase } from '@/application/use-cases/introduction/contact/commands/create-contact/create-contact.usecase';
 
 @Module({
-  imports: [ContactRepositoryModule],
+  imports: [IntroductionRepositoryModule],
   controllers: [PublicContactController],
-  providers: [PublicContactService],
-  exports: [PublicContactService],
+  providers: [
+    CreateContactUseCase,
+  ],
+  exports: [
+    CreateContactUseCase,
+  ],
 })
 export class PublicContactModule { }
 

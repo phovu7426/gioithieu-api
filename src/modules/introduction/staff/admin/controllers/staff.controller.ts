@@ -1,58 +1,57 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Put,
-  Param,
-  Delete,
-  Query,
-  ValidationPipe,
-  UseGuards,
-} from '@nestjs/common';
-import { StaffService } from '@/modules/introduction/staff/admin/services/staff.service';
-import { CreateStaffDto } from '@/modules/introduction/staff/admin/dtos/create-staff.dto';
-import { UpdateStaffDto } from '@/modules/introduction/staff/admin/dtos/update-staff.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { Controller, Get, Post, Put, Delete, Body, Param, ValidationPipe, ParseIntPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { CreateStaffUseCase } from '@/application/use-cases/introduction/staff/commands/create-staff/create-staff.usecase';
+import { UpdateStaffUseCase } from '@/application/use-cases/introduction/staff/commands/update-staff/update-staff.usecase';
+import { DeleteStaffUseCase } from '@/application/use-cases/introduction/staff/commands/delete-staff/delete-staff.usecase';
+import { ListStaffUseCase } from '@/application/use-cases/introduction/staff/queries/admin/list-staff.usecase';
+import { GetStaffUseCase } from '@/application/use-cases/introduction/staff/queries/admin/get-staff.usecase';
+import { CreateStaffDto } from '@/application/use-cases/introduction/staff/commands/create-staff/create-staff.dto';
+import { UpdateStaffDto } from '@/application/use-cases/introduction/staff/commands/update-staff/update-staff.dto';
 import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
 
-@Controller('admin/staff')
-@UseGuards(JwtAuthGuard, RbacGuard)
-export class StaffController {
-  constructor(private readonly staffService: StaffService) { }
+@ApiTags('Admin / Introduction / Staff')
+@Controller('admin/staffs')
+export class AdminStaffController {
+  constructor(
+    private readonly listUseCase: ListStaffUseCase,
+    private readonly getUseCase: GetStaffUseCase,
+    private readonly createUseCase: CreateStaffUseCase,
+    private readonly updateUseCase: UpdateStaffUseCase,
+    private readonly deleteUseCase: DeleteStaffUseCase,
+  ) { }
 
-  @LogRequest()
-  @Post()
-  @Permission('staff.manage')
-  create(@Body(ValidationPipe) createStaffDto: CreateStaffDto) {
-    return this.staffService.create(createStaffDto);
-  }
-
+  @ApiOperation({ summary: 'List all staff members' })
+  @Permission('staff.view')
   @Get()
-  @Permission('staff.manage')
-  findAll(@Query(ValidationPipe) query: any) {
-    return this.staffService.getList(query);
+  async findAll() {
+    return this.listUseCase.execute();
   }
 
+  @ApiOperation({ summary: 'Get staff member by ID' })
+  @Permission('staff.view')
   @Get(':id')
-  @Permission('staff.manage')
-  findOne(@Param('id') id: string) {
-    return this.staffService.getOne(+id);
+  async findOne(@Param('id') id: string) {
+    return this.getUseCase.execute(BigInt(id));
   }
 
+  @ApiOperation({ summary: 'Create new staff member' })
+  @Permission('staff.manage')
+  @Post()
+  async create(@Body(ValidationPipe) dto: CreateStaffDto) {
+    return this.createUseCase.execute(dto);
+  }
+
+  @ApiOperation({ summary: 'Update staff member' })
+  @Permission('staff.manage')
   @Put(':id')
-  @Permission('staff.manage')
-  update(@Param('id') id: string, @Body(ValidationPipe) updateStaffDto: UpdateStaffDto) {
-    return this.staffService.update(+id, updateStaffDto);
+  async update(@Param('id') id: string, @Body(ValidationPipe) dto: UpdateStaffDto) {
+    return this.updateUseCase.execute(BigInt(id), dto);
   }
 
-  @Delete(':id')
+  @ApiOperation({ summary: 'Delete staff member' })
   @Permission('staff.manage')
-  remove(@Param('id') id: string) {
-    return this.staffService.delete(+id);
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.deleteUseCase.execute(BigInt(id));
   }
 }
-

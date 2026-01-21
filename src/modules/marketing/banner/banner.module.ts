@@ -1,22 +1,15 @@
 import { Module } from '@nestjs/common';
-
-// Import admin modules
-import { AdminBannerModule } from '@/modules/marketing/banner/admin/banner.module';
-import { AdminBannerLocationModule } from '@/modules/marketing/banner/admin/banner-location.module';
-
-// Import public modules
-import { PublicBannerModule } from '@/modules/marketing/banner/public/banner.module';
-import { BannerRepositoryModule } from './banner.repository.module';
+import { AdminBannerController } from './admin/controllers/banner.controller';
+import { MarketingRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/marketing-repository.module';
+import { ListActiveBannersUseCase, ListAllBannersUseCase } from '@/application/use-cases/marketing/banner.usecases';
 
 @Module({
-    imports: [
-        BannerRepositoryModule,
-        // Admin modules
-        AdminBannerModule,
-        AdminBannerLocationModule,
-        // Public modules
-        PublicBannerModule,
+    imports: [MarketingRepositoryModule],
+    controllers: [AdminBannerController],
+    providers: [
+        ListActiveBannersUseCase,
+        ListAllBannersUseCase,
     ],
-    exports: [],
+    exports: [ListActiveBannersUseCase, ListAllBannersUseCase],
 })
 export class BannerModule { }

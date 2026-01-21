@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
-import { PublicGalleryService } from '@/modules/introduction/gallery/public/services/gallery.service';
 import { PublicGalleryController } from '@/modules/introduction/gallery/public/controllers/gallery.controller';
-
-import { GalleryRepositoryModule } from '@/modules/introduction/gallery/gallery.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { ListActiveGalleriesUseCase } from '@/application/use-cases/introduction/gallery/queries/public/list-active-galleries.usecase';
+import { GetPublicGalleryUseCase } from '@/application/use-cases/introduction/gallery/queries/public/get-public-gallery.usecase';
 
 @Module({
-  imports: [GalleryRepositoryModule],
+  imports: [IntroductionRepositoryModule],
   controllers: [PublicGalleryController],
-  providers: [PublicGalleryService],
-  exports: [PublicGalleryService],
+  providers: [
+    ListActiveGalleriesUseCase,
+    GetPublicGalleryUseCase,
+  ],
+  exports: [
+    ListActiveGalleriesUseCase,
+    GetPublicGalleryUseCase,
+  ],
 })
 export class PublicGalleryModule { }
 

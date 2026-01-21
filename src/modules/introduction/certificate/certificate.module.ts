@@ -7,7 +7,7 @@ import { AdminCertificateModule } from '@/modules/introduction/certificate/admin
 import { PublicCertificateModule } from '@/modules/introduction/certificate/public/certificate.module';
 
 // Import repository module
-import { CertificateRepositoryModule } from './certificate.repository.module';
+import { CertificateRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/certificate-repository.module';
 
 @Module({
   imports: [
@@ -18,7 +18,10 @@ import { CertificateRepositoryModule } from './certificate.repository.module';
     // Repository module
     CertificateRepositoryModule,
   ],
-  exports: [CertificateRepositoryModule],
+  exports: [
+    AdminCertificateModule,
+    PublicCertificateModule,
+    CertificateRepositoryModule,
+  ],
 })
 export class CertificateModule { }
-

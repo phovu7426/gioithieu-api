@@ -1,28 +1,15 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { PublicStaffService } from '@/modules/introduction/staff/public/services/staff.service';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { Controller, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ListActiveStaffUseCase } from '@/application/use-cases/introduction/staff/queries/public/list-active-staff.usecase';
 
-@Controller('staff')
+@ApiTags('Public / Staff')
+@Controller('staffs')
 export class PublicStaffController {
-  constructor(private readonly staffService: PublicStaffService) { }
+  constructor(private readonly listActiveUseCase: ListActiveStaffUseCase) { }
 
-  @Permission('public')
+  @ApiOperation({ summary: 'Get all active staff' })
   @Get()
-  findAll(@Query() query: any) {
-    return this.staffService.getList(query);
-  }
-
-  @Permission('public')
-  @Get('department/:department')
-  findByDepartment(@Param('department') department: string) {
-    return this.staffService.findByDepartment(department);
-  }
-
-  @Permission('public')
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.staffService.getOne(+id);
+  async findAll() {
+    return this.listActiveUseCase.execute();
   }
 }
-

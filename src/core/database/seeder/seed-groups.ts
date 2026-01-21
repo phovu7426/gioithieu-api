@@ -5,7 +5,7 @@ import { PrismaService } from '@/core/database/prisma/prisma.service';
 export class SeedGroups {
   private readonly logger = new Logger(SeedGroups.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding groups and contexts...');
@@ -35,10 +35,10 @@ export class SeedGroups {
 
     // ========== 1. SYSTEM CONTEXT - 1 GROUP: system ==========
     // Tìm group với code 'system' trước (ưu tiên)
-    let systemGroup = await this.prisma.group.findFirst({ 
-      where: { code: 'system' } 
+    let systemGroup = await this.prisma.group.findFirst({
+      where: { code: 'system' }
     });
-    
+
     if (systemGroup) {
       // Đã có group với code 'system', update owner và context nếu cần
       let needUpdate = false;
@@ -60,13 +60,13 @@ export class SeedGroups {
       this.logger.log(`✅ Found existing system group: ${systemGroup.name} (code: ${systemGroup.code})`);
     } else {
       // Không có group với code 'system', tìm group khác trong system context
-      const existingSystemGroups = await this.prisma.group.findMany({ 
-        where: { 
+      const existingSystemGroups = await this.prisma.group.findMany({
+        where: {
           context_id: systemContext.id,
           type: 'system'
-        } 
+        }
       });
-      
+
       if (existingSystemGroups.length > 0) {
         // Có group khác trong system context, update code của group đầu tiên thành 'system'
         systemGroup = existingSystemGroups[0];
@@ -76,7 +76,7 @@ export class SeedGroups {
           where: { id: systemGroup.id },
           data: { code: `system_old_${Date.now()}` },
         });
-        
+
         // Xóa các groups còn lại (trừ group đầu tiên)
         if (existingSystemGroups.length > 1) {
           for (let i = 1; i < existingSystemGroups.length; i++) {
@@ -84,7 +84,7 @@ export class SeedGroups {
             this.logger.log(`🗑️ Removed duplicate system group: ${existingSystemGroups[i].code}`);
           }
         }
-        
+
         // Update code về 'system'
         systemGroup = await this.prisma.group.update({
           where: { id: systemGroup.id },
@@ -135,8 +135,8 @@ export class SeedGroups {
 
     const createdShopGroups: any[] = [];
     for (const shopData of shopGroups) {
-      let shopGroup = await this.prisma.group.findFirst({ 
-        where: { code: shopData.code, context_id: shopContext.id } 
+      let shopGroup = await this.prisma.group.findFirst({
+        where: { code: shopData.code, context_id: shopContext.id }
       });
       if (!shopGroup) {
         shopGroup = await this.prisma.group.create({
@@ -164,71 +164,16 @@ export class SeedGroups {
       });
     }
 
-    // ========== 3. COMIC CONTEXT - 4 GROUPS: truyện 1, truyện 2, truyện 3, truyện 4 ==========
-    let comicContext = await this.prisma.context.findFirst({ where: { code: 'comic' } });
-    if (!comicContext) {
-      comicContext = await this.prisma.context.create({
-        data: {
-          type: 'comic',
-          ref_id: null,
-          name: 'Comic Context',
-          code: 'comic',
-          status: 'active',
-        },
-      });
-      this.logger.log(`✅ Created comic context: ${comicContext.name}`);
-    } else {
-      this.logger.log(`✅ Found existing comic context: ${comicContext.name}`);
-    }
-
-    const comicGroups = [
-      { code: 'truyen1', name: 'Truyện 1' },
-      { code: 'truyen2', name: 'Truyện 2' },
-      { code: 'truyen3', name: 'Truyện 3' },
-      { code: 'truyen4', name: 'Truyện 4' },
-    ];
-
-    const createdComicGroups: any[] = [];
-    for (const comicData of comicGroups) {
-      let comicGroup = await this.prisma.group.findFirst({ 
-        where: { code: comicData.code, context_id: comicContext.id } 
-      });
-      if (!comicGroup) {
-        comicGroup = await this.prisma.group.create({
-          data: {
-            type: 'comic',
-            code: comicData.code,
-            name: comicData.name,
-            status: 'active',
-            context_id: comicContext.id,
-            owner_id: defaultOwnerId,
-          },
-        });
-        this.logger.log(`✅ Created comic group: ${comicGroup.name} (code: ${comicGroup.code})`);
-      } else {
-        this.logger.log(`✅ Found existing comic group: ${comicGroup.name} (code: ${comicGroup.code})`);
-      }
-      createdComicGroups.push(comicGroup);
-    }
-
-    // Update comic context ref_id to first comic group
-    if (Number(comicContext.ref_id) !== Number(createdComicGroups[0].id)) {
-      await this.prisma.context.update({
-        where: { id: comicContext.id },
-        data: { ref_id: createdComicGroups[0].id },
-      });
-    }
-
     this.logger.log(`✅ Groups seeding completed!`);
     this.logger.log(`   📊 Statistics:`);
     this.logger.log(`   - System context: 1 group`);
     this.logger.log(`   - Shop context: ${createdShopGroups.length} groups`);
-    this.logger.log(`   - Comic context: ${createdComicGroups.length} groups`);
+
   }
 
   async clear(): Promise<void> {
     this.logger.log('Clearing groups...');
-    
+
     // Xóa contexts trước (vì có foreign key) - trừ system context
     await this.prisma.context.deleteMany({
       where: { type: { not: 'system' } },

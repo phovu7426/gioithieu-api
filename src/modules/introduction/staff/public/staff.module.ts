@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
-import { PublicStaffService } from '@/modules/introduction/staff/public/services/staff.service';
 import { PublicStaffController } from '@/modules/introduction/staff/public/controllers/staff.controller';
-
-import { StaffRepositoryModule } from '@/modules/introduction/staff/staff.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { ListActiveStaffUseCase } from '@/application/use-cases/introduction/staff/queries/public/list-active-staff.usecase';
 
 @Module({
-  imports: [StaffRepositoryModule],
+  imports: [IntroductionRepositoryModule],
   controllers: [PublicStaffController],
-  providers: [PublicStaffService],
-  exports: [PublicStaffService],
+  providers: [ListActiveStaffUseCase],
+  exports: [ListActiveStaffUseCase],
 })
 export class PublicStaffModule { }
 

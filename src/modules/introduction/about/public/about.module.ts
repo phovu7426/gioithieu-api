@@ -1,13 +1,20 @@
 import { Module } from '@nestjs/common';
-import { PublicAboutService } from '@/modules/introduction/about/public/services/about.service';
 import { PublicAboutController } from '@/modules/introduction/about/public/controllers/about.controller';
-import { AboutRepositoryModule } from '@/modules/introduction/about/about.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { ListActiveAboutSectionsUseCase } from '@/application/use-cases/introduction/about/queries/public/list-active-sections.usecase';
+import { GetAboutSectionBySlugUseCase } from '@/application/use-cases/introduction/about/queries/public/get-section-by-slug.usecase';
 
 @Module({
-  imports: [AboutRepositoryModule],
+  imports: [IntroductionRepositoryModule],
   controllers: [PublicAboutController],
-  providers: [PublicAboutService],
-  exports: [PublicAboutService],
+  providers: [
+    ListActiveAboutSectionsUseCase,
+    GetAboutSectionBySlugUseCase,
+  ],
+  exports: [
+    ListActiveAboutSectionsUseCase,
+    GetAboutSectionBySlugUseCase,
+  ],
 })
 export class PublicAboutModule { }
 

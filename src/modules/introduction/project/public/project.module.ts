@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
-import { PublicProjectService } from '@/modules/introduction/project/public/services/project.service';
 import { PublicProjectController } from '@/modules/introduction/project/public/controllers/project.controller';
-
-import { ProjectRepositoryModule } from '@/modules/introduction/project/project.repository.module';
+import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
+import { ListActiveProjectsUseCase } from '@/application/use-cases/introduction/project/queries/public/list-active-projects.usecase';
 
 @Module({
-  imports: [ProjectRepositoryModule],
+  imports: [IntroductionRepositoryModule],
   controllers: [PublicProjectController],
-  providers: [PublicProjectService],
-  exports: [PublicProjectService],
+  providers: [ListActiveProjectsUseCase],
+  exports: [ListActiveProjectsUseCase],
 })
 export class PublicProjectModule { }
 

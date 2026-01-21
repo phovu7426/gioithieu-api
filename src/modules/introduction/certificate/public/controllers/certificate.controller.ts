@@ -1,23 +1,28 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { PublicCertificateService } from '@/modules/introduction/certificate/public/services/certificate.service';
-import { CertificateType } from '@/shared/enums/types/certificate-type.enum';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { Controller, Get, Param, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { GetPublicCertificateUseCase } from '@/application/use-cases/certificate/queries/public/get-certificate/get-public-certificate.usecase';
+import { ListPublicCertificatesUseCase } from '@/application/use-cases/certificate/queries/public/list-certificates/list-public-certificates.usecase';
+import { PublicCertificateResponseDto } from '@/application/use-cases/certificate/queries/public/get-certificate/public-certificate.response.dto';
 
-@Controller('certificates')
+@ApiTags('Public Certificates')
+@Controller('public/certificates')
 export class PublicCertificateController {
-  constructor(private readonly certificateService: PublicCertificateService) { }
+  constructor(
+    private readonly getUseCase: GetPublicCertificateUseCase,
+    private readonly listUseCase: ListPublicCertificatesUseCase,
+  ) { }
 
-  @Permission('public')
   @Get()
-  findAll(@Query() query: any) {
-    return this.certificateService.getList(query);
+  @ApiOperation({ summary: 'List all active certificates for public view' })
+  @ApiResponse({ status: HttpStatus.OK, type: [PublicCertificateResponseDto] })
+  async getList() {
+    return this.listUseCase.execute();
   }
 
-  @Permission('public')
-  @Get('type/:type')
-  findByType(@Param('type') type: CertificateType) {
-    return this.certificateService.findByType(type);
+  @Get(':id')
+  @ApiOperation({ summary: 'Get active certificate by ID for public view' })
+  @ApiResponse({ status: HttpStatus.OK, type: PublicCertificateResponseDto })
+  async getById(@Param('id') id: string) {
+    return this.getUseCase.execute(BigInt(id));
   }
 }
-
