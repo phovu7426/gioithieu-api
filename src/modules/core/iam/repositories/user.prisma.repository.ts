@@ -1,11 +1,11 @@
-
+﻿
 import { Injectable } from '@nestjs/common';
 import { User, Prisma, Profile } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { PrismaRepository } from '@/common/core/repositories';
 import { IUserRepository, UserFilter } from './user.repository.interface';
-import { IPaginationOptions, IPaginatedResult } from '@/common/base/repository/repository.interface';
-import { createPaginationMeta } from '@/common/base/utils/pagination.helper';
+import { IPaginationOptions, IPaginatedResult } from '@/common/core/repositories';
+import { createPaginationMeta } from '@/common/core/utils';
 
 @Injectable()
 export class UserPrismaRepository extends PrismaRepository<

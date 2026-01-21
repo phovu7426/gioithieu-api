@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+﻿import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { UserService } from '@/modules/core/iam/user/admin/services/user.service';
 import { CreateUserDto } from '@/modules/core/iam/user/admin/dtos/create-user.dto';
 import { UpdateUserDto } from '@/modules/core/iam/user/admin/dtos/update-user.dto';
 import { ChangePasswordDto } from '@/modules/core/iam/user/admin/dtos/change-password.dto';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { prepareQuery } from '@/common/core/utils';
 
 @Controller('admin/users')
 export class UserController {

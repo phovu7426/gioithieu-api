@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { PostComment } from '@prisma/client';
 import { IPostCommentRepository, POST_COMMENT_REPOSITORY, PostCommentFilter } from '@/modules/post/repositories/post-comment.repository.interface';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class AdminPostCommentService extends BaseContentService<PostComment, IPostCommentRepository> {

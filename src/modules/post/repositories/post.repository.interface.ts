@@ -1,5 +1,5 @@
-import { Post } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+﻿import { Post } from '@prisma/client';
+import { IRepository } from '@/common/core/repositories';
 
 export const POST_REPOSITORY = 'IPostRepository';
 

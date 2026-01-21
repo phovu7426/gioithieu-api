@@ -1,8 +1,8 @@
-import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
+﻿import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
 import { PublicAboutService } from '@/modules/introduction/about/public/services/about.service';
 import { AboutSectionType } from '@/shared/enums/types/about-section-type.enum';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { prepareQuery } from '@/common/core/utils';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('about-sections')
 export class PublicAboutController {

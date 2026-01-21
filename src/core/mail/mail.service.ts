@@ -1,7 +1,7 @@
-import { Injectable, InternalServerErrorException, Inject } from '@nestjs/common';
+﻿import { Injectable, InternalServerErrorException, Inject } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
-import { CacheService } from '@/common/services/cache.service';
+import { CacheService } from '@/common/cache/services';
 import { IEmailConfigRepository, EMAIL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/email-config.repository.interface';
 
 export interface SendMailOptions {

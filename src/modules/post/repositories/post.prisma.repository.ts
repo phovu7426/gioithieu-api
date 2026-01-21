@@ -1,12 +1,12 @@
-
+﻿
 import { Injectable } from '@nestjs/common';
 import { Post, Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { PrismaRepository } from '@/common/core/repositories';
 import { IPostRepository, PostFilter } from './post.repository.interface';
 import { RedisUtil } from '@/core/utils/redis.util';
-import { IPaginationOptions, IPaginatedResult } from '@/common/base/repository/repository.interface';
-import { createPaginationMeta } from '@/common/base/utils/pagination.helper';
+import { IPaginationOptions, IPaginatedResult } from '@/common/core/repositories';
+import { createPaginationMeta } from '@/common/core/utils';
 
 @Injectable()
 export class PostPrismaRepository extends PrismaRepository<

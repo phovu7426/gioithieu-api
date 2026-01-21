@@ -1,7 +1,7 @@
-import { Injectable, ConflictException, Inject, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, ConflictException, Inject, NotFoundException } from '@nestjs/common';
 import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY, BannerLocationFilter } from '@/modules/marketing/banner/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 import { BannerLocation } from '@prisma/client';
 
 @Injectable()

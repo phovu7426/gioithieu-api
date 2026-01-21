@@ -1,9 +1,9 @@
-import { Controller, Put, Body, Param, ParseIntPipe, BadRequestException } from '@nestjs/common';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
+﻿import { Controller, Put, Body, Param, ParseIntPipe, BadRequestException } from '@nestjs/common';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
-import { RequestContext } from '@/common/utils/request-context.util';
-import { Auth } from '@/common/utils/auth.util';
+import { RequestContext } from '@/common/shared/utils';
+import { Auth } from '@/common/auth/utils';
 import { ExecutionContext } from '@nestjs/common';
 
 @Controller('admin/users')

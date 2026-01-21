@@ -1,7 +1,7 @@
-import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
+﻿import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
 import { PublicGalleryService } from '@/modules/introduction/gallery/public/services/gallery.service';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { prepareQuery } from '@/common/core/utils';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('gallery')
 export class PublicGalleryController {

@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+﻿import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 
@@ -10,20 +10,20 @@ import { CommonModule } from '@/common/common.module';
 import { CustomLoggerService } from '@/core/logger/logger.service';
 
 // Common Filters, Interceptors, Guards
-import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
-import { QueryFailedFilter } from '@/common/filters/query-failed.filter';
-import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
-import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
-import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
-import { FilePathInterceptor } from '@/common/interceptors/file-path.interceptor';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { HttpExceptionFilter } from '@/common/http/filters';
+import { QueryFailedFilter } from '@/common/http/filters';
+import { TransformInterceptor } from '@/common/http/interceptors';
+import { LoggingInterceptor } from '@/common/http/interceptors';
+import { TimeoutInterceptor } from '@/common/http/interceptors';
+import { FilePathInterceptor } from '@/common/file/interceptors';
+import { JwtAuthGuard } from '@/common/auth/guards';
 import { AuthModule } from '@/modules/core/auth/auth.module';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
-import { RbacGuard } from '@/common/guards/rbac.guard';
-import { RequestContextMiddleware } from '@/common/middlewares/request-context.middleware';
+import { RbacGuard } from '@/common/auth/guards';
+import { RequestContextMiddleware } from '@/common/http/middlewares';
 import { RateLimitModule } from '@/core/security/throttler.module';
 import { ContextModule } from '@/modules/core/context/context.module';
-import { GroupInterceptor } from '@/common/interceptors/group.interceptor';
+import { GroupInterceptor } from '@/common/http/interceptors';
 
 // New Domain Modules
 import { PostModule } from '@/modules/post/post.module';

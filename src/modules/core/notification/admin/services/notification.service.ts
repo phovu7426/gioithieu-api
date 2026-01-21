@@ -1,6 +1,6 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { INotificationRepository, NOTIFICATION_REPOSITORY, NotificationFilter } from '@/modules/core/notification/repositories/notification.repository.interface';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class NotificationService extends BaseService<any, INotificationRepository> {

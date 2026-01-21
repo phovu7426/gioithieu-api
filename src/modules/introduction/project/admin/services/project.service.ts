@@ -1,6 +1,6 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { IProjectRepository, PROJECT_REPOSITORY, ProjectFilter } from '@/modules/introduction/project/repositories/project.repository.interface';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 import { Project } from '@prisma/client';
 
 @Injectable()

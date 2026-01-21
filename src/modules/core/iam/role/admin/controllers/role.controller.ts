@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { AuthService } from '@/common/services/auth.service';
+﻿import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Permission } from '@/common/auth/decorators';
+import { LogRequest } from '@/common/shared/decorators';
+import { AuthService } from '@/common/auth/services';
 import { RoleService } from '@/modules/core/iam/role/admin/services/role.service';
 
 @Controller('admin/roles')

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -13,9 +13,9 @@ import {
 import { PostTagService } from '@/modules/post/post-tag/admin/services/post-tag.service';
 import { CreatePostTagDto } from '@/modules/post/post-tag/admin/dtos/create-post-tag.dto';
 import { UpdatePostTagDto } from '@/modules/post/post-tag/admin/dtos/update-post-tag.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('admin/post-tags')
 export class PostTagController {

@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IGalleryRepository, GALLERY_REPOSITORY } from '@/modules/introduction/gallery/repositories/gallery.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class PublicGalleryService extends BaseService<any, IGalleryRepository> {

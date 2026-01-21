@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -16,12 +16,12 @@ import { CreateProjectDto } from '@/modules/introduction/project/admin/dtos/crea
 import { UpdateProjectDto } from '@/modules/introduction/project/admin/dtos/update-project.dto';
 import { GetProjectsDto } from '@/modules/introduction/project/admin/dtos/get-projects.dto';
 import { ProjectStatus } from '@/shared/enums/types/project-status.enum';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
-import { ParseBigIntPipe } from '@/common/pipes/parse-bigint.pipe';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
+import { ParseBigIntPipe } from '@/common/http/pipes';
 
 @Controller('admin/projects')
 @UseGuards(JwtAuthGuard, RbacGuard)

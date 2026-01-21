@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Query,
@@ -8,8 +8,8 @@ import {
 import { PostCategoryService } from '@/modules/post/post-category/public/services/post-category.service';
 import { GetCategoriesDto } from '@/modules/post/post-category/public/dtos/get-categories.dto';
 import { GetCategoryDto } from '@/modules/post/post-category/public/dtos/get-category.dto';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { Permission } from '@/common/auth/decorators';
+import { prepareQuery } from '@/common/core/utils';
 
 @Controller('public/post-categories')
 export class PostCategoryController {

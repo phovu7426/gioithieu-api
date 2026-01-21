@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { IEmailConfigRepository, EMAIL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/email-config.repository.interface';
 import { UpdateEmailConfigDto } from '../dtos/update-email-config.dto';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class EmailConfigService extends BaseService<any, IEmailConfigRepository> {

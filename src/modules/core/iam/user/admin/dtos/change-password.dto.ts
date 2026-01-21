@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { Match } from '@/common/validators/match.decorator';
+﻿import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { Match } from '@/common/shared/validators';
 
 export class ChangePasswordDto {
   @IsNotEmpty({ message: 'Mật khẩu không được để trống.' })

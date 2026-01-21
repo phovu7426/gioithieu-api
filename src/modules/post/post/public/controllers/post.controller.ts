@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Query,
@@ -9,8 +9,8 @@ import {
 import { PostService } from '@/modules/post/post/public/services/post.service';
 import { GetPostsDto } from '@/modules/post/post/public/dtos/get-posts.dto';
 import { GetPostDto } from '@/modules/post/post/public/dtos/get-post.dto';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { Permission } from '@/common/auth/decorators';
+import { prepareQuery } from '@/common/core/utils';
 
 @Controller('public/posts')
 export class PostController {

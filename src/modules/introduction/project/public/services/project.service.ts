@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IProjectRepository, PROJECT_REPOSITORY, ProjectFilter } from '@/modules/introduction/project/repositories/project.repository.interface';
 import { ProjectStatus } from '@/shared/enums/types/project-status.enum';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class PublicProjectService extends BaseContentService<any, IProjectRepository> {

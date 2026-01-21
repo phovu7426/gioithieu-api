@@ -1,6 +1,6 @@
-
+﻿
 import { Contact } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+import { IRepository } from '@/common/core/repositories';
 
 export const CONTACT_REPOSITORY = 'IContactRepository';
 

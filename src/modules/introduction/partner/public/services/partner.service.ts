@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/repositories/partner.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { PartnerType } from '@/shared/enums/types/partner-type.enum';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class PublicPartnerService extends BaseService<any, IPartnerRepository> {

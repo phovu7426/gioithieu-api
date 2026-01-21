@@ -1,6 +1,6 @@
-
+﻿
 import { Faq } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+import { IRepository } from '@/common/core/repositories';
 
 export const FAQ_REPOSITORY = 'IFaqRepository';
 

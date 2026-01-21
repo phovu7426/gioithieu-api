@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IGeneralConfigRepository, GENERAL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/general-config.repository.interface';
 import { UpdateGeneralConfigDto } from '../dtos/update-general-config.dto';
-import { CacheService } from '@/common/services/cache.service';
-import { BaseService } from '@/common/base/services';
+import { CacheService } from '@/common/cache/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class GeneralConfigService extends BaseService<any, IGeneralConfigRepository> {

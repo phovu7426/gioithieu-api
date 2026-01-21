@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { IContextRepository, CONTEXT_REPOSITORY } from '@/modules/core/context/repositories/context.repository.interface';
 import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/core/context/repositories/group.repository.interface';
 import { Request } from 'express';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '@/modules/core/rbac/repositories/user-group.repository.interface';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class ContextService extends BaseService<any, IContextRepository> {

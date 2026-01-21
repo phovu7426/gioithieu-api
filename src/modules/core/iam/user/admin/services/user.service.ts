@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { RequestContext } from '@/common/utils/request-context.util';
+import { RequestContext } from '@/common/shared/utils';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { ChangePasswordDto } from '@/modules/core/iam/user/admin/dtos/change-password.dto';
 import { IUserRepository, USER_REPOSITORY, UserFilter } from '@/modules/core/iam/repositories/user.repository.interface';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class UserService extends BaseService<any, IUserRepository> {

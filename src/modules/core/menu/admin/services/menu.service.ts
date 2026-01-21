@@ -1,10 +1,10 @@
-import { Injectable, Inject, Logger, BadRequestException, NotFoundException, forwardRef } from '@nestjs/common';
+﻿import { Injectable, Inject, Logger, BadRequestException, NotFoundException, forwardRef } from '@nestjs/common';
 import { IMenuRepository, MENU_REPOSITORY, MenuFilter } from '@/modules/core/menu/repositories/menu.repository.interface';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
-import { RequestContext } from '@/common/utils/request-context.util';
+import { RequestContext } from '@/common/shared/utils';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { MenuTreeItem } from '@/modules/core/menu/admin/interfaces/menu-tree-item.interface';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class MenuService extends BaseService<any, IMenuRepository> {

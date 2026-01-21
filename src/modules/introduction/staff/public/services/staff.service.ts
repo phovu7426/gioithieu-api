@@ -1,7 +1,7 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { IStaffRepository, STAFF_REPOSITORY, StaffFilter } from '@/modules/introduction/staff/repositories/staff.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 import { Staff } from '@prisma/client';
 
 @Injectable()

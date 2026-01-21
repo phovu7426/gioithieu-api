@@ -1,8 +1,8 @@
-
+﻿
 import { Injectable } from '@nestjs/common';
 import { Banner, Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
-import { PrismaRepository } from '@/common/base/repository/prisma.repository';
+import { PrismaRepository } from '@/common/core/repositories';
 import { IBannerRepository, BannerFilter } from './banner.repository.interface';
 
 @Injectable()

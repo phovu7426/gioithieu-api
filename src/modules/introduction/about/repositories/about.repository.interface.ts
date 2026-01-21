@@ -1,4 +1,4 @@
-import { IRepository, IPaginatedResult, IPaginationOptions } from '@/common/base/repository/repository.interface';
+﻿import { IRepository, IPaginatedResult, IPaginationOptions } from '@/common/core/repositories';
 
 export interface AboutFilter {
     search?: string;

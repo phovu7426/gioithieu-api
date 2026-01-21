@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -12,10 +12,10 @@ import {
 import { ContactService } from '@/modules/introduction/contact/admin/services/contact.service';
 import { CreateContactDto } from '@/modules/introduction/contact/admin/dtos/create-contact.dto';
 import { UpdateContactDto } from '@/modules/introduction/contact/admin/dtos/update-contact.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { AuthService } from '@/common/services/auth.service';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { AuthService } from '@/common/auth/services';
 
 @Controller('admin/contacts')
 export class ContactController {

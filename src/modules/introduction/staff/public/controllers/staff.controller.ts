@@ -1,7 +1,7 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+﻿import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PublicStaffService } from '@/modules/introduction/staff/public/services/staff.service';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { prepareQuery } from '@/common/core/utils';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('staff')
 export class PublicStaffController {

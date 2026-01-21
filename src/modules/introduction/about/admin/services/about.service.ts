@@ -1,6 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IAboutRepository, ABOUT_REPOSITORY, AboutFilter } from '@/modules/introduction/about/repositories/about.repository.interface';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class AboutService extends BaseContentService<any, IAboutRepository> {

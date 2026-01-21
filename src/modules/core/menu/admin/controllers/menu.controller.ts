@@ -1,12 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe, ValidationPipe } from '@nestjs/common';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { AuthService } from '@/common/services/auth.service';
+﻿import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe, ValidationPipe } from '@nestjs/common';
+import { Permission } from '@/common/auth/decorators';
+import { AuthService } from '@/common/auth/services';
 import { MenuService } from '@/modules/core/menu/admin/services/menu.service';
 import { CreateMenuDto } from '@/modules/core/menu/admin/dtos/create-menu.dto';
 import { UpdateMenuDto } from '@/modules/core/menu/admin/dtos/update-menu.dto';
 import { QueryMenuDto } from '@/modules/core/menu/admin/dtos/query-menu.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
 
 @Controller('admin/menus')
 export class AdminMenuController {

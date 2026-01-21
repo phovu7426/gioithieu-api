@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { Certificate } from '@prisma/client';
 import { ICertificateRepository, CERTIFICATE_REPOSITORY, CertificateFilter } from '@/modules/introduction/certificate/repositories/certificate.repository.interface';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class CertificateService extends BaseContentService<Certificate, ICertificateRepository> {

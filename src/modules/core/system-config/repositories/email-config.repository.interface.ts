@@ -1,6 +1,6 @@
-
+﻿
 import { EmailConfig } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+import { IRepository } from '@/common/core/repositories';
 
 export const EMAIL_CONFIG_REPOSITORY = 'IEmailConfigRepository';
 

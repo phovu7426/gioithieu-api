@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { Faq } from '@prisma/client';
 import { IFaqRepository, FAQ_REPOSITORY, FaqFilter } from '@/modules/introduction/faq/repositories/faq.repository.interface';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class FaqService extends BaseContentService<Faq, IFaqRepository> {

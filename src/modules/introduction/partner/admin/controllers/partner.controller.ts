@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -13,11 +13,11 @@ import {
 import { PartnerService } from '@/modules/introduction/partner/admin/services/partner.service';
 import { CreatePartnerDto } from '@/modules/introduction/partner/admin/dtos/create-partner.dto';
 import { UpdatePartnerDto } from '@/modules/introduction/partner/admin/dtos/update-partner.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
 
 @Controller('admin/partners')
 @UseGuards(JwtAuthGuard, RbacGuard)

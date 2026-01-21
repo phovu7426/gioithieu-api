@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Put,
@@ -7,9 +7,9 @@ import {
 } from '@nestjs/common';
 import { GeneralConfigService } from '../services/general-config.service';
 import { UpdateGeneralConfigDto } from '../dtos/update-general-config.dto';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { AuthService } from '@/common/services/auth.service';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { AuthService } from '@/common/auth/services';
 
 @Controller('admin/system-configs/general')
 export class GeneralConfigController {

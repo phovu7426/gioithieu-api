@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Patch,
@@ -8,14 +8,14 @@ import {
   Request,
   NotFoundException,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
+import { Permission } from '@/common/auth/decorators';
 import { NotificationService } from '@/modules/core/notification/admin/services/notification.service';
 import { GetNotificationsDto } from '@/modules/core/notification/user/dtos/get-notifications.dto';
-import { AuthUser } from '@/common/interfaces/auth-user.interface';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { AuthUser } from '@/common/auth/interfaces';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 
 @Controller('user/notifications')

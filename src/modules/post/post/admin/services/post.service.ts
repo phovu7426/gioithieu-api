@@ -1,10 +1,10 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+﻿import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Post } from '@prisma/client';
-import { RequestContext } from '@/common/utils/request-context.util';
-import { verifyGroupOwnership } from '@/common/utils/group-ownership.util';
+import { RequestContext } from '@/common/shared/utils';
+import { verifyGroupOwnership } from '@/common/shared/utils';
 import { IPostRepository, POST_REPOSITORY, PostFilter } from '@/modules/post/repositories/post.repository.interface';
 import { GetPostsDto } from '../dtos/get-posts.dto';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class PostService extends BaseContentService<Post, IPostRepository> {

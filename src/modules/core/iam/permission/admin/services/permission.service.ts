@@ -1,7 +1,7 @@
-import { Injectable, BadRequestException, Inject, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, BadRequestException, Inject, NotFoundException } from '@nestjs/common';
 import { IPermissionRepository, PERMISSION_REPOSITORY, PermissionFilter } from '@/modules/core/iam/repositories/permission.repository.interface';
 import { RbacCacheService } from '@/modules/core/rbac/services/rbac-cache.service';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class PermissionService extends BaseService<any, IPermissionRepository> {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+﻿import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
 import { Response, Request } from 'express';
@@ -8,9 +8,9 @@ import { RegisterDto } from '@/modules/core/auth/dto/register.dto';
 import { RefreshTokenDto } from '@/modules/core/auth/dto/refresh-token.dto';
 import { ForgotPasswordDto } from '@/modules/core/auth/dto/forgot-password.dto';
 import { ResetPasswordDto } from '@/modules/core/auth/dto/reset-password.dto';
-import { Auth } from '@/common/utils/auth.util';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { Auth } from '@/common/auth/utils';
+import { Permission } from '@/common/auth/decorators';
+import { LogRequest } from '@/common/shared/decorators';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')

@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -14,11 +14,11 @@ import {
 import { TestimonialService } from '@/modules/introduction/testimonial/admin/services/testimonial.service';
 import { CreateTestimonialDto } from '@/modules/introduction/testimonial/admin/dtos/create-testimonial.dto';
 import { UpdateTestimonialDto } from '@/modules/introduction/testimonial/admin/dtos/update-testimonial.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
 
 @Controller('admin/testimonials')
 @UseGuards(JwtAuthGuard, RbacGuard)

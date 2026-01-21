@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
-import { Auth } from '@/common/utils/auth.util';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
+﻿import { Controller, Get, Post, Put, Delete, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Auth } from '@/common/auth/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
 import { PermissionService } from '@/modules/core/iam/permission/admin/services/permission.service';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { prepareQuery } from '@/common/core/utils';
 
 @Controller('admin/permissions')
 export class PermissionController {

@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
+﻿import { Controller, Get, Post, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { PostCommentService } from '../services/comment.service';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('public/posts/:postId/comments')
 @Permission('public')

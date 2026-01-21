@@ -1,8 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+﻿import { Inject, Injectable } from '@nestjs/common';
 import { Post } from '@prisma/client';
 import { IPostRepository, POST_REPOSITORY, PostFilter } from '@/modules/post/repositories/post.repository.interface';
 import { GetPostsDto } from '../dtos/get-posts.dto';
-import { BaseContentService } from '@/common/base/services';
+import { BaseContentService } from '@/common/core/services';
 
 @Injectable()
 export class PostService extends BaseContentService<Post, IPostRepository> {

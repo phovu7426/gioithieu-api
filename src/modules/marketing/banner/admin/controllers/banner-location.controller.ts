@@ -1,4 +1,4 @@
-import {
+﻿import {
     Controller,
     Get,
     Post,
@@ -14,11 +14,11 @@ import { BannerLocationService } from '@/modules/marketing/banner/admin/services
 import { CreateBannerLocationDto } from '@/modules/marketing/banner/admin/dtos/create-banner-location.dto';
 import { UpdateBannerLocationDto } from '@/modules/marketing/banner/admin/dtos/update-banner-location.dto';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
 
 @Controller('admin/banner-locations')
 @UseGuards(JwtAuthGuard, RbacGuard)

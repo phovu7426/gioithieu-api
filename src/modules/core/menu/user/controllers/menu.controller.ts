@@ -1,6 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { AuthService } from '@/common/services/auth.service';
+﻿import { Controller, Get, Query } from '@nestjs/common';
+import { Permission } from '@/common/auth/decorators';
+import { AuthService } from '@/common/auth/services';
 import { MenuService } from '@/modules/core/menu/admin/services/menu.service';
 
 @Controller('admin/user/menus')

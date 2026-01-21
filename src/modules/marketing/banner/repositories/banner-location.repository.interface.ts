@@ -1,6 +1,6 @@
-
+﻿
 import { BannerLocation } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+import { IRepository } from '@/common/core/repositories';
 
 export const BANNER_LOCATION_REPOSITORY = 'IBannerLocationRepository';
 

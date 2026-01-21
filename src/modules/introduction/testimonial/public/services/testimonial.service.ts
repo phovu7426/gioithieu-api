@@ -1,7 +1,7 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { ITestimonialRepository, TESTIMONIAL_REPOSITORY, TestimonialFilter } from '@/modules/introduction/testimonial/repositories/testimonial.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class PublicTestimonialService extends BaseService<any, ITestimonialRepository> {

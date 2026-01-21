@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -9,15 +9,15 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
+import { Permission } from '@/common/auth/decorators';
 import { NotificationService } from '@/modules/core/notification/admin/services/notification.service';
 import { CreateNotificationDto } from '@/modules/core/notification/admin/dtos/create-notification.dto';
 import { UpdateNotificationDto } from '@/modules/core/notification/admin/dtos/update-notification.dto';
 import { GetNotificationsDto } from '@/modules/core/notification/admin/dtos/get-notifications.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
 
 @Controller('admin/notifications')
 @UseGuards(JwtAuthGuard, RbacGuard)

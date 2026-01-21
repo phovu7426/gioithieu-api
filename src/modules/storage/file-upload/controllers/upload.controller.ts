@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Post,
   UploadedFile,
@@ -9,7 +9,7 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UploadService } from '../services/upload.service';
 import { FileValidationService } from '../services/file-validation.service';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { Permission } from '@/common/auth/decorators';
 import { UploadResponseDto } from '../dtos/upload-response.dto';
 import { Throttle } from '@nestjs/throttler/dist/throttler.decorator';
 

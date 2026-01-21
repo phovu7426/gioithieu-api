@@ -1,9 +1,9 @@
-import {
+﻿import {
   Controller,
   Get,
 } from '@nestjs/common';
 import { PublicGeneralConfigService } from '../services/general-config.service';
-import { Permission } from '@/common/decorators/rbac.decorators';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('public/system-configs/general')
 export class PublicGeneralConfigController {

@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IAboutRepository, ABOUT_REPOSITORY, AboutFilter } from '@/modules/introduction/about/repositories/about.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { AboutSectionType } from '@/shared/enums/types/about-section-type.enum';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class PublicAboutService extends BaseService<any, IAboutRepository> {

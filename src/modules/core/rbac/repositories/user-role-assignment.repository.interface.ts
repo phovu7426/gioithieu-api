@@ -1,5 +1,5 @@
-import { UserRoleAssignment } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+﻿import { UserRoleAssignment } from '@prisma/client';
+import { IRepository } from '@/common/core/repositories';
 
 export const USER_ROLE_ASSIGNMENT_REPOSITORY = 'IUserRoleAssignmentRepository';
 

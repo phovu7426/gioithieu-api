@@ -1,5 +1,5 @@
-import { INestApplication, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
-import { ResponseUtil } from '@/common/utils/response.util';
+﻿import { INestApplication, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { ResponseUtil } from '@/common/shared/utils';
 
 export function applyGlobalPipes(app: INestApplication, options: { production: boolean }) {
   app.useGlobalPipes(

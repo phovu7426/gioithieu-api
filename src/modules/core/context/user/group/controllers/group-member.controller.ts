@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, ForbiddenException } from '@nestjs/common';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { AuthService } from '@/common/services/auth.service';
+﻿import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, ForbiddenException } from '@nestjs/common';
+import { Permission } from '@/common/auth/decorators';
+import { AuthService } from '@/common/auth/services';
 import { UserGroupService } from '../services/group.service';
 
 /**

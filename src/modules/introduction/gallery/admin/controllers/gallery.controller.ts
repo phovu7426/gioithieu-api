@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -13,11 +13,11 @@ import {
 import { GalleryService } from '@/modules/introduction/gallery/admin/services/gallery.service';
 import { CreateGalleryDto } from '@/modules/introduction/gallery/admin/dtos/create-gallery.dto';
 import { UpdateGalleryDto } from '@/modules/introduction/gallery/admin/dtos/update-gallery.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
 
 @Controller('admin/gallery')
 @UseGuards(JwtAuthGuard, RbacGuard)

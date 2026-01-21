@@ -1,4 +1,4 @@
-import {
+﻿import {
   Controller,
   Get,
   Post,
@@ -13,11 +13,11 @@ import {
 import { AboutService } from '@/modules/introduction/about/admin/services/about.service';
 import { CreateAboutDto } from '@/modules/introduction/about/admin/dtos/create-about.dto';
 import { UpdateAboutDto } from '@/modules/introduction/about/admin/dtos/update-about.dto';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
-import { LogRequest } from '@/common/decorators/log-request.decorator';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { RbacGuard } from '@/common/guards/rbac.guard';
+import { prepareQuery } from '@/common/core/utils';
+import { LogRequest } from '@/common/shared/decorators';
+import { Permission } from '@/common/auth/decorators';
+import { JwtAuthGuard } from '@/common/auth/guards';
+import { RbacGuard } from '@/common/auth/guards';
 
 @Controller('admin/about-sections')
 @UseGuards(JwtAuthGuard, RbacGuard)

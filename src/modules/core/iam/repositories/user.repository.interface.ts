@@ -1,6 +1,6 @@
-
+﻿
 import { User, Profile, Prisma } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+import { IRepository } from '@/common/core/repositories';
 
 export const USER_REPOSITORY = 'IUserRepository';
 

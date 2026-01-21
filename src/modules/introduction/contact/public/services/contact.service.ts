@@ -1,8 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+﻿import { Injectable, Inject } from '@nestjs/common';
 import { IContactRepository, CONTACT_REPOSITORY } from '@/modules/introduction/contact/repositories/contact.repository.interface';
 import { ContactStatus } from '@/shared/enums/types/contact-status.enum';
 import { CreateContactDto } from '@/modules/introduction/contact/public/dtos/create-contact.dto';
-import { BaseService } from '@/common/base/services';
+import { BaseService } from '@/common/core/services';
 
 @Injectable()
 export class PublicContactService extends BaseService<any, IContactRepository> {

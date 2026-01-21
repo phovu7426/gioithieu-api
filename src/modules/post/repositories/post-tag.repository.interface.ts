@@ -1,6 +1,6 @@
-
+﻿
 import { PostTag } from '@prisma/client';
-import { IRepository } from '@/common/base/repository/repository.interface';
+import { IRepository } from '@/common/core/repositories';
 
 export const POST_TAG_REPOSITORY = 'IPostTagRepository';
 

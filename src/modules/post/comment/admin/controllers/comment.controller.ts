@@ -1,8 +1,8 @@
-import { Controller, Get, Query, Patch, Param, Body, Delete, UseGuards, ValidationPipe } from '@nestjs/common';
+﻿import { Controller, Get, Query, Patch, Param, Body, Delete, UseGuards, ValidationPipe } from '@nestjs/common';
 import { AdminPostCommentService } from '../services/comment.service';
-import { RbacGuard } from '@/common/guards/rbac.guard';
-import { Permission } from '@/common/decorators/rbac.decorators';
-import { prepareQuery } from '@/common/base/utils/list-query.helper';
+import { RbacGuard } from '@/common/auth/guards';
+import { Permission } from '@/common/auth/decorators';
+import { prepareQuery } from '@/common/core/utils';
 
 @Controller('admin/post-comments')
 @UseGuards(RbacGuard)
