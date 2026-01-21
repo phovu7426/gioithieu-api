@@ -64,20 +64,41 @@ export function transformFilePaths(
   // Nếu là object, transform từng property
   if (typeof obj === 'object' && obj !== null) {
     const transformed: any = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
-      // Nếu key nằm trong danh sách pathFields hoặc value là string bắt đầu bằng /uploads
-      if (
-        pathFields.includes(key) ||
-        (typeof value === 'string' && (value.startsWith('/uploads') || value.startsWith('/storage')))
-      ) {
-        transformed[key] = addDomainToPath(value as string, baseUrl);
+      // Check if this field is a known path field
+      if (pathFields.includes(key)) {
+        if (typeof value === 'string') {
+          // Check if it's a JSON string
+          const trimmed = value.trim();
+          if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(value);
+              transformed[key] = transformFilePaths(parsed, baseUrl, pathFields);
+              continue;
+            } catch (e) {
+              // Not valid JSON, treat as regular path string
+            }
+          }
+          // Regular string path
+          transformed[key] = addDomainToPath(value, baseUrl);
+        } else if (typeof value === 'object' && value !== null) {
+          // Flatten/Recursively transform nested objects/arrays (e.g. images array)
+          transformed[key] = transformFilePaths(value, baseUrl, pathFields);
+        } else {
+          transformed[key] = value;
+        }
       } else {
-        // Recursively transform nested objects/arrays
-        transformed[key] = transformFilePaths(value, baseUrl, pathFields);
+        // Not a path field, but assume if it looks like a path we process it
+        if (typeof value === 'string' && (value.startsWith('/uploads') || value.startsWith('/storage'))) {
+          transformed[key] = addDomainToPath(value, baseUrl);
+        } else {
+          // Recursively transform nested objects/arrays
+          transformed[key] = transformFilePaths(value, baseUrl, pathFields);
+        }
       }
     }
-    
+
     return transformed;
   }
 
