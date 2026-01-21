@@ -5,7 +5,11 @@ import { NotificationController as UserNotificationController } from '@/modules/
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
 
 // Import repository module
+<<<<<<< HEAD:src/modules/core/notification/notification.module.ts
 import { NotificationRepositoryModule } from '@/modules/core/notification/notification.repository.module';
+=======
+import { NotificationRepositoryModule } from './notification.repository.module';
+>>>>>>> parent of cf58bf3 (fix repo):src/modules/extra/notification/notification.module.ts
 
 @Module({
   imports: [

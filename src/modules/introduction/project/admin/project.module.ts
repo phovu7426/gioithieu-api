@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+<<<<<<< HEAD
 import { AdminProjectController } from './controllers/project.controller';
 import { IntroductionRepositoryModule } from '@/infrastructure/persistence/prisma/repositories/introduction-repository.module';
 import { CreateProjectUseCase } from '@/application/use-cases/introduction/project/commands/create-project/create-project.usecase';
@@ -23,6 +24,15 @@ import { GetProjectUseCase } from '@/application/use-cases/introduction/project/
     CreateProjectUseCase,
     UpdateProjectUseCase,
     DeleteProjectUseCase,
+=======
+import { ProjectService } from '@/modules/introduction/project/admin/services/project.service';
+import { ProjectController } from '@/modules/introduction/project/admin/controllers/project.controller';
+import { RbacModule } from '@/modules/rbac/rbac.module';
+
+@Module({
+  imports: [
+    RbacModule,
+>>>>>>> parent of cf58bf3 (fix repo)
   ],
 })
 export class AdminProjectModule { }
