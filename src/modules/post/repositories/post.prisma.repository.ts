@@ -274,4 +274,30 @@ export class PostPrismaRepository extends PrismaRepository<
             top_viewed_posts: topViewedPosts,
         };
     }
+
+    async batchIncrementViewCount(postId: number | bigint, count: number): Promise<void> {
+        await this.prisma.post.update({
+            where: { id: BigInt(postId) },
+            data: { view_count: { increment: count } },
+        });
+    }
+
+    async upsertViewStats(postId: number | bigint, viewDate: Date, count: number): Promise<void> {
+        await (this.prisma as any).postViewStats.upsert({
+            where: {
+                post_id_view_date: {
+                    post_id: BigInt(postId),
+                    view_date: viewDate,
+                },
+            },
+            create: {
+                post_id: BigInt(postId),
+                view_date: viewDate,
+                view_count: count,
+            },
+            update: {
+                view_count: { increment: count },
+            },
+        });
+    }
 }

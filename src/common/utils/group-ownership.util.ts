@@ -1,118 +1,11 @@
 import { ForbiddenException } from '@nestjs/common';
 import { RequestContext } from '@/common/utils/request-context.util';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
 
 /**
  * Interface cho entity có group_id
  */
 export interface GroupOwnedEntity {
   group_id?: number | null;
-}
-
-/**
- * Helper function: Lấy group hiện tại từ RequestContext
- * Nếu chưa có trong cache, sẽ query từ database và cache lại
- * 
- * @param prisma - PrismaService (optional, chỉ cần khi chưa có trong cache)
- * @returns Group hoặc null
- * 
- * @example
- * ```typescript
- * const group = await getCurrentGroup(this.prisma);
- * if (group && group.type === 'system') {
- *   // System admin logic
- * }
- * ```
- */
-export async function getCurrentGroup(
-  prisma?: PrismaService
-): Promise<any | null> {
-  // Thử lấy từ RequestContext cache trước
-  const groupId = RequestContext.get<number | null>('groupId');
-  if (!groupId) {
-    return null;
-  }
-
-  // Nếu có prisma, query và cache lại
-  if (prisma) {
-    const group = await prisma.group.findFirst({ 
-      where: { id: groupId },
-      include: { context: true }
-    });
-    if (group) {
-      RequestContext.set('group', group);
-      if (group.context) {
-        RequestContext.set('context', group.context);
-        RequestContext.set('contextId', Number(group.context.id));
-      }
-    }
-    return group || null;
-  }
-
-  // Nếu không có prisma, chỉ trả về null
-  return null;
-}
-
-/**
- * Helper function: Lấy context hiện tại từ RequestContext (từ group)
- * Nếu chưa có trong cache, sẽ query từ database và cache lại
- * 
- * @param prisma - PrismaService (optional, chỉ cần khi chưa có trong cache)
- * @returns Context hoặc null
- * 
- * @example
- * ```typescript
- * const context = await getCurrentContext(this.prisma);
- * if (context && context.type === 'system') {
- *   // System admin logic
- * }
- * ```
- */
-export async function getCurrentContext(
-  prisma?: PrismaService
-): Promise<any | null> {
-  // Thử lấy từ RequestContext cache trước
-  const cachedContext = RequestContext.get<any>('context');
-  if (cachedContext) {
-    return cachedContext;
-  }
-
-  // Nếu chưa có và có prisma, query từ groupId
-  if (prisma) {
-    const groupId = RequestContext.get<number | null>('groupId');
-    if (groupId) {
-      // Query context từ group
-      const group = await prisma.group.findFirst({ 
-        where: { id: groupId },
-        include: { context: true }
-      });
-      
-      if (group && group.context) {
-        RequestContext.set('context', group.context);
-        RequestContext.set('contextId', Number(group.context.id));
-        return group.context;
-      } else if (group && group.context_id) {
-        const context = await prisma.context.findFirst({ where: { id: group.context_id } });
-        if (context) {
-          RequestContext.set('context', context);
-          RequestContext.set('contextId', Number(context.id));
-        }
-        return context || null;
-      }
-    } else {
-      // Fallback: system context
-      const contextId = RequestContext.get<number>('contextId') || 1;
-      const context = await prisma.context.findFirst({ where: { id: contextId } });
-      if (context) {
-        RequestContext.set('context', context);
-        RequestContext.set('contextId', Number(context.id));
-      }
-      return context || null;
-    }
-  }
-
-  // Nếu không có prisma, chỉ trả về null
-  return null;
 }
 
 /**
@@ -158,4 +51,3 @@ export function verifyGroupOwnership(entity: GroupOwnedEntity): void {
 export function verifyContextOwnership(entity: GroupOwnedEntity): void {
   verifyGroupOwnership(entity);
 }
-

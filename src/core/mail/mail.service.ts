@@ -1,8 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
+import { Injectable, InternalServerErrorException, Inject } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 import { CacheService } from '@/common/services/cache.service';
+import { IEmailConfigRepository, EMAIL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/email-config.repository.interface';
 
 export interface SendMailOptions {
   to: string | string[];
@@ -35,9 +35,10 @@ export class MailService {
   private configCache: any | null = null;
 
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(EMAIL_CONFIG_REPOSITORY)
+    private readonly emailConfigRepo: IEmailConfigRepository,
     private readonly cacheService: CacheService,
-  ) {}
+  ) { }
 
   private async getActiveConfig(): Promise<any> {
     if (this.configCache) {
@@ -47,9 +48,7 @@ export class MailService {
     const config = await this.cacheService.getOrSet<any>(
       this.CACHE_KEY,
       async () => {
-        const configData = await this.prisma.emailConfig.findFirst({
-          orderBy: { id: 'asc' },
-        });
+        const configData = await this.emailConfigRepo.getConfig();
 
         if (!configData) {
           throw new InternalServerErrorException('Email configuration not found. Please configure email in system config.');

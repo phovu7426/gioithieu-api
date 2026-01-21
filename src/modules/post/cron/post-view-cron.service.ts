@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { RedisUtil } from '@/core/utils/redis.util';
+import { IPostRepository, POST_REPOSITORY } from '../repositories/post.repository.interface';
 
 @Injectable()
 export class PostViewCronService {
@@ -9,7 +9,8 @@ export class PostViewCronService {
     private readonly BUFFER_KEY = 'post:views:buffer';
 
     constructor(
-        private readonly prisma: PrismaService,
+        @Inject(POST_REPOSITORY)
+        private readonly postRepo: IPostRepository,
         private readonly redis: RedisUtil,
     ) { }
 
@@ -78,31 +79,11 @@ export class PostViewCronService {
             const chunk = entries.slice(i, i + CHUNK_SIZE);
 
             try {
-                await this.prisma.$transaction(async (tx) => {
-                    for (const item of chunk) {
-                        await tx.post.update({
-                            where: { id: item.postId },
-                            data: { view_count: { increment: item.count } },
-                        });
-
-                        await tx.postViewStats.upsert({
-                            where: {
-                                post_id_view_date: {
-                                    post_id: item.postId,
-                                    view_date: vncDate,
-                                },
-                            },
-                            create: {
-                                post_id: item.postId,
-                                view_date: vncDate,
-                                view_count: item.count,
-                            },
-                            update: {
-                                view_count: { increment: item.count },
-                            },
-                        });
-                    }
-                }, { timeout: 15000 });
+                // Process each item in the chunk using repository methods
+                for (const item of chunk) {
+                    await this.postRepo.batchIncrementViewCount(item.postId, item.count);
+                    await this.postRepo.upsertViewStats(item.postId, vncDate, item.count);
+                }
 
                 // SUCCESS: Remove processed fields from Redis to ensure idempotency if next chunk fails
                 const processedFields = chunk.map(item => item.postIdStr);

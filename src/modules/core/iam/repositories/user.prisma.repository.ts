@@ -142,4 +142,22 @@ export class UserPrismaRepository extends PrismaRepository<
             data: { last_login_at: new Date() },
         });
     }
+
+    async findByIdWithBasicInfo(userId: number | bigint) {
+        return this.prisma.user.findFirst({
+            where: { id: BigInt(userId) },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                phone: true,
+                status: true,
+                email_verified_at: true,
+                phone_verified_at: true,
+                last_login_at: true,
+                created_at: true,
+                updated_at: true,
+            },
+        });
+    }
 }

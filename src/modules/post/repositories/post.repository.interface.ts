@@ -23,5 +23,9 @@ export interface IPostRepository extends IRepository<Post> {
     syncRelations(postId: number | bigint, tagIds?: number[], categoryIds?: number[]): Promise<void>;
     getViewStats(postId: number | bigint, startDate: Date, endDate: Date): Promise<any[]>; // Should define specific DTO/Entity for stats if needed
     getStatisticsOverview(): Promise<any>; // Define return type
+
+    // Batch operations for cron jobs
+    batchIncrementViewCount(postId: number | bigint, count: number): Promise<void>;
+    upsertViewStats(postId: number | bigint, viewDate: Date, count: number): Promise<void>;
 }
 

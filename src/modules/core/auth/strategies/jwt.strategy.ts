@@ -1,15 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { RedisUtil } from '@/core/utils/redis.util';
+import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/repositories/user.repository.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private readonly prisma: PrismaService,
+    @Inject(USER_REPOSITORY)
+    private readonly userRepo: IUserRepository,
     private readonly redis: RedisUtil,
   ) {
     super({
@@ -36,21 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     // 2. Load thông tin user từ DB nếu cache miss
-    const user = await this.prisma.user.findFirst({
-      where: { id: BigInt(userId) },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        phone: true,
-        status: true,
-        email_verified_at: true,
-        phone_verified_at: true,
-        last_login_at: true,
-        created_at: true,
-        updated_at: true,
-      },
-    });
+    const user = await this.userRepo.findByIdWithBasicInfo(BigInt(userId));
 
     if (!user) return null;
 
