@@ -64,11 +64,26 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp: new Date().toISOString(),
     };
 
-    this.logger.error(
-      `HTTP Exception: ${status} - ${message}`,
-      JSON.stringify(logPayload),
-      exception.stack,
+    // Check if we should ignore logging for this request
+    const ignoredPaths = [
+      '/favicon.ico',
+      '/.well-known/appspecific/com.chrome.devtools.json',
+      '/robots.txt'
+    ];
+
+    // Chỉ ignore log nếu là lỗi 404 và nằm trong danh sách ignoredPaths
+    const shouldLog = !(
+      status === HttpStatus.NOT_FOUND &&
+      ignoredPaths.some(path => request.url.includes(path))
     );
+
+    if (shouldLog) {
+      this.logger.error(
+        `HTTP Exception: ${status} - ${message}`,
+        JSON.stringify(logPayload),
+        exception.stack,
+      );
+    }
 
     // Create standardized error response
     const errorResponse = ResponseUtil.error(message, 'ERROR', status, errors);
