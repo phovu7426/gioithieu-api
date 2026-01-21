@@ -4,9 +4,10 @@ import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { RequestContext } from '@/common/utils/request-context.util';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { MenuTreeItem } from '@/modules/core/menu/admin/interfaces/menu-tree-item.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class MenuService {
+export class MenuService extends BaseService<any, IMenuRepository> {
   private readonly logger = new Logger(MenuService.name);
 
   constructor(
@@ -14,7 +15,9 @@ export class MenuService {
     private readonly menuRepo: IMenuRepository,
     @Inject(forwardRef(() => RbacService))
     private readonly rbacService: RbacService,
-  ) { }
+  ) {
+    super(menuRepo);
+  }
 
   async getList(query: any) {
     const filter: MenuFilter = {};
@@ -23,15 +26,12 @@ export class MenuService {
     if (query.type) filter.type = query.type;
     if (query.parentId !== undefined) filter.parentId = query.parentId;
 
-    const result = await this.menuRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
       filter,
     });
-
-    result.data = result.data.map(item => this.convertBigIntFields(item));
-    return result;
   }
 
   async getSimpleList(query: any) {
@@ -42,54 +42,50 @@ export class MenuService {
     });
   }
 
-  async getOne(id: number) {
-    const menu = await this.menuRepo.findById(id);
-    return this.convertBigIntFields(menu);
+  /**
+   * Alias for create with userId support
+   */
+  async createWithUser(data: any, userId?: number) {
+    if (userId) data.created_user_id = userId;
+    return this.create(data);
   }
 
-  async create(data: any, userId?: number) {
+  /**
+   * Alias for update with userId support
+   */
+  async updateById(id: number, data: any, userId?: number) {
+    if (userId) data.updated_user_id = userId;
+    return this.update(id, data);
+  }
+
+  /**
+   * Alias for delete
+   */
+  async deleteById(id: number) {
+    return this.delete(id);
+  }
+
+  protected async beforeCreate(data: any) {
     const payload = this.preparePayload(data);
-    if (userId) payload.created_user_id = BigInt(userId);
 
     if (payload.code) {
       const exists = await this.menuRepo.findByCode(payload.code);
       if (exists) throw new BadRequestException('Menu code already exists');
     }
-
-    const menu = await this.menuRepo.create(payload);
-    return this.getOne(Number(menu.id));
+    return payload;
   }
 
-  async createWithUser(data: any, userId?: number) {
-    return this.create(data, userId);
-  }
-
-  async update(id: number, data: any, userId?: number) {
+  protected async beforeUpdate(id: number | bigint, data: any) {
     const current = await this.menuRepo.findById(id);
     if (!current) throw new NotFoundException('Menu not found');
 
     const payload = this.preparePayload(data);
-    if (userId) payload.updated_user_id = BigInt(userId);
 
     if (payload.code && payload.code !== (current as any).code) {
       const exists = await this.menuRepo.findByCode(payload.code);
       if (exists) throw new BadRequestException('Menu code already exists');
     }
-
-    await this.menuRepo.update(id, payload);
-    return this.getOne(id);
-  }
-
-  async updateById(id: number, data: any, userId?: number) {
-    return this.update(id, data, userId);
-  }
-
-  async delete(id: number) {
-    return this.menuRepo.delete(id);
-  }
-
-  async deleteById(id: number) {
-    return this.delete(id);
+    return payload;
   }
 
   async getTree(): Promise<MenuTreeItem[]> {
@@ -157,6 +153,8 @@ export class MenuService {
     const payload = { ...data };
     if (payload.parent_id !== undefined) payload.parent_id = this.toBigInt(payload.parent_id);
     if (payload.required_permission_id !== undefined) payload.required_permission_id = this.toBigInt(payload.required_permission_id);
+    if (payload.created_user_id !== undefined) payload.created_user_id = this.toBigInt(payload.created_user_id);
+    if (payload.updated_user_id !== undefined) payload.updated_user_id = this.toBigInt(payload.updated_user_id);
     return payload;
   }
 
@@ -220,16 +218,9 @@ export class MenuService {
     return result;
   }
 
-  private convertBigIntFields(entity: any): any {
+  protected transform(entity: any): any {
     if (!entity) return entity;
-    const converted = { ...entity };
-    if (converted.id) converted.id = Number(converted.id);
-    if (converted.parent_id) converted.parent_id = Number(converted.parent_id);
-    if (converted.required_permission_id) converted.required_permission_id = Number(converted.required_permission_id);
-    if (converted.created_user_id) converted.created_user_id = Number(converted.created_user_id);
-    if (converted.updated_user_id) converted.updated_user_id = Number(converted.updated_user_id);
-
-    if (converted.parent) converted.parent = this.convertBigIntFields(converted.parent);
+    const converted = super.transform(entity) as any;
 
     if (converted.menu_permissions) {
       converted.menu_permissions = converted.menu_permissions.map((mp: any) => ({

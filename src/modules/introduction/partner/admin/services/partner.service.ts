@@ -1,12 +1,18 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/repositories/partner.repository.interface';
+import { BaseContentService } from '@/common/base/services';
+import { Partner } from '@prisma/client';
 
 @Injectable()
-export class PartnerService {
+export class PartnerService extends BaseContentService<Partner, IPartnerRepository> {
   constructor(
     @Inject(PARTNER_REPOSITORY)
     private readonly partnerRepo: IPartnerRepository,
-  ) { }
+  ) {
+    super(partnerRepo);
+  }
+
+  protected defaultSort = 'sort_order:asc,created_at:desc';
 
   async getList(query: any) {
     const filter: PartnerFilter = {};
@@ -14,15 +20,12 @@ export class PartnerService {
     if (query.status) filter.status = query.status;
     if (query.type) filter.type = query.type;
 
-    const result = await this.partnerRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
       filter,
     });
-
-    result.data = result.data.map(item => this.transform(item));
-    return result;
   }
 
   async getSimpleList(query: any) {
@@ -30,40 +33,6 @@ export class PartnerService {
       ...query,
       limit: query.limit ?? 50,
     });
-  }
-
-  async getOne(id: number) {
-    const partner = await this.partnerRepo.findById(id);
-    return this.transform(partner);
-  }
-
-  async create(data: any) {
-    const partner = await this.partnerRepo.create(data);
-    return this.getOne(Number(partner.id));
-  }
-
-  async update(id: number, data: any) {
-    await this.partnerRepo.update(id, data);
-    return this.getOne(id);
-  }
-
-  async delete(id: number) {
-    return this.partnerRepo.delete(id);
-  }
-
-  async changeStatus(id: number, status: string) {
-    return this.update(id, { status: status as any });
-  }
-
-  async updateSortOrder(id: number, sortOrder: number) {
-    return this.update(id, { sort_order: sortOrder });
-  }
-
-  private transform(partner: any) {
-    if (!partner) return partner;
-    const item = { ...partner };
-    if (item.id) item.id = Number(item.id);
-    return item;
   }
 }
 

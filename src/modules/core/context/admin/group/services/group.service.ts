@@ -4,9 +4,10 @@ import { IContextRepository, CONTEXT_REPOSITORY } from '@/modules/core/context/r
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '@/modules/core/rbac/repositories/user-group.repository.interface';
 import { IRoleRepository, ROLE_REPOSITORY } from '@/modules/core/iam/repositories/role.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class AdminGroupService {
+export class AdminGroupService extends BaseService<any, IGroupRepository> {
   constructor(
     @Inject(GROUP_REPOSITORY)
     private readonly groupRepo: IGroupRepository,
@@ -17,7 +18,11 @@ export class AdminGroupService {
     @Inject(ROLE_REPOSITORY)
     private readonly roleRepo: IRoleRepository,
     private readonly rbacService: RbacService,
-  ) { }
+  ) {
+    super(groupRepo);
+  }
+
+  protected defaultSort = 'id:desc';
 
   async getList(query: any) {
     const filter: GroupFilter = {};
@@ -26,15 +31,19 @@ export class AdminGroupService {
     if (query.status) filter.status = query.status;
     if (query.contextId) filter.contextId = query.contextId;
 
-    const result = await this.groupRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
-      sort: query.sort || 'id:desc',
+      sort: query.sort,
       filter,
     });
+  }
 
-    result.data = result.data.map(item => this.transform(item));
-    return result;
+  /**
+   * Alias for getOne
+   */
+  async findById(id: number) {
+    return this.getOne(id);
   }
 
   async isSystemAdmin(userId: number): Promise<boolean> {
@@ -49,7 +58,10 @@ export class AdminGroupService {
     if (!isAdmin) {
       throw new ForbiddenException('Only system admin can create groups');
     }
+    return this.create(data);
+  }
 
+  protected async beforeCreate(data: any) {
     const context = await this.contextRepo.findById(data.context_id);
     if (!context || (context as any).status !== 'active') {
       throw new NotFoundException(`Context with id ${data.context_id} not found`);
@@ -66,9 +78,10 @@ export class AdminGroupService {
       owner_id: data.owner_id ? BigInt(data.owner_id) : null,
       status: data.status || 'active',
     };
+    return payload;
+  }
 
-    const group = await this.groupRepo.create(payload);
-
+  protected async afterCreate(group: any) {
     if (group.owner_id) {
       const existingUserGroup = await this.userGroupRepo.findUnique(Number(group.owner_id), Number(group.id));
 
@@ -86,13 +99,6 @@ export class AdminGroupService {
         await this.rbacService.assignRoleToUser(Number(group.owner_id), Number(ownerRole.id), Number(group.id));
       }
     }
-
-    return this.transform(group);
-  }
-
-  async findById(id: number) {
-    const group = await this.groupRepo.findById(id);
-    return this.transform(group);
   }
 
   async findByCode(code: string) {
@@ -101,26 +107,16 @@ export class AdminGroupService {
   }
 
   async updateGroup(id: number, data: any) {
-    const group = await this.groupRepo.findById(id);
-    if (!group) throw new NotFoundException('Group not found');
-
-    await this.groupRepo.update(id, data);
-    return this.findById(id);
+    return this.update(id, data);
   }
 
   async deleteGroup(id: number) {
-    const group = await this.groupRepo.findById(id);
-    if (!group) throw new NotFoundException('Group not found');
-
-    return this.groupRepo.delete(id);
+    return this.delete(id);
   }
 
-  private transform(group: any) {
+  protected transform(group: any) {
     if (!group) return group;
-    const item = { ...group };
-    if (item.id) item.id = Number(item.id);
-    if (item.owner_id) item.owner_id = Number(item.owner_id);
-    if (item.context_id) item.context_id = Number(item.context_id);
+    const item = super.transform(group) as any;
     if (item.context) {
       item.context = {
         ...item.context,

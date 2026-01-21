@@ -4,9 +4,10 @@ import { RequestContext } from '@/common/utils/request-context.util';
 import { IRoleRepository, ROLE_REPOSITORY, RoleFilter } from '@/modules/core/iam/repositories/role.repository.interface';
 import { IPermissionRepository, PERMISSION_REPOSITORY } from '@/modules/core/iam/repositories/permission.repository.interface';
 import { IUserRoleAssignmentRepository, USER_ROLE_ASSIGNMENT_REPOSITORY } from '@/modules/core/rbac/repositories/user-role-assignment.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class RoleService {
+export class RoleService extends BaseService<any, IRoleRepository> {
   constructor(
     @Inject(ROLE_REPOSITORY)
     private readonly roleRepo: IRoleRepository,
@@ -15,7 +16,11 @@ export class RoleService {
     @Inject(USER_ROLE_ASSIGNMENT_REPOSITORY)
     private readonly assignmentRepo: IUserRoleAssignmentRepository,
     private readonly rbacCache: RbacCacheService,
-  ) { }
+  ) {
+    super(roleRepo);
+  }
+
+  private pendingContextIds: number[] | null = null;
 
   async getList(query: any) {
     const filter: RoleFilter & { contextId?: number } = {};
@@ -30,102 +35,108 @@ export class RoleService {
       filter.contextId = contextId;
     }
 
-    const result = await this.roleRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
       filter,
     });
-
-    result.data = result.data.map((role) => this.transformRole(role));
-    return result;
   }
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });
   }
 
-  async getOne(id: number) {
-    const role = await this.roleRepo.findById(id);
-    return this.transformRole(role);
+  /**
+   * Alias with audit log support
+   */
+  async createWithAudit(data: any, createdBy?: number) {
+    if (createdBy) {
+      data.created_user_id = createdBy;
+      data.updated_user_id = createdBy;
+    }
+    return this.create(data);
   }
 
-  async create(data: any, createdBy?: number) {
-    const payload = { ...data };
+  /**
+   * Alias with audit log support
+   */
+  async updateWithAudit(id: number, data: any, updatedBy?: number) {
+    if (updatedBy) data.updated_user_id = updatedBy;
+    return this.update(id, data);
+  }
 
-    // Audit
-    if (createdBy) {
-      payload.created_user_id = BigInt(createdBy);
-      payload.updated_user_id = BigInt(createdBy);
-    }
+  /**
+   * Alias for update
+   */
+  async updateById(id: number, data: any) {
+    return this.update(id, data);
+  }
 
-    // Unique code check
+  /**
+   * Alias for delete
+   */
+  async deleteById(id: number) {
+    return this.delete(id);
+  }
+
+  protected async beforeCreate(data: any) {
+    const payload = this.preparePayload(data);
+
     if (payload.code) {
       const exists = await this.roleRepo.findByCode(payload.code);
       if (exists) throw new BadRequestException('Role code already exists');
     }
 
-    const contextIds = this.normalizeIdArray(payload.context_ids);
+    this.pendingContextIds = this.normalizeIdArray(payload.context_ids);
     delete payload.context_ids;
 
-    const role = await this.roleRepo.create(payload);
+    return payload;
+  }
 
-    if (contextIds) {
-      await this.roleRepo.syncContexts(role.id, contextIds);
+  protected async afterCreate(role: any) {
+    if (this.pendingContextIds) {
+      await this.roleRepo.syncContexts(role.id, this.pendingContextIds);
+      this.pendingContextIds = null;
     }
-
-    return this.getOne(Number(role.id));
   }
 
-  async createWithAudit(data: any, createdBy?: number) {
-    return this.create(data, createdBy);
-  }
-
-  async update(id: number, data: any, updatedBy?: number) {
-    const payload = { ...data };
-    if (updatedBy) payload.updated_user_id = BigInt(updatedBy);
-
+  protected async beforeUpdate(id: number | bigint, data: any) {
     const current = await this.roleRepo.findById(id);
     if (!current) throw new NotFoundException('Role not found');
+
+    const payload = this.preparePayload(data);
 
     if (payload.code && payload.code !== current.code) {
       const exists = await this.roleRepo.findByCode(payload.code);
       if (exists) throw new BadRequestException('Role code already exists');
     }
 
-    const contextIds = this.normalizeIdArray(payload.context_ids);
+    this.pendingContextIds = this.normalizeIdArray(payload.context_ids);
     delete payload.context_ids;
 
-    await this.roleRepo.update(id, payload);
+    return payload;
+  }
 
-    if (contextIds !== null) {
-      await this.roleRepo.syncContexts(id, contextIds);
+  protected async afterUpdate(id: number | bigint) {
+    if (this.pendingContextIds !== null) {
+      await this.roleRepo.syncContexts(id, this.pendingContextIds);
+      this.pendingContextIds = null;
     }
-
-    return this.getOne(id);
   }
 
-  async updateWithAudit(id: number, data: any, updatedBy?: number) {
-    return this.update(id, data, updatedBy);
-  }
-
-  async updateById(id: number, data: any) { return this.update(id, data); }
-
-  async delete(id: number) {
-    // Constraint checks
+  protected async beforeDelete(id: number | bigint): Promise<boolean> {
     const childrenCount = await this.roleRepo.count({ parent_id: BigInt(id), deleted_at: null });
     if (childrenCount > 0) throw new BadRequestException('Cannot delete role with children');
 
     const userCount = await this.assignmentRepo.count({ role_id: BigInt(id) });
     if (userCount > 0) throw new BadRequestException('Cannot delete role assigned to users');
 
-    return this.roleRepo.delete(id);
+    return true;
   }
 
-  async deleteById(id: number) { return this.delete(id); }
-
   async assignPermissions(roleId: number, permissionIds: number[]) {
-    const role = await this.roleRepo.findById(roleId);
+    const role = await this.getOne(roleId);
     if (!role) throw new NotFoundException('Role not found');
 
     await this.roleRepo.syncPermissions(roleId, permissionIds);
@@ -137,15 +148,23 @@ export class RoleService {
     return this.getOne(roleId);
   }
 
+  private preparePayload(data: any): any {
+    const payload = { ...data };
+    if (payload.created_user_id) payload.created_user_id = BigInt(payload.created_user_id);
+    if (payload.updated_user_id) payload.updated_user_id = BigInt(payload.updated_user_id);
+    if (payload.parent_id) payload.parent_id = BigInt(payload.parent_id);
+    return payload;
+  }
+
   private normalizeIdArray(input: any): number[] | null {
     if (input === undefined) return null;
     if (!Array.isArray(input)) return [];
     return input.map((id: any) => Number(id)).filter((id) => !Number.isNaN(id));
   }
 
-  private transformRole(role: any) {
+  protected transform(role: any) {
     if (!role) return role;
-    const item = { ...role };
+    const item = super.transform(role) as any;
 
     if (item.parent) {
       const { id, code, name, status } = item.parent;

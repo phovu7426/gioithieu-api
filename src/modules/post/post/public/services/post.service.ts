@@ -1,13 +1,17 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Post } from '@prisma/client';
 import { IPostRepository, POST_REPOSITORY, PostFilter } from '@/modules/post/repositories/post.repository.interface';
 import { GetPostsDto } from '../dtos/get-posts.dto';
+import { BaseContentService } from '@/common/base/services';
 
 @Injectable()
-export class PostService {
+export class PostService extends BaseContentService<Post, IPostRepository> {
   constructor(
     @Inject(POST_REPOSITORY)
     private readonly postRepo: IPostRepository,
-  ) { }
+  ) {
+    super(postRepo);
+  }
 
   async getList(dto: GetPostsDto) {
     const filter: PostFilter = {
@@ -19,43 +23,45 @@ export class PostService {
       isPinned: dto.is_pinned,
     };
 
-    const result = await this.postRepo.findAll({
+    return super.getList({
       page: dto.page,
       limit: dto.limit,
       sort: dto.sort,
       filter,
     });
-
-    // Transform data ensures we don't expose sensitive fields and handle active check
-    result.data = result.data.map(post => this.transform(post));
-    return result;
   }
 
-  async getOne(slug: string) {
+  async getOneBySlug(slug: string) {
     const post = await this.postRepo.findPublishedBySlug(slug);
     return this.transform(post);
   }
 
-  async incrementViewCount(id: number): Promise<void> {
-    await this.postRepo.incrementViewCount(id);
+  // Keep original name for compatibility if needed, though getOneBySlug is clearer
+  async getOne(slug: string) {
+    return this.getOneBySlug(slug);
   }
 
-  private transform(post: any) {
+  // No need to override incrementViewCount as BaseContentService now handles it automatically
+  // by delegating to the specialized repository method if it exists.
+
+  protected transform(post: any) {
     if (!post) return post;
 
+    const p = super.transform(post) as any;
+
     // Logic adapted from previous implementation
-    if (post.primary_category) {
-      const primary = post.primary_category as any;
+    if (p.primary_category) {
+      const primary = p.primary_category as any;
       if (primary.status && primary.status !== 'active') {
-        post.primary_category = null;
+        p.primary_category = null;
       } else {
         const { id, name, slug, description } = primary;
-        post.primary_category = { id, name, slug, description };
+        p.primary_category = { id, name, slug, description };
       }
     }
 
-    if (Array.isArray(post.categories)) {
-      post.categories = (post.categories as any[])
+    if (Array.isArray(p.categories)) {
+      p.categories = (p.categories as any[])
         .map((link) => link?.category)
         .filter(Boolean)
         .filter(cat => cat.status === 'active') // Ensure only active categories
@@ -65,17 +71,16 @@ export class PostService {
         });
     }
 
-    if (Array.isArray(post.tags)) {
-      post.tags = (post.tags as any[])
+    if (Array.isArray(p.tags)) {
+      p.tags = (p.tags as any[])
         .map((link) => link?.tag)
         .filter(Boolean)
-        // .filter(tag => tag.status === 'active') // Assuming tags have status, previous code didn't filter explicitly but select did
         .map((tag: any) => {
           const { id, name, slug, description } = tag;
           return { id, name, slug, description };
         });
     }
-    return post;
+    return p;
   }
 }
 

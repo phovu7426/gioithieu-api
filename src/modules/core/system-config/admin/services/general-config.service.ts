@@ -1,18 +1,20 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { IGeneralConfigRepository, GENERAL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/general-config.repository.interface';
 import { UpdateGeneralConfigDto } from '../dtos/update-general-config.dto';
 import { CacheService } from '@/common/services/cache.service';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class GeneralConfigService {
+export class GeneralConfigService extends BaseService<any, IGeneralConfigRepository> {
   private readonly CACHE_KEY = 'public:general-config';
 
   constructor(
     @Inject(GENERAL_CONFIG_REPOSITORY)
     private readonly generalConfigRepo: IGeneralConfigRepository,
     private readonly cacheService: CacheService,
-  ) { }
+  ) {
+    super(generalConfigRepo);
+  }
 
   async getConfig(): Promise<any> {
     const config = await this.generalConfigRepo.getConfig();
@@ -54,11 +56,8 @@ export class GeneralConfigService {
         twitter_site: dto.twitter_site,
         created_user_id: updatedBy ? BigInt(updatedBy) : null,
         updated_user_id: updatedBy ? BigInt(updatedBy) : null,
+        contact_channels: dto.contact_channels || {},
       };
-
-      if (dto.contact_channels !== undefined) {
-        payload.contact_channels = dto.contact_channels as unknown as Prisma.InputJsonValue;
-      }
 
       result = await this.generalConfigRepo.create(payload);
     } else {
@@ -89,7 +88,7 @@ export class GeneralConfigService {
       };
 
       if (dto.contact_channels !== undefined) {
-        updateData.contact_channels = dto.contact_channels as unknown as Prisma.InputJsonValue;
+        updateData.contact_channels = dto.contact_channels;
       }
 
       result = await this.generalConfigRepo.update(existing.id, updateData);
@@ -105,14 +104,5 @@ export class GeneralConfigService {
     }
 
     return this.transform(result);
-  }
-
-  private transform(config: any) {
-    if (!config) return config;
-    const item = { ...config };
-    if (item.id) item.id = Number(item.id);
-    if (item.created_user_id) item.created_user_id = Number(item.created_user_id);
-    if (item.updated_user_id) item.updated_user_id = Number(item.updated_user_id);
-    return item;
   }
 }

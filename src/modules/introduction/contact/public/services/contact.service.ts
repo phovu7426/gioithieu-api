@@ -2,19 +2,22 @@ import { Injectable, Inject } from '@nestjs/common';
 import { IContactRepository, CONTACT_REPOSITORY } from '@/modules/introduction/contact/repositories/contact.repository.interface';
 import { ContactStatus } from '@/shared/enums/types/contact-status.enum';
 import { CreateContactDto } from '@/modules/introduction/contact/public/dtos/create-contact.dto';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class PublicContactService {
+export class PublicContactService extends BaseService<any, IContactRepository> {
   constructor(
     @Inject(CONTACT_REPOSITORY)
     private readonly contactRepo: IContactRepository,
-  ) { }
+  ) {
+    super(contactRepo);
+  }
 
   /**
    * Tạo contact mới từ public
    */
   async create(createContactDto: CreateContactDto) {
-    const contact = await this.contactRepo.create({
+    return super.create({
       name: createContactDto.name,
       email: createContactDto.email,
       phone: createContactDto.phone ?? null,
@@ -22,11 +25,6 @@ export class PublicContactService {
       message: createContactDto.message,
       status: ContactStatus.Pending as any,
     });
-
-    return {
-      ...contact,
-      id: Number(contact.id)
-    };
   }
 }
 

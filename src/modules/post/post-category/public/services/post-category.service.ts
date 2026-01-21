@@ -1,12 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { PostCategory } from '@prisma/client';
 import { IPostCategoryRepository, POST_CATEGORY_REPOSITORY, PostCategoryFilter } from '@/modules/post/repositories/post-category.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class PostCategoryService {
+export class PostCategoryService extends BaseService<PostCategory, IPostCategoryRepository> {
   constructor(
     @Inject(POST_CATEGORY_REPOSITORY)
     private readonly categoryRepo: IPostCategoryRepository,
-  ) { }
+  ) {
+    super(categoryRepo);
+  }
 
   async getList(query: any) {
     const filter: PostCategoryFilter = {
@@ -15,15 +19,12 @@ export class PostCategoryService {
     if (query.parentId !== undefined) filter.parentId = query.parentId;
     if (query.search) filter.search = query.search;
 
-    const result = await this.categoryRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort || 'sort_order:ASC',
       filter,
     });
-
-    result.data = result.data.map((item) => this.transform(item));
-    return result;
   }
 
   async findBySlug(slug: string) {
@@ -32,24 +33,18 @@ export class PostCategoryService {
     return this.transform(category);
   }
 
-  async getOne(id: number) {
-    const category = await this.categoryRepo.findById(id);
-    return this.transform(category);
-  }
-
-  private transform(category: any) {
+  protected transform(category: any) {
     if (!category) return category;
-    const item = { ...category };
-    if (item.id) item.id = Number(item.id);
+    const item = super.transform(category) as any;
 
     if (item.parent) {
       const { id, name, slug } = item.parent;
-      item.parent = { id: Number(id), name, slug };
+      item.parent = { id, name, slug };
     }
     if (Array.isArray(item.children)) {
       item.children = item.children.map((child: any) => {
         const { id, name, slug } = child;
-        return { id: Number(id), name, slug };
+        return { id, name, slug };
       });
     }
     return item;

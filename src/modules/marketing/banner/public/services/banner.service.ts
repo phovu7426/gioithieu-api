@@ -2,15 +2,19 @@ import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { IBannerRepository, BANNER_REPOSITORY } from '@/modules/marketing/banner/repositories/banner.repository.interface';
 import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY } from '@/modules/marketing/banner/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
+import { BaseService } from '@/common/base/services';
+import { Banner } from '@prisma/client';
 
 @Injectable()
-export class PublicBannerService {
+export class PublicBannerService extends BaseService<Banner, IBannerRepository> {
     constructor(
         @Inject(BANNER_REPOSITORY)
         private readonly bannerRepo: IBannerRepository,
         @Inject(BANNER_LOCATION_REPOSITORY)
         private readonly locationRepo: IBannerLocationRepository,
-    ) { }
+    ) {
+        super(bannerRepo);
+    }
 
     async findByLocationCode(locationCode: string) {
         const location = await this.locationRepo.findByCode(locationCode);
@@ -24,9 +28,6 @@ export class PublicBannerService {
     }
 
     async findActiveBanners(locationCode?: string) {
-        const query: any = { status: BasicStatus.active };
-        if (locationCode) query.search = locationCode; // repository buildWhere uses search for code too
-
         const locations = await this.locationRepo.findAll({
             filter: { status: BasicStatus.active, search: locationCode },
             limit: 1000
@@ -45,20 +46,16 @@ export class PublicBannerService {
     }
 
     async findBannerById(id: number) {
-        const banner = await this.bannerRepo.findById(id);
-
+        const banner = await super.getOne(id);
         if (!banner || (banner as any).status !== BasicStatus.active) {
             throw new NotFoundException(`Banner with ID ${id} not found or inactive`);
         }
-
-        return this.transform(banner);
+        return banner;
     }
 
-    private transform(banner: any) {
+    protected transform(banner: any) {
         if (!banner) return banner;
-        const item = { ...banner };
-        if (item.id) item.id = Number(item.id);
-        if (item.location_id) item.location_id = Number(item.location_id);
+        const item = super.transform(banner) as any;
         if (item.location) {
             item.location = {
                 id: Number(item.location.id),

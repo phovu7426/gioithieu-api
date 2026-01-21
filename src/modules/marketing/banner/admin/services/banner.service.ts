@@ -2,15 +2,21 @@ import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { IBannerRepository, BANNER_REPOSITORY, BannerFilter } from '@/modules/marketing/banner/repositories/banner.repository.interface';
 import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY } from '@/modules/marketing/banner/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
+import { BaseContentService } from '@/common/base/services';
+import { Banner } from '@prisma/client';
 
 @Injectable()
-export class BannerService {
+export class BannerService extends BaseContentService<Banner, IBannerRepository> {
     constructor(
         @Inject(BANNER_REPOSITORY)
         private readonly bannerRepo: IBannerRepository,
         @Inject(BANNER_LOCATION_REPOSITORY)
         private readonly locationRepo: IBannerLocationRepository,
-    ) { }
+    ) {
+        super(bannerRepo);
+    }
+
+    protected defaultSort = 'sort_order:asc,created_at:desc';
 
     async getList(query: any) {
         const filter: BannerFilter = {};
@@ -18,22 +24,12 @@ export class BannerService {
         if (query.status) filter.status = query.status;
         if (query.locationId) filter.locationId = query.locationId;
 
-        // Apply special filter for active status like original prepareFilters
-        if (filter.status === BasicStatus.active) {
-            // Note: Repository buildWhere could handle this, but original service had it.
-            // For now, let's keep it simple as Repository buildWhere handles basic status.
-            // If date range is needed, repository buildWhere should be updated.
-        }
-
-        const result = await this.bannerRepo.findAll({
+        return super.getList({
             page: query.page,
             limit: query.limit,
             sort: query.sort,
             filter,
         });
-
-        result.data = result.data.map(item => this.transform(item));
-        return result;
     }
 
     async getSimpleList(query: any) {
@@ -43,44 +39,27 @@ export class BannerService {
         });
     }
 
-    async getOne(id: number) {
-        const banner = await this.bannerRepo.findById(id);
-        return this.transform(banner);
-    }
-
-    async create(data: any) {
-        const payload = { ...data };
-
-        if (payload.location_id) {
-            const location = await this.locationRepo.findById(payload.location_id);
+    protected async beforeCreate(data: any) {
+        if (data.location_id) {
+            const location = await this.locationRepo.findById(data.location_id);
             if (!location) {
-                throw new NotFoundException(`Vị trí banner với ID ${payload.location_id} không tồn tại`);
+                throw new NotFoundException(`Vị trí banner với ID ${data.location_id} không tồn tại`);
             }
         }
-
-        const banner = await this.bannerRepo.create(payload);
-        return this.getOne(Number(banner.id));
+        return data;
     }
 
-    async update(id: number, data: any) {
-        const payload = { ...data };
-
+    protected async beforeUpdate(id: number | bigint, data: any) {
         const current = await this.bannerRepo.findById(id);
         if (!current) throw new NotFoundException('Banner not found');
 
-        if (payload.location_id && payload.location_id !== Number((current as any).location_id)) {
-            const location = await this.locationRepo.findById(payload.location_id);
+        if (data.location_id && data.location_id !== Number((current as any).location_id)) {
+            const location = await this.locationRepo.findById(data.location_id);
             if (!location) {
-                throw new NotFoundException(`Vị trí banner với ID ${payload.location_id} không tồn tại`);
+                throw new NotFoundException(`Vị trí banner với ID ${data.location_id} không tồn tại`);
             }
         }
-
-        await this.bannerRepo.update(id, payload);
-        return this.getOne(id);
-    }
-
-    async delete(id: number) {
-        return this.bannerRepo.delete(id);
+        return data;
     }
 
     async findByLocationCode(locationCode: string) {
@@ -93,19 +72,9 @@ export class BannerService {
         return banners.map(item => this.transform(item));
     }
 
-    async changeStatus(id: number, status: BasicStatus) {
-        return this.update(id, { status: status as any });
-    }
-
-    async updateSortOrder(id: number, sortOrder: number) {
-        return this.update(id, { sort_order: sortOrder });
-    }
-
-    private transform(banner: any) {
+    protected transform(banner: any) {
         if (!banner) return banner;
-        const item = { ...banner };
-        if (item.id) item.id = Number(item.id);
-        if (item.location_id) item.location_id = Number(item.location_id);
+        const item = super.transform(banner) as any;
         if (item.location) {
             item.location = {
                 id: Number(item.location.id),

@@ -1,18 +1,23 @@
 import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { RequestContext } from '@/common/utils/request-context.util';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { ChangePasswordDto } from '@/modules/core/iam/user/admin/dtos/change-password.dto';
 import { IUserRepository, USER_REPOSITORY, UserFilter } from '@/modules/core/iam/repositories/user.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class UserService {
+export class UserService extends BaseService<any, IUserRepository> {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
     private readonly rbacService: RbacService,
-  ) { }
+  ) {
+    super(userRepo);
+  }
+
+  private pendingRoleIds: number[] | null = null;
+  private pendingProfileData: any = null;
 
   async getList(query: any) {
     const filter: UserFilter = {};
@@ -31,29 +36,40 @@ export class UserService {
       filter.groupId = groupId;
     }
 
-    const result = await this.userRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
       filter,
     });
-
-    // Transform data
-    result.data = this.transformList(result.data);
-    return result;
   }
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });
   }
 
-  async getOne(id: number) {
-    const user = await this.userRepo.findById(id);
-    if (!user) return null;
-    return this.transformOne(user);
+  /**
+   * Alias for update
+   */
+  async updateById(id: number, data: any) {
+    return this.update(id, data);
   }
 
-  async create(data: any) {
+  /**
+   * Alias for delete
+   */
+  async deleteById(id: number) {
+    return this.delete(id);
+  }
+
+  async changePassword(id: number, dto: ChangePasswordDto) {
+    const user = await this.getOne(id);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+    const hashed = await bcrypt.hash(dto.password, 10);
+    await this.userRepo.update(id, { password: hashed });
+  }
+
+  protected async beforeCreate(data: any) {
     const payload = { ...data };
 
     // Hash password
@@ -72,32 +88,31 @@ export class UserService {
       throw new BadRequestException('Tên đăng nhập đã được sử dụng.');
     }
 
-    // Seprate role_ids and profile
-    const roleIds = this.normalizeIdArray(payload.role_ids);
-    const profileData = payload.profile;
+    this.pendingRoleIds = this.normalizeIdArray(payload.role_ids);
+    this.pendingProfileData = payload.profile;
     delete payload.role_ids;
     delete payload.profile;
 
-    // Create User
-    const user = await this.userRepo.create(payload);
-
-    // Create Profile
-    if (profileData) {
-      await this.userRepo.upsertProfile(user.id, profileData);
-    }
-
-    // Sync Roles
-    if (roleIds && roleIds.length > 0) {
-      const groupId = RequestContext.get<number | null>('groupId');
-      if (groupId) {
-        await this.rbacService.syncRolesInGroup(Number(user.id), groupId, roleIds, true);
-      }
-    }
-
-    return this.getOne(Number(user.id));
+    return payload;
   }
 
-  async update(id: number, data: any) {
+  protected async afterCreate(user: any) {
+    const id = (user as any).id;
+    if (this.pendingProfileData) {
+      await this.userRepo.upsertProfile(id, this.pendingProfileData);
+      this.pendingProfileData = null;
+    }
+
+    if (this.pendingRoleIds && this.pendingRoleIds.length > 0) {
+      const groupId = RequestContext.get<number | null>('groupId');
+      if (groupId) {
+        await this.rbacService.syncRolesInGroup(Number(id), groupId, this.pendingRoleIds, true);
+        this.pendingRoleIds = null;
+      }
+    }
+  }
+
+  protected async beforeUpdate(id: number | bigint, data: any) {
     const payload = { ...data };
 
     // Hash password if present
@@ -108,84 +123,56 @@ export class UserService {
     }
 
     // Unique Checks (exclude current user)
-    if (payload.email && !(await this.userRepo.checkUnique('email', payload.email, id))) {
+    if (payload.email && !(await this.userRepo.checkUnique('email', payload.email, Number(id)))) {
       throw new BadRequestException('Email đã được sử dụng.');
     }
-    if (payload.phone && !(await this.userRepo.checkUnique('phone', payload.phone, id))) {
+    if (payload.phone && !(await this.userRepo.checkUnique('phone', payload.phone, Number(id)))) {
       throw new BadRequestException('Số điện thoại đã được sử dụng.');
     }
-    if (payload.username && !(await this.userRepo.checkUnique('username', payload.username, id))) {
+    if (payload.username && !(await this.userRepo.checkUnique('username', payload.username, Number(id)))) {
       throw new BadRequestException('Tên đăng nhập đã được sử dụng.');
     }
 
-    const roleIds = this.normalizeIdArray(payload.role_ids);
-    const profileData = payload.profile;
+    this.pendingRoleIds = this.normalizeIdArray(payload.role_ids);
+    this.pendingProfileData = payload.profile;
     delete payload.role_ids;
     delete payload.profile;
 
-    await this.userRepo.update(id, payload);
+    return payload;
+  }
 
-    if (profileData) {
-      await this.userRepo.upsertProfile(id, profileData);
+  protected async afterUpdate(id: number | bigint) {
+    if (this.pendingProfileData) {
+      await this.userRepo.upsertProfile(id, this.pendingProfileData);
+      this.pendingProfileData = null;
     }
 
-    if (roleIds !== null) { // Only sync if role_ids explicitly provided
+    if (this.pendingRoleIds !== null) {
       const groupId = RequestContext.get<number | null>('groupId');
       if (groupId) {
-        await this.rbacService.syncRolesInGroup(id, groupId, roleIds, true);
+        await this.rbacService.syncRolesInGroup(Number(id), groupId, this.pendingRoleIds, true);
+        this.pendingRoleIds = null;
       }
     }
-
-    return this.getOne(id);
   }
 
-  async updateById(id: number, data: any) { return this.update(id, data); }
-
-  async delete(id: number) {
-    // Logic requirement: delete profile? 
-    // UserPrismaRepository doesn't strictly cascade delete unless DB is set up OR we override delete.
-    // But assuming repo.delete handles the user deletion.
-    // Ideally DB has ON DELETE CASCADE for Profile.
-    // Or we should update repository to handle it.
-    // For now, calling delete.
-    return this.userRepo.delete(id);
-  }
-  async deleteById(id: number) { return this.delete(id); }
-
-  async changePassword(id: number, dto: ChangePasswordDto) {
-    const user = await this.userRepo.findById(id);
-    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
-    const hashed = await bcrypt.hash(dto.password, 10);
-    await this.userRepo.update(id, { password: hashed });
-  }
-
-  // Helpers
   private normalizeIdArray(input: any): number[] | null {
     if (input === undefined) return null;
     if (!Array.isArray(input)) return [];
     return input.map((id: any) => Number(id)).filter((id) => !Number.isNaN(id));
   }
 
-  private transformOne(user: any) {
-    const u = this.transformUser(user);
-    return u;
-  }
-
-  private transformList(users: any[]) {
-    return users.map(u => this.transformUser(u));
-  }
-
-  private transformUser(user: any) {
+  protected transform(user: any) {
     if (!user) return user;
+    const u = super.transform(user) as any;
     const groupId = RequestContext.get<number | null>('groupId');
-    const u = { ...user }; // shallow copy
 
     if (groupId && u.user_role_assignments) {
       u.role_ids = (u.user_role_assignments as any[])
         .filter((ura: any) => ura.group_id === groupId)
         .map((ura: any) => ura.role_id);
     } else {
-      u.role_ids = [];
+      u.role_ids = u.role_ids || [];
     }
 
     delete u.user_role_assignments;

@@ -1,11 +1,11 @@
-
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { IContextRepository, CONTEXT_REPOSITORY, ContextFilter } from '@/modules/core/context/repositories/context.repository.interface';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/core/context/repositories/group.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class AdminContextService {
+export class AdminContextService extends BaseService<any, IContextRepository> {
   constructor(
     @Inject(CONTEXT_REPOSITORY)
     private readonly contextRepo: IContextRepository,
@@ -13,7 +13,11 @@ export class AdminContextService {
     private readonly rbacService: RbacService,
     @Inject(GROUP_REPOSITORY)
     private readonly groupRepo: IGroupRepository,
-  ) { }
+  ) {
+    super(contextRepo);
+  }
+
+  protected defaultSort = 'id:desc';
 
   async getList(query: any) {
     const filter: ContextFilter = {};
@@ -21,15 +25,12 @@ export class AdminContextService {
     if (query.type) filter.type = query.type;
     if (query.status) filter.status = query.status;
 
-    const result = await this.contextRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
-      sort: query.sort || 'id:desc',
+      sort: query.sort,
       filter,
     });
-
-    result.data = result.data.map(item => this.transform(item));
-    return result;
   }
 
   private async isSystemAdmin(userId: number): Promise<boolean> {
@@ -56,7 +57,10 @@ export class AdminContextService {
     if (!isAdmin) {
       throw new ForbiddenException('Only system admin can create contexts');
     }
+    return this.create(data);
+  }
 
+  protected async beforeCreate(data: any) {
     const existing = await this.contextRepo.findByTypeAndRefId(data.type, data.ref_id ?? null);
     if (existing) {
       throw new BadRequestException(`Context with type "${data.type}" and ref_id "${data.ref_id ?? 'null'}" already exists`);
@@ -74,9 +78,7 @@ export class AdminContextService {
       code,
       status: data.status || 'active',
     };
-
-    const context = await this.contextRepo.create(payload);
-    return this.transform(context);
+    return payload;
   }
 
   async updateContext(id: number, data: any, requesterUserId: number) {
@@ -84,34 +86,40 @@ export class AdminContextService {
     if (!isAdmin) {
       throw new ForbiddenException('Only system admin can update contexts');
     }
+    return this.update(id, data);
+  }
 
-    const context = await this.contextRepo.findById(id);
-    if (!context) throw new NotFoundException('Context not found');
-
-    if (id === 1) {
+  protected async beforeUpdate(id: number | bigint, data: any) {
+    if (Number(id) === 1) {
       throw new BadRequestException('Cannot update system context');
     }
 
-    if (data.code && data.code !== context.code) {
+    const current = await this.contextRepo.findById(id);
+    if (!current) throw new NotFoundException('Context not found');
+
+    if (data.code && data.code !== current.code) {
       const existing = await this.contextRepo.findByCode(data.code);
       if (existing) {
         throw new BadRequestException(`Context with code "${data.code}" already exists`);
       }
     }
 
-    await this.contextRepo.update(id, data);
-    return this.findById(id);
+    if (data.ref_id !== undefined) {
+      data.ref_id = data.ref_id ? BigInt(data.ref_id) : null;
+    }
+
+    return data;
   }
 
   async deleteContext(id: number) {
-    const context = await this.contextRepo.findById(id);
-    if (!context) throw new NotFoundException('Context not found');
+    return this.delete(id);
+  }
 
-    if (id === 1) {
+  protected async beforeDelete(id: number | bigint): Promise<boolean> {
+    if (Number(id) === 1) {
       throw new BadRequestException('Cannot delete system context');
     }
 
-    // Use groupRepo instead of prisma.group.count
     const groups = await this.groupRepo.findMany({
       where: { context_id: BigInt(id), deleted_at: null },
     });
@@ -119,15 +127,6 @@ export class AdminContextService {
     if (groups.length > 0) {
       throw new BadRequestException(`Cannot delete context: ${groups.length} group(s) are using this context`);
     }
-
-    return this.contextRepo.delete(id);
-  }
-
-  private transform(context: any) {
-    if (!context) return context;
-    const item = { ...context };
-    if (item.id) item.id = Number(item.id);
-    if (item.ref_id) item.ref_id = Number(item.ref_id);
-    return item;
+    return true;
   }
 }

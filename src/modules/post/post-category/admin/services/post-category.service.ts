@@ -1,14 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PostCategory } from '@prisma/client';
-import { StringUtil } from '@/core/utils/string.util';
 import { IPostCategoryRepository, POST_CATEGORY_REPOSITORY, PostCategoryFilter } from '@/modules/post/repositories/post-category.repository.interface';
+import { BaseContentService } from '@/common/base/services';
 
 @Injectable()
-export class PostCategoryService {
+export class PostCategoryService extends BaseContentService<PostCategory, IPostCategoryRepository> {
   constructor(
     @Inject(POST_CATEGORY_REPOSITORY)
     private readonly categoryRepo: IPostCategoryRepository,
-  ) { }
+  ) {
+    super(categoryRepo);
+  }
 
   async getList(query: any) {
     const filter: PostCategoryFilter = {};
@@ -16,15 +18,12 @@ export class PostCategoryService {
     if (query.status !== undefined) filter.status = query.status;
     if (query.parentId !== undefined) filter.parentId = query.parentId;
 
-    const result = await this.categoryRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
       filter,
     });
-
-    result.data = result.data.map((item) => this.transform(item));
-    return result;
   }
 
   async getSimpleList(query: any) {
@@ -35,35 +34,24 @@ export class PostCategoryService {
     });
   }
 
-  async getOne(id: number) {
-    const category = await this.categoryRepo.findById(id);
-    return this.transform(category);
-  }
-
-  async create(data: any) {
+  protected async beforeCreate(data: any) {
     const payload = { ...data };
-    this.normalizeSlug(payload);
+    await this.ensureSlug(payload);
     payload.parent_id = this.toBigInt(payload.parent_id);
-    const category = await this.categoryRepo.create(payload);
-    return this.getOne(Number(category.id));
+    return payload;
   }
 
-  async update(id: number, data: any) {
+  protected async beforeUpdate(id: number | bigint, data: any) {
     const payload = { ...data };
     const current = await this.categoryRepo.findById(id);
-    this.normalizeSlug(payload, current?.slug);
+    await this.ensureSlug(payload, id, current?.slug);
     payload.parent_id = this.toBigInt(payload.parent_id);
-    await this.categoryRepo.update(id, payload);
-    return this.getOne(id);
+    return payload;
   }
 
-  async delete(id: number) {
-    return this.categoryRepo.delete(id);
-  }
-
-  private transform(category: any) {
+  protected transform(category: any) {
     if (!category) return category;
-    const item = { ...category };
+    const item = super.transform(category) as any;
     if (item.parent) {
       const { id, name, slug } = item.parent;
       item.parent = { id, name, slug };
@@ -75,21 +63,6 @@ export class PostCategoryService {
       });
     }
     return item;
-  }
-
-  private normalizeSlug(data: any, currentSlug?: string) {
-    if (data.name && !data.slug) {
-      data.slug = StringUtil.toSlug(data.name);
-      return;
-    }
-    if (data.slug) {
-      const normalized = StringUtil.toSlug(data.slug);
-      if (currentSlug && StringUtil.toSlug(currentSlug) === normalized) {
-        delete data.slug;
-      } else {
-        data.slug = normalized;
-      }
-    }
   }
 
   private toBigInt(value?: number | string | bigint | null): bigint | null {

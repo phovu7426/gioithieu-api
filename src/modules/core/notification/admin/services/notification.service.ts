@@ -1,12 +1,15 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { INotificationRepository, NOTIFICATION_REPOSITORY, NotificationFilter } from '@/modules/core/notification/repositories/notification.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class NotificationService {
+export class NotificationService extends BaseService<any, INotificationRepository> {
   constructor(
     @Inject(NOTIFICATION_REPOSITORY)
     private readonly notificationRepo: INotificationRepository,
-  ) { }
+  ) {
+    super(notificationRepo);
+  }
 
   async getList(query: any) {
     const filter: NotificationFilter = {};
@@ -16,15 +19,12 @@ export class NotificationService {
     if (query.type) filter.type = query.type;
     if (query.status) filter.status = query.status;
 
-    const result = await this.notificationRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort || 'created_at:desc',
       filter,
     });
-
-    result.data = result.data.map(item => this.transform(item));
-    return result;
   }
 
   async getSimpleList(query: any) {
@@ -34,31 +34,14 @@ export class NotificationService {
     });
   }
 
-  async getOne(id: number) {
-    const notification = await this.notificationRepo.findById(id);
-    return this.transform(notification);
+  protected async beforeCreate(data: any) {
+    if (data.user_id) data.user_id = BigInt(data.user_id);
+    return data;
   }
 
-  async create(data: any) {
-    const payload = {
-      ...data,
-      user_id: data.user_id ? BigInt(data.user_id) : null,
-    };
-    const notification = await this.notificationRepo.create(payload);
-    return this.getOne(Number(notification.id));
-  }
-
-  async update(id: number, data: any) {
-    const payload = {
-      ...data,
-      user_id: data.user_id ? BigInt(data.user_id) : null,
-    };
-    await this.notificationRepo.update(id, payload);
-    return this.getOne(id);
-  }
-
-  async delete(id: number) {
-    return this.notificationRepo.delete(id);
+  protected async beforeUpdate(id: number | bigint, data: any) {
+    if (data.user_id) data.user_id = BigInt(data.user_id);
+    return data;
   }
 
   async restore(id: number) {
@@ -66,8 +49,8 @@ export class NotificationService {
   }
 
   async markAsReadForUser(id: number, userId: number) {
-    const notification = await this.notificationRepo.findById(id);
-    if (!notification || Number(notification.user_id) !== userId) {
+    const notification = await this.getOne(id);
+    if (!notification || Number((notification as any).user_id) !== userId) {
       throw new NotFoundException('Notification not found');
     }
     const updated = await this.notificationRepo.markAsRead(id);
@@ -76,15 +59,5 @@ export class NotificationService {
 
   async markAllAsReadForUser(userId: number) {
     await this.notificationRepo.markAllAsRead(userId);
-  }
-
-  private transform(notification: any) {
-    if (!notification) return notification;
-    const item = { ...notification };
-    if (item.id) item.id = Number(item.id);
-    if (item.user_id) item.user_id = Number(item.user_id);
-    if (item.created_user_id) item.created_user_id = Number(item.created_user_id);
-    if (item.updated_user_id) item.updated_user_id = Number(item.updated_user_id);
-    return item;
   }
 }

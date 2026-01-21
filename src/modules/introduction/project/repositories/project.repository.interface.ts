@@ -12,5 +12,5 @@ export interface ProjectFilter {
 
 export interface IProjectRepository extends IRepository<Project> {
     findBySlug(slug: string): Promise<Project | null>;
-    incrementViewCount(id: number): Promise<Project>;
+    incrementViewCount(id: number | bigint): Promise<Project>;
 }

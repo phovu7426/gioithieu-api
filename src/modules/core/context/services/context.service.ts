@@ -4,9 +4,10 @@ import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/core/context/repos
 import { Request } from 'express';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '@/modules/core/rbac/repositories/user-group.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class ContextService {
+export class ContextService extends BaseService<any, IContextRepository> {
   constructor(
     @Inject(CONTEXT_REPOSITORY)
     private readonly contextRepo: IContextRepository,
@@ -16,7 +17,9 @@ export class ContextService {
     private readonly rbacService: RbacService,
     @Inject(USER_GROUP_REPOSITORY)
     private readonly userGroupRepo: IUserGroupRepository,
-  ) { }
+  ) {
+    super(contextRepo);
+  }
 
   private async isSystemAdmin(userId: number): Promise<boolean> {
     return this.rbacService.userHasPermissionsInGroup(userId, null, [
@@ -110,11 +113,6 @@ export class ContextService {
     return this.transform(context);
   }
 
-  async findById(id: number) {
-    const context = await this.contextRepo.findById(id);
-    return this.transform(context);
-  }
-
   async findByTypeAndRefId(type: string, refId: number | null) {
     const context = await this.contextRepo.findByTypeAndRefId(type, refId);
     return this.transform(context);
@@ -125,7 +123,10 @@ export class ContextService {
     if (!isAdmin) {
       throw new ForbiddenException('Only system admin can create contexts');
     }
+    return this.create(data);
+  }
 
+  protected async beforeCreate(data: any) {
     const existing = await this.contextRepo.findByTypeAndRefId(data.type, data.ref_id ?? null);
     if (existing) {
       throw new BadRequestException(`Context with type "${data.type}" and ref_id "${data.ref_id ?? 'null'}" already exists`);
@@ -143,9 +144,7 @@ export class ContextService {
       code,
       status: data.status || 'active',
     };
-
-    const context = await this.contextRepo.create(payload);
-    return this.transform(context);
+    return payload;
   }
 
   async updateContext(id: number, data: any, requesterUserId: number) {
@@ -153,30 +152,37 @@ export class ContextService {
     if (!isAdmin) {
       throw new ForbiddenException('Only system admin can update contexts');
     }
+    return this.update(id, data);
+  }
 
-    const context = await this.contextRepo.findById(id);
-    if (!context) throw new NotFoundException('Context not found');
-
-    if (id === 1) {
+  protected async beforeUpdate(id: number | bigint, data: any) {
+    if (Number(id) === 1) {
       throw new BadRequestException('Cannot update system context');
     }
 
-    if (data.code && data.code !== context.code) {
+    const current = await this.contextRepo.findById(id);
+    if (!current) throw new NotFoundException('Context not found');
+
+    if (data.code && data.code !== current.code) {
       const existing = await this.contextRepo.findByCode(data.code);
       if (existing) {
         throw new BadRequestException(`Context with code "${data.code}" already exists`);
       }
     }
 
-    await this.contextRepo.update(id, data);
-    return this.findById(id);
+    if (data.ref_id !== undefined) {
+      data.ref_id = data.ref_id ? BigInt(data.ref_id) : null;
+    }
+
+    return data;
   }
 
   async deleteContext(id: number) {
-    const context = await this.contextRepo.findById(id);
-    if (!context) throw new NotFoundException('Context not found');
+    return this.delete(id);
+  }
 
-    if (id === 1) {
+  protected async beforeDelete(id: number | bigint): Promise<boolean> {
+    if (Number(id) === 1) {
       throw new BadRequestException('Cannot delete system context');
     }
 
@@ -189,15 +195,7 @@ export class ContextService {
       throw new BadRequestException(`Cannot delete context: ${groupsCount} group(s) are using this context`);
     }
 
-    return this.contextRepo.delete(id);
-  }
-
-  private transform(context: any) {
-    if (!context) return context;
-    const item = { ...context };
-    if (item.id) item.id = Number(item.id);
-    if (item.ref_id) item.ref_id = Number(item.ref_id);
-    return item;
+    return true;
   }
 }
 

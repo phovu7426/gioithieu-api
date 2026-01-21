@@ -1,13 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { IProjectRepository, PROJECT_REPOSITORY, ProjectFilter } from '@/modules/introduction/project/repositories/project.repository.interface';
 import { ProjectStatus } from '@/shared/enums/types/project-status.enum';
+import { BaseContentService } from '@/common/base/services';
 
 @Injectable()
-export class PublicProjectService {
+export class PublicProjectService extends BaseContentService<any, IProjectRepository> {
   constructor(
     @Inject(PROJECT_REPOSITORY)
     private readonly projectRepo: IProjectRepository,
-  ) { }
+  ) {
+    super(projectRepo);
+  }
 
   async getList(query: any) {
     const filter: ProjectFilter = {
@@ -18,15 +21,12 @@ export class PublicProjectService {
     if (query.search) filter.search = query.search;
     if (query.isFeatured !== undefined) filter.isFeatured = query.isFeatured;
 
-    const result = await this.projectRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
       filter,
     });
-
-    result.data = result.data.map(item => this.transform(item));
-    return result;
   }
 
   async findBySlug(slug: string) {
@@ -38,21 +38,20 @@ export class PublicProjectService {
     if (!allowed.includes((project as any).status)) return null;
 
     // Increment view count
-    await this.projectRepo.incrementViewCount(Number(project.id));
+    await this.incrementViewCount(Number(project.id));
 
     return this.transform(project);
   }
 
   async getFeatured(limit: number = 10) {
     const result = await this.getList({ isFeatured: true, limit, page: 1 });
-    return result.data;
+    return result.data as any[];
   }
 
-  private transform(project: any) {
+  protected transform(project: any) {
     if (!project) return project;
-    const item = { ...project };
-    if (item.id) item.id = Number(item.id);
-    if (item.view_count) item.view_count = Number(item.view_count);
+    const item = super.transform(project) as any;
+    if (item.view_count !== undefined) item.view_count = Number(item.view_count);
     return item;
   }
 }

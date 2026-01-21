@@ -1,28 +1,29 @@
 import { Injectable, ConflictException, Inject, NotFoundException } from '@nestjs/common';
 import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY, BannerLocationFilter } from '@/modules/marketing/banner/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
+import { BaseService } from '@/common/base/services';
+import { BannerLocation } from '@prisma/client';
 
 @Injectable()
-export class BannerLocationService {
+export class BannerLocationService extends BaseService<BannerLocation, IBannerLocationRepository> {
     constructor(
         @Inject(BANNER_LOCATION_REPOSITORY)
         private readonly locationRepo: IBannerLocationRepository,
-    ) { }
+    ) {
+        super(locationRepo);
+    }
 
     async getList(query: any) {
         const filter: BannerLocationFilter = {};
         if (query.search) filter.search = query.search;
         if (query.status) filter.status = query.status;
 
-        const result = await this.locationRepo.findAll({
+        return super.getList({
             page: query.page,
             limit: query.limit,
             sort: query.sort,
             filter,
         });
-
-        result.data = result.data.map(item => this.transform(item));
-        return result;
     }
 
     async getSimpleList(query: any) {
@@ -32,40 +33,27 @@ export class BannerLocationService {
         });
     }
 
-    async getOne(id: number) {
-        const location = await this.locationRepo.findById(id);
-        return this.transform(location);
-    }
-
-    async create(data: any) {
-        const payload = { ...data };
-
-        if (payload.code) {
-            const exists = await this.locationRepo.findByCode(payload.code);
+    protected async beforeCreate(data: any) {
+        if (data.code) {
+            const exists = await this.locationRepo.findByCode(data.code);
             if (exists) {
-                throw new ConflictException(`Mã vị trí banner "${payload.code}" đã tồn tại`);
+                throw new ConflictException(`Mã vị trí banner "${data.code}" đã tồn tại`);
             }
         }
-
-        const location = await this.locationRepo.create(payload);
-        return this.getOne(Number(location.id));
+        return data;
     }
 
-    async update(id: number, data: any) {
-        const payload = { ...data };
-
+    protected async beforeUpdate(id: number, data: any) {
         const current = await this.locationRepo.findById(id);
         if (!current) throw new NotFoundException('Banner location not found');
 
-        if (payload.code && payload.code !== (current as any).code) {
-            const exists = await this.locationRepo.findByCode(payload.code);
+        if (data.code && data.code !== (current as any).code) {
+            const exists = await this.locationRepo.findByCode(data.code);
             if (exists) {
-                throw new ConflictException(`Mã vị trí banner "${payload.code}" đã tồn tại`);
+                throw new ConflictException(`Mã vị trí banner "${data.code}" đã tồn tại`);
             }
         }
-
-        await this.locationRepo.update(id, payload);
-        return this.getOne(id);
+        return data;
     }
 
     async findByCode(code: string) {
@@ -73,18 +61,7 @@ export class BannerLocationService {
         return this.transform(location);
     }
 
-    async delete(id: number) {
-        return this.locationRepo.delete(id);
-    }
-
     async changeStatus(id: number, status: BasicStatus) {
         return this.update(id, { status: status as any });
-    }
-
-    private transform(location: any) {
-        if (!location) return location;
-        const item = { ...location };
-        if (item.id) item.id = Number(item.id);
-        return item;
     }
 }

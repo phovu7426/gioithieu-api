@@ -1,21 +1,23 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PostTag } from '@prisma/client';
-import { StringUtil } from '@/core/utils/string.util';
 import { IPostTagRepository, POST_TAG_REPOSITORY, PostTagFilter } from '@/modules/post/repositories/post-tag.repository.interface';
+import { BaseContentService } from '@/common/base/services';
 
 @Injectable()
-export class PostTagService {
+export class PostTagService extends BaseContentService<PostTag, IPostTagRepository> {
   constructor(
     @Inject(POST_TAG_REPOSITORY)
     private readonly tagRepo: IPostTagRepository,
-  ) { }
+  ) {
+    super(tagRepo);
+  }
 
   async getList(query: any) {
     const filter: PostTagFilter = {};
     if (query.search) filter.search = query.search;
     if (query.status !== undefined) filter.status = query.status;
 
-    return this.tagRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort,
@@ -27,40 +29,17 @@ export class PostTagService {
     return this.getList({ ...query, limit: 1000 });
   }
 
-  async getOne(id: number) {
-    return this.tagRepo.findById(id);
-  }
-
-  async create(data: any) {
+  protected async beforeCreate(data: any) {
     const payload = { ...data };
-    this.normalizeSlug(payload);
-    return this.tagRepo.create(payload);
+    await this.ensureSlug(payload);
+    return payload;
   }
 
-  async update(id: number, data: any) {
+  protected async beforeUpdate(id: number | bigint, data: any) {
     const payload = { ...data };
     const current = await this.tagRepo.findById(id);
-    this.normalizeSlug(payload, current?.slug);
-    return this.tagRepo.update(id, payload);
-  }
-
-  async delete(id: number) {
-    return this.tagRepo.delete(id);
-  }
-
-  private normalizeSlug(data: any, currentSlug?: string) {
-    if (data.name && !data.slug) {
-      data.slug = StringUtil.toSlug(data.name);
-      return;
-    }
-    if (data.slug) {
-      const normalized = StringUtil.toSlug(data.slug);
-      if (currentSlug && StringUtil.toSlug(currentSlug) === normalized) {
-        delete data.slug;
-      } else {
-        data.slug = normalized;
-      }
-    }
+    await this.ensureSlug(payload, id, current?.slug);
+    return payload;
   }
 }
 

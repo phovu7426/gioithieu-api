@@ -1,12 +1,16 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { PostTag } from '@prisma/client';
 import { IPostTagRepository, POST_TAG_REPOSITORY, PostTagFilter } from '@/modules/post/repositories/post-tag.repository.interface';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class PostTagService {
+export class PostTagService extends BaseService<PostTag, IPostTagRepository> {
   constructor(
     @Inject(POST_TAG_REPOSITORY)
     private readonly tagRepo: IPostTagRepository,
-  ) { }
+  ) {
+    super(tagRepo);
+  }
 
   async getList(query: any) {
     const filter: PostTagFilter = {
@@ -14,33 +18,18 @@ export class PostTagService {
     };
     if (query.search) filter.search = query.search;
 
-    const result = await this.tagRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort || 'created_at:DESC',
       filter,
     });
-
-    result.data = result.data.map((item) => this.transform(item));
-    return result;
   }
 
   async findBySlug(slug: string) {
     const tag = await this.tagRepo.findBySlug(slug);
     if (!tag || (tag as any).status !== 'active') return null;
     return this.transform(tag);
-  }
-
-  async getOne(id: number) {
-    const tag = await this.tagRepo.findById(id);
-    return this.transform(tag);
-  }
-
-  private transform(tag: any) {
-    if (!tag) return tag;
-    const item = { ...tag };
-    if (item.id) item.id = Number(item.id);
-    return item;
   }
 }
 

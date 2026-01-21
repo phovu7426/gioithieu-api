@@ -2,13 +2,16 @@ import { Injectable, Inject } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { IEmailConfigRepository, EMAIL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/email-config.repository.interface';
 import { UpdateEmailConfigDto } from '../dtos/update-email-config.dto';
+import { BaseService } from '@/common/base/services';
 
 @Injectable()
-export class EmailConfigService {
+export class EmailConfigService extends BaseService<any, IEmailConfigRepository> {
   constructor(
     @Inject(EMAIL_CONFIG_REPOSITORY)
     private readonly emailConfigRepo: IEmailConfigRepository
-  ) { }
+  ) {
+    super(emailConfigRepo);
+  }
 
   async getConfig(): Promise<any> {
     const config = await this.emailConfigRepo.getConfig();
@@ -63,12 +66,9 @@ export class EmailConfigService {
     return this.transform(result, true);
   }
 
-  private transform(config: any, maskPassword = false) {
+  protected transform(config: any, maskPassword = false) {
     if (!config) return config;
-    const item = { ...config };
-    if (item.id) item.id = Number(item.id);
-    if (item.created_user_id) item.created_user_id = Number(item.created_user_id);
-    if (item.updated_user_id) item.updated_user_id = Number(item.updated_user_id);
+    const item = super.transform(config) as any;
 
     if (maskPassword && item.smtp_password) {
       item.smtp_password = '******';

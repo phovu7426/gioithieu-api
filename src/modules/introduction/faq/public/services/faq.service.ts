@@ -1,12 +1,16 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Faq } from '@prisma/client';
 import { IFaqRepository, FAQ_REPOSITORY, FaqFilter } from '@/modules/introduction/faq/repositories/faq.repository.interface';
+import { BaseContentService } from '@/common/base/services';
 
 @Injectable()
-export class PublicFaqService {
+export class PublicFaqService extends BaseContentService<Faq, IFaqRepository> {
   constructor(
     @Inject(FAQ_REPOSITORY)
     private readonly faqRepo: IFaqRepository,
-  ) { }
+  ) {
+    super(faqRepo);
+  }
 
   async getList(query: any) {
     const filter: FaqFilter = {
@@ -14,21 +18,20 @@ export class PublicFaqService {
     };
     if (query.search) filter.search = query.search;
 
-    const result = await this.faqRepo.findAll({
+    return super.getList({
       page: query.page,
       limit: query.limit,
       sort: query.sort || 'sort_order:asc,created_at:desc',
       filter,
     });
-
-    result.data = result.data.map((item) => this.transform(item));
-    return result;
   }
 
   async getOne(id: number) {
-    const faq = await this.faqRepo.findById(id);
-    if (!faq || (faq as any).status !== 'active') return null;
-    return this.transform(faq);
+    const faq = await super.getOne(id);
+    if (!faq || (faq as any).status !== 'active') {
+      throw new NotFoundException('FAQ not found or inactive');
+    }
+    return faq;
   }
 
   async getPopular(limit: number = 10) {
@@ -41,18 +44,13 @@ export class PublicFaqService {
     return result.data.map(item => this.transform(item));
   }
 
-  async incrementViewCount(id: number) {
-    return this.faqRepo.incrementViewCount(id);
-  }
-
   async incrementHelpfulCount(id: number) {
     return this.faqRepo.incrementHelpfulCount(id);
   }
 
-  private transform(faq: any) {
+  protected transform(faq: any) {
     if (!faq) return faq;
-    const item = { ...faq };
-    if (item.id) item.id = Number(item.id);
+    const item = super.transform(faq) as any;
     if (item.view_count) item.view_count = Number(item.view_count);
     if (item.helpful_count) item.helpful_count = Number(item.helpful_count);
     return item;
