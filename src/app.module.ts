@@ -17,33 +17,33 @@ import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
 import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import { FilePathInterceptor } from '@/common/interceptors/file-path.interceptor';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { AuthModule } from '@/modules/common/auth/auth.module';
-import { RbacModule } from '@/modules/rbac/rbac.module';
+import { AuthModule } from '@/modules/core/auth/auth.module';
+import { RbacModule } from '@/modules/core/rbac/rbac.module';
 import { RbacGuard } from '@/common/guards/rbac.guard';
 import { RequestContextMiddleware } from '@/common/middlewares/request-context.middleware';
 import { RateLimitModule } from '@/core/security/throttler.module';
-import { ContextModule } from '@/modules/context/context.module';
+import { ContextModule } from '@/modules/core/context/context.module';
 import { GroupInterceptor } from '@/common/interceptors/group.interceptor';
 
 // New Domain Modules
 import { PostModule } from '@/modules/post/post.module';
-import { NotificationModule } from '@/modules/extra/notification/notification.module';
-import { UserManagementModule } from '@/modules/common/user-management/user-management.module';
+import { NotificationModule } from '@/modules/core/notification/notification.module';
+import { UserManagementModule } from '@/modules/core/iam/user-management.module';
 import { EnumModule } from '@/shared/enums';
-import { FileUploadModule } from '@/modules/common/file-upload/file-upload.module';
-import { MenuModule } from '@/modules/common/menu/menu.module';
-import { BannerModule } from '@/modules/extra/banner/banner.module';
-import { ContactModule } from '@/modules/contact/contact.module';
-import { SystemConfigModule } from '@/modules/common/system-config/system-config.module';
+import { FileUploadModule } from '@/modules/storage/file-upload/file-upload.module';
+import { MenuModule } from '@/modules/core/menu/menu.module';
+import { BannerModule } from '@/modules/marketing/banner/banner.module';
+import { ContactModule } from '@/modules/introduction/contact/contact.module';
+import { SystemConfigModule } from '@/modules/core/system-config/system-config.module';
 import { AppMailModule } from '@/core/mail/mail.module';
 import { ProjectModule } from '@/modules/introduction/project/project.module';
-import { AboutModule } from '@/modules/common/about/about.module';
+import { AboutModule } from '@/modules/introduction/about/about.module';
 import { StaffModule } from '@/modules/introduction/staff/staff.module';
 import { TestimonialModule } from '@/modules/introduction/testimonial/testimonial.module';
 import { PartnerModule } from '@/modules/introduction/partner/partner.module';
 import { GalleryModule } from '@/modules/introduction/gallery/gallery.module';
 import { CertificateModule } from '@/modules/introduction/certificate/certificate.module';
-import { FaqModule } from '@/modules/common/faq/faq.module';
+import { FaqModule } from '@/modules/introduction/faq/faq.module';
 import { HomepageModule } from '@/modules/homepage/homepage.module';
 
 @Module({

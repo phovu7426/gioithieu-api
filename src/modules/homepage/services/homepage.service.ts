@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CacheService } from '@/common/services/cache.service';
 import { PublicProjectService } from '@/modules/introduction/project/public/services/project.service';
-import { PublicAboutService } from '@/modules/common/about/public/services/about.service';
+import { PublicAboutService } from '@/modules/introduction/about/public/services/about.service';
 import { PublicStaffService } from '@/modules/introduction/staff/public/services/staff.service';
 import { PublicPartnerService } from '@/modules/introduction/partner/public/services/partner.service';
 import { PublicCertificateService } from '@/modules/introduction/certificate/public/services/certificate.service';
-import { PublicFaqService } from '@/modules/common/faq/public/services/faq.service';
+import { PublicFaqService } from '@/modules/introduction/faq/public/services/faq.service';
 
 @Injectable()
 export class HomepageService {

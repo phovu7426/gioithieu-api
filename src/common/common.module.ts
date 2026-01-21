@@ -2,7 +2,7 @@ import { Global, Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AuthService } from '@/common/services/auth.service';
 import { CacheService } from '@/common/services/cache.service';
-import { ContextModule } from '@/modules/context/context.module';
+import { ContextModule } from '@/modules/core/context/context.module';
 
 /**
  * Common Module - Cung cấp các services dùng chung

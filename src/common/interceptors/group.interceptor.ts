@@ -2,9 +2,9 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler, ForbiddenEx
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { RequestContext } from '@/common/utils/request-context.util';
-import { AdminContextService } from '@/modules/context/admin/context/services/context.service';
-import { AdminGroupService } from '@/modules/context/admin/group/services/group.service';
-import { UserGroupService } from '@/modules/context/user/group/services/group.service';
+import { AdminContextService } from '@/modules/core/context/admin/context/services/context.service';
+import { AdminGroupService } from '@/modules/core/context/admin/group/services/group.service';
+import { UserGroupService } from '@/modules/core/context/user/group/services/group.service';
 import { Auth } from '@/common/utils/auth.util';
 import { PERMS_REQUIRED_KEY, PUBLIC_PERMISSION } from '@/common/decorators/rbac.decorators';
 
