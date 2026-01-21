@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMS_REQUIRED_KEY, PUBLIC_PERMISSION } from '@/common/decorators/rbac.decorators';
-import { RbacService } from '@/modules/rbac/services/rbac.service';
+import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { Auth } from '@/common/utils/auth.util';
 import { RequestContext } from '@/common/utils/request-context.util';
 import { ResponseUtil } from '@/common/utils/response.util';
