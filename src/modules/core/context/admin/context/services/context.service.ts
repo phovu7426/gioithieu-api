@@ -1,5 +1,5 @@
 ﻿import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
-import { IContextRepository, CONTEXT_REPOSITORY, ContextFilter } from '@/modules/core/context/repositories/context.repository.interface';
+import { IContextRepository, CONTEXT_REPOSITORY } from '@/modules/core/context/repositories/context.repository.interface';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/core/context/repositories/group.repository.interface';
 import { BaseService } from '@/common/core/services';
@@ -43,7 +43,7 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
   async createContext(data: any, requesterUserId: number) {
     const isAdmin = await this.isSystemAdmin(requesterUserId);
     if (!isAdmin) {
-      throw new ForbiddenException('Only system admin can create contexts');
+      throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này');
     }
     return this.create(data);
   }
@@ -51,13 +51,13 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
   protected async beforeCreate(data: any) {
     const existing = await this.contextRepo.findByTypeAndRefId(data.type, data.ref_id ?? null);
     if (existing) {
-      throw new BadRequestException(`Context with type "${data.type}" and ref_id "${data.ref_id ?? 'null'}" already exists`);
+      throw new BadRequestException(`Context với loại "${data.type}" và ref_id "${data.ref_id ?? 'null'}" đã tồn tại`);
     }
 
     const code = data.code || `${data.type}-${data.ref_id ?? 'system'}`;
     const existingByCode = await this.contextRepo.findByCode(code);
     if (existingByCode) {
-      throw new BadRequestException(`Context with code "${code}" already exists`);
+      throw new BadRequestException(`Context với mã "${code}" đã tồn tại`);
     }
 
     const payload = {
@@ -72,23 +72,23 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
   async updateContext(id: number, data: any, requesterUserId: number) {
     const isAdmin = await this.isSystemAdmin(requesterUserId);
     if (!isAdmin) {
-      throw new ForbiddenException('Only system admin can update contexts');
+      throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này');
     }
     return this.update(id, data);
   }
 
   protected async beforeUpdate(id: number | bigint, data: any) {
     if (Number(id) === 1) {
-      throw new BadRequestException('Cannot update system context');
+      throw new BadRequestException('Không thể cập nhật context hệ thống');
     }
 
     const current = await this.contextRepo.findById(id);
-    if (!current) throw new NotFoundException('Context not found');
+    if (!current) throw new NotFoundException('Context không tồn tại');
 
     if (data.code && data.code !== current.code) {
       const existing = await this.contextRepo.findByCode(data.code);
       if (existing) {
-        throw new BadRequestException(`Context with code "${data.code}" already exists`);
+        throw new BadRequestException(`Context với mã "${data.code}" đã tồn tại`);
       }
     }
 
@@ -105,7 +105,7 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
 
   protected async beforeDelete(id: number | bigint): Promise<boolean> {
     if (Number(id) === 1) {
-      throw new BadRequestException('Cannot delete system context');
+      throw new BadRequestException('Không thể xóa context hệ thống');
     }
 
     const groups = await this.groupRepo.findManyRaw({
@@ -113,7 +113,7 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
     });
 
     if (groups.length > 0) {
-      throw new BadRequestException(`Cannot delete context: ${groups.length} group(s) are using this context`);
+      throw new BadRequestException(`Không thể xóa context: ${groups.length} group đang sử dụng context này`);
     }
     return true;
   }

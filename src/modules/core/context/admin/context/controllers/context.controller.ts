@@ -2,7 +2,6 @@
 import { Permission } from '@/common/auth/decorators';
 import { AuthService } from '@/common/auth/services';
 import { AdminContextService } from '../services/context.service';
-import { prepareQuery } from '@/common/core/utils';
 
 /**
  * Controller cho System Admin quản lý Contexts
@@ -20,7 +19,7 @@ export class AdminContextController {
    */
   @Permission('group.manage')
   @Post()
-  async createContext(@Body() body: {
+  async create(@Body() body: {
     type: string;
     ref_id?: number | null;
     name: string;
@@ -31,7 +30,6 @@ export class AdminContextController {
     if (!userId) {
       throw new ForbiddenException('Authentication required');
     }
-
     return this.contextService.createContext(body, userId);
   }
 
@@ -51,7 +49,7 @@ export class AdminContextController {
    */
   @Permission('public')
   @Get(':id')
-  async getContext(@Param('id', ParseIntPipe) id: number) {
+  async getOne(@Param('id', ParseIntPipe) id: number) {
     return this.contextService.findById(id);
   }
 
