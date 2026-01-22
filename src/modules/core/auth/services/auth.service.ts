@@ -1,7 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { ConfigService } from '@nestjs/config';
 import { UserStatus } from '@/shared/enums/types/user-status.enum';
 import { RedisUtil } from '@/core/utils/redis.util';
 import { TokenService } from '@/modules/core/auth/services/token.service';
@@ -20,8 +18,6 @@ export class AuthService {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepo: IUserRepository,
-    private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
     private readonly redis: RedisUtil,
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly tokenService: TokenService,
