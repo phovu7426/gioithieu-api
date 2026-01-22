@@ -84,7 +84,7 @@ export class GroupInterceptor implements NestInterceptor {
         const userGroups = await this.userGroupService.getUserGroups(userId);
 
         if (userGroups.length > 0) {
-          // Ưu tiên group không phải system (shop/comic) hơn system group
+          // Ưu tiên group không phải system (ví dụ shop) hơn system group
           let selectedGroup = userGroups.find((g: any) => g.type !== 'system') || userGroups[0];
 
           if (selectedGroup) {
