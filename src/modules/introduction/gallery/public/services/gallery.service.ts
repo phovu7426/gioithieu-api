@@ -12,21 +12,17 @@ export class PublicGalleryService extends BaseService<any, IGalleryRepository> {
     super(galleryRepo);
   }
 
-  async getList(query: any) {
-    const filter: any = {
-      ...(query.filter || {}),
-      status: BasicStatus.active as any,
-    };
-
-    if (query.featured) filter.featured = true;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort || 'sort_order:asc,created_at:desc',
-      filter,
-    });
+  protected async prepareFilters(filter: any) {
+    // Public API chỉ hiển thị active, normalize featured/isFeatured
+    const normalized = { ...filter };
+    if (filter.featured !== undefined) {
+      normalized.isFeatured = filter.featured;
+      delete normalized.featured;
+    }
+    return { ...normalized, status: BasicStatus.active as any };
   }
+
+
 
   async findBySlug(slug: string): Promise<any | null> {
     const gallery = await this.galleryRepo.findOne({

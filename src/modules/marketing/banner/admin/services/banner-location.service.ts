@@ -13,18 +13,6 @@ export class BannerLocationService extends BaseService<BannerLocation, IBannerLo
         super(locationRepo);
     }
 
-    async getList(query: any) {
-        const filter: BannerLocationFilter = {};
-        if (query.search) filter.search = query.search;
-        if (query.status) filter.status = query.status;
-
-        return super.getList({
-            page: query.page,
-            limit: query.limit,
-            sort: query.sort,
-            filter,
-        });
-    }
 
     async getSimpleList(query: any) {
         return this.getList({

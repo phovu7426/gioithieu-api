@@ -2,27 +2,57 @@
  * Prepare query parameters from request query
  * This function extracts filters and options from query object
  */
-export function prepareQuery(query: any = {}): { filters: any; options: any } {
-  const filterInput: any = {};
-  const optionInput: any = {};
-  if (query && typeof query === 'object') {
-    if (query.filters && typeof query.filters === 'object') {
-      Object.assign(filterInput, query.filters);
-    }
-    if (query.options && typeof query.options === 'object') {
-      Object.assign(optionInput, query.options);
-    }
+/**
+ * Prepare query parameters from request query
+ * This function extracts filters and options from query object.
+ * It supports flattened parameters (e.g., ?search=abc) which is the preferred way.
+ * Parameters mapping: 
+ * - Standard options: page, limit, sort, sort_by, sort_order, format
+ * - Everything else is treated as a filter
+ */
+export function prepareQuery(query: any = {}): { filter: any; options: any } {
+  if (!query || typeof query !== 'object') {
+    return { filter: {}, options: {} };
   }
-  const rootCompat: any = {};
-  if (query.page !== undefined) rootCompat.page = query.page;
-  if (query.limit !== undefined) rootCompat.limit = query.limit;
-  if (query.sort !== undefined) rootCompat.sort = query.sort;
-  // Hỗ trợ sort_by và sort_order (backward compatibility)
-  if (query.sort_by && !query.sort) {
-    const sortOrder = (query.sort_order || 'DESC').toUpperCase();
-    rootCompat.sort = `${query.sort_by}:${sortOrder}`;
+
+  // 1. Destructure standard options
+  const {
+    page,
+    limit,
+    sort,
+    sort_by,
+    sort_order,
+    sortBy,
+    sortOrder,
+    format,
+    filters, // Backward compatibility for filters[key]
+    options, // Backward compatibility for options[key]
+    ...flatFilters
+  } = query;
+
+  // 2. Build options
+  const rootOptions: any = {};
+  if (page !== undefined) rootOptions.page = Number(page);
+  if (limit !== undefined) rootOptions.limit = Number(limit);
+  if (sort !== undefined) rootOptions.sort = sort;
+  if (format !== undefined) rootOptions.format = format;
+
+  // Handle sort_by/sort_order or sortBy/sortOrder (backward compatibility)
+  const finalSortBy = sort_by || sortBy;
+  const finalSortOrder = sort_order || sortOrder || 'DESC';
+  if (finalSortBy && !sort) {
+    const order = finalSortOrder.toUpperCase();
+    rootOptions.sort = `${finalSortBy}:${order}`;
   }
-  if (query.format !== undefined) rootCompat.format = query.format;
-  const options = { ...rootCompat, ...optionInput };
-  return { filters: filterInput, options };
+
+  // Merge explicitly passed options if any
+  const finalOptions = { ...rootOptions, ...(options || {}) };
+
+  // 3. Build filters
+  // Priority: flat filters (preferred) merged with explicitly passed filters
+  const finalFilters = { ...flatFilters, ...(filters || {}) };
+
+  // Note: renamed 'filters' to 'filter' to match IPaginationOptions.filter
+  return { filter: finalFilters, options: finalOptions };
 }
+

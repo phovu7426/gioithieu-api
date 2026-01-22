@@ -15,26 +15,6 @@ export class PostService extends BaseContentService<Post, IPostRepository> {
     super(postRepo);
   }
 
-  async getList(query: GetPostsDto) {
-    const filter: PostFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status as any;
-    if (query.categoryId) filter.categoryId = query.categoryId;
-    if (query.tagId) filter.tagId = query.tagId;
-    if (query.isFeatured !== undefined) filter.isFeatured = query.isFeatured;
-    if (query.isPinned !== undefined) filter.isPinned = query.isPinned;
-
-    const sort = query.sortBy && query.sortOrder
-      ? `${query.sortBy}:${query.sortOrder}`
-      : 'created_at:DESC';
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort,
-      filter,
-    });
-  }
 
   private _temp_tagIds: number[] | null = null;
   private _temp_categoryIds: number[] | null = null;

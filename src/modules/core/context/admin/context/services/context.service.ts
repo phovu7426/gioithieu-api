@@ -19,19 +19,6 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
 
   protected defaultSort = 'id:desc';
 
-  async getList(query: any) {
-    const filter: ContextFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.type) filter.type = query.type;
-    if (query.status) filter.status = query.status;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   private async isSystemAdmin(userId: number): Promise<boolean> {
     return this.rbacService.userHasPermissionsInGroup(userId, null, [

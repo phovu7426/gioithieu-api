@@ -12,19 +12,6 @@ export class PostCategoryService extends BaseContentService<PostCategory, IPostC
     super(categoryRepo);
   }
 
-  async getList(query: any) {
-    const filter: PostCategoryFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status !== undefined) filter.status = query.status;
-    if (query.parentId !== undefined) filter.parentId = query.parentId;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   async getSimpleList(query: any) {
     return this.getList({

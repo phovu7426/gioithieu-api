@@ -3,7 +3,6 @@ import { Auth } from '@/common/auth/utils';
 import { LogRequest } from '@/common/shared/decorators';
 import { Permission } from '@/common/auth/decorators';
 import { PermissionService } from '@/modules/core/iam/permission/admin/services/permission.service';
-import { prepareQuery } from '@/common/core/utils';
 
 @Controller('admin/permissions')
 export class PermissionController {

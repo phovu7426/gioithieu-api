@@ -14,20 +14,12 @@ export class PublicCertificateService extends BaseService<Certificate, ICertific
     super(certificateRepo);
   }
 
-  async getList(query: any) {
-    const filter: any = {
-      status: BasicStatus.active as any,
-    };
-
-    if (query.type) filter.type = query.type;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort || 'sort_order:asc,created_at:desc',
-      filter,
-    });
+  protected async prepareFilters(filter: any) {
+    // Public API chỉ hiển thị active
+    return { ...filter, status: BasicStatus.active as any };
   }
+
+
 
   async findByType(type: CertificateType): Promise<Certificate[]> {
     const result = await this.getList({

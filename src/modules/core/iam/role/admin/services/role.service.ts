@@ -22,26 +22,19 @@ export class RoleService extends BaseService<any, IRoleRepository> {
 
   private pendingContextIds: number[] | null = null;
 
-  async getList(query: any) {
-    const filter: RoleFilter & { contextId?: number } = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status;
-    if (query.parentId !== undefined) filter.parentId = query.parentId;
-
+  protected async prepareFilters(filter: any) {
     const context = RequestContext.get<any>('context');
     const contextId = RequestContext.get<number>('contextId') || 1;
 
+    // Nếu không phải system context, filter theo contextId
     if (context && context.type !== 'system') {
-      filter.contextId = contextId;
+      return { ...filter, contextId };
     }
 
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
+    return filter;
   }
+
+
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });

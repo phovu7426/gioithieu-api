@@ -19,30 +19,21 @@ export class UserService extends BaseService<any, IUserRepository> {
   private pendingRoleIds: number[] | null = null;
   private pendingProfileData: any = null;
 
-  async getList(query: any) {
-    const filter: UserFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.email) filter.email = query.email;
-    if (query.phone) filter.phone = query.phone;
-    if (query.username) filter.username = query.username;
-    if (query.status) filter.status = query.status;
-
-    // Filter by context/group logic
+  protected async prepareFilters(filter: any) {
+    // Lấy context để filter theo group nếu cần
     const context = RequestContext.get<any>('context');
     const contextId = RequestContext.get<number>('contextId') || 1;
     const groupId = RequestContext.get<number | null>('groupId');
 
+    // Nếu không phải system context, filter theo groupId
     if (context && context.type !== 'system' && contextId !== 1 && groupId) {
-      filter.groupId = groupId;
+      return { ...filter, groupId };
     }
 
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
+    return filter;
   }
+
+
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });

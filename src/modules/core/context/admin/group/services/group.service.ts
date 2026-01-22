@@ -24,20 +24,6 @@ export class AdminGroupService extends BaseService<any, IGroupRepository> {
 
   protected defaultSort = 'id:desc';
 
-  async getList(query: any) {
-    const filter: GroupFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.type) filter.type = query.type;
-    if (query.status) filter.status = query.status;
-    if (query.contextId) filter.contextId = query.contextId;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   /**
    * Alias for getOne

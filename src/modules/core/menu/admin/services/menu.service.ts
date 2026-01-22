@@ -19,20 +19,6 @@ export class MenuService extends BaseService<any, IMenuRepository> {
     super(menuRepo);
   }
 
-  async getList(query: any) {
-    const filter: MenuFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status;
-    if (query.type) filter.type = query.type;
-    if (query.parentId !== undefined) filter.parentId = query.parentId;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   async getSimpleList(query: any) {
     return this.getList({

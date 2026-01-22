@@ -12,18 +12,6 @@ export class PostTagService extends BaseContentService<PostTag, IPostTagReposito
     super(tagRepo);
   }
 
-  async getList(query: any) {
-    const filter: PostTagFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status !== undefined) filter.status = query.status;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });

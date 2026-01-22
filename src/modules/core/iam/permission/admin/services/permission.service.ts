@@ -13,20 +13,6 @@ export class PermissionService extends BaseService<any, IPermissionRepository> {
     super(permissionRepo);
   }
 
-  async getList(query: any) {
-    const filter: PermissionFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status;
-    if (query.scope) filter.scope = query.scope;
-    if (query.parentId !== undefined) filter.parentId = query.parentId;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });

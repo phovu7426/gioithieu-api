@@ -14,19 +14,6 @@ export class GalleryService extends BaseContentService<Gallery, IGalleryReposito
 
   protected defaultSort = 'sort_order:asc,created_at:desc';
 
-  async getList(query: any) {
-    const filter: GalleryFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status;
-    if (query.isFeatured !== undefined) filter.isFeatured = query.isFeatured;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   protected async beforeCreate(data: any) {
     const payload = { ...data };

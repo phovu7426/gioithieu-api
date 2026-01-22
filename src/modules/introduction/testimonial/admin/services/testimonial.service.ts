@@ -15,19 +15,6 @@ export class TestimonialService extends BaseService<Testimonial, ITestimonialRep
     super(testimonialRepo);
   }
 
-  async getList(query: any) {
-    const filter: TestimonialFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status;
-    if (query.projectId) filter.projectId = query.projectId;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   async getSimpleList(query: any) {
     return this.getList({

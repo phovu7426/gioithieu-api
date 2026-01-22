@@ -12,19 +12,6 @@ export class ProjectService extends BaseContentService<Project, IProjectReposito
     super(projectRepo);
   }
 
-  async getList(query: any) {
-    const filter: ProjectFilter = {};
-    if (query.search) filter.search = query.search;
-    if (query.status) filter.status = query.status;
-    if (query.isFeatured !== undefined) filter.isFeatured = query.isFeatured;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
-  }
 
   async getSimpleList(query: any) {
     return this.getList({

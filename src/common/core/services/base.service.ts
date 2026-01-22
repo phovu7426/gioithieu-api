@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { IRepository, IPaginatedResult, IPaginationOptions } from '../repositories/repository.interface';
-import { createPaginationMeta } from '../utils/pagination.helper';
+import { createPaginationMeta, prepareQuery } from '../utils';
 
 /**
  * Base Service DB-agnostic.
@@ -82,11 +82,18 @@ export abstract class BaseService<T, R extends IRepository<T>> {
     }
 
     /**
-     * Lấy danh sách phân trang
+     * Lấy danh sách phân trang.
+     * Chấp nhận raw query từ controller hoặc IPaginationOptions đã chuẩn hóa.
      */
-    async getList(options: IPaginationOptions = {}): Promise<IPaginatedResult<T>> {
+    async getList(queryOrOptions: any = {}): Promise<IPaginatedResult<T>> {
+        // 1. Chuẩn hóa query thành filter và options
+        const { filter, options } = prepareQuery(queryOrOptions);
+
+        // 2. Chuẩn hóa options (page, limit, sort)
         const normalized = await this.prepareOptions(options);
-        const preparedFilters = await this.prepareFilters(normalized.filter, normalized);
+
+        // 3. Xử lý filters qua hook
+        const preparedFilters = await this.prepareFilters(filter, normalized);
 
         if (preparedFilters === false) {
             return {
@@ -95,17 +102,22 @@ export abstract class BaseService<T, R extends IRepository<T>> {
             };
         }
 
-        if (preparedFilters && typeof preparedFilters === 'object') {
-            normalized.filter = preparedFilters;
-        }
+        // Gán filter đã xử lý vào options để repository thực thi
+        normalized.filter = preparedFilters && typeof preparedFilters === 'object'
+            ? preparedFilters
+            : filter;
 
+        // 4. Gọi repository
         const result = await this.repository.findAll(normalized);
+
+        // 5. Transform kết quả
         result.data = await Promise.all(
             result.data.map((item) => this.transform(item) as T)
         );
 
         return this.afterGetList(result);
     }
+
 
     /**
      * Lấy một bản ghi theo ID

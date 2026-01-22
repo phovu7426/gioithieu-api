@@ -13,23 +13,38 @@ export class PostService extends BaseContentService<Post, IPostRepository> {
     super(postRepo);
   }
 
-  async getList(dto: GetPostsDto) {
-    const filter: PostFilter = {
-      status: 'published', // Public API always return published posts
-      search: dto.search,
-      categorySlug: dto.category_slug,
-      tagSlug: dto.tag_slug,
-      isFeatured: dto.is_featured,
-      isPinned: dto.is_pinned,
-    };
+  protected async prepareFilters(filter: any) {
+    // Public API chỉ hiển thị published, normalize snake_case/camelCase
+    const normalized = { ...filter };
 
-    return super.getList({
-      page: dto.page,
-      limit: dto.limit,
-      sort: dto.sort,
-      filter,
-    });
+    // Normalize categorySlug
+    if (filter.category_slug) {
+      normalized.categorySlug = filter.category_slug;
+      delete normalized.category_slug;
+    }
+
+    // Normalize tagSlug
+    if (filter.tag_slug) {
+      normalized.tagSlug = filter.tag_slug;
+      delete normalized.tag_slug;
+    }
+
+    // Normalize isFeatured
+    if (filter.is_featured !== undefined) {
+      normalized.isFeatured = filter.is_featured;
+      delete normalized.is_featured;
+    }
+
+    // Normalize isPinned
+    if (filter.is_pinned !== undefined) {
+      normalized.isPinned = filter.is_pinned;
+      delete normalized.is_pinned;
+    }
+
+    return { ...normalized, status: 'published' };
   }
+
+
 
   async getOneBySlug(slug: string) {
     const post = await this.postRepo.findPublishedBySlug(slug);

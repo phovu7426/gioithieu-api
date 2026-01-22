@@ -12,22 +12,15 @@ export class PublicProjectService extends BaseContentService<any, IProjectReposi
     super(projectRepo);
   }
 
-  async getList(query: any) {
-    const filter: ProjectFilter = {
-      status: {
-        in: [ProjectStatus.completed, ProjectStatus.in_progress] as any,
-      } as any
+  protected async prepareFilters(filter: any) {
+    // Public API chỉ hiển thị project completed hoặc in_progress
+    return {
+      ...filter,
+      status: { in: [ProjectStatus.completed, ProjectStatus.in_progress] as any } as any
     };
-    if (query.search) filter.search = query.search;
-    if (query.isFeatured !== undefined) filter.isFeatured = query.isFeatured;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort,
-      filter,
-    });
   }
+
+
 
   async findBySlug(slug: string) {
     const project = await this.projectRepo.findBySlug(slug);

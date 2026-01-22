@@ -13,19 +13,12 @@ export class PublicAboutService extends BaseService<any, IAboutRepository> {
     super(aboutRepo);
   }
 
-  async getList(query: any) {
-    const filter: AboutFilter = {
-      status: BasicStatus.active
-    };
-    if (query.section_type) filter.section_type = query.section_type;
-
-    return super.getList({
-      page: query.page,
-      limit: query.limit,
-      sort: query.sort || 'sort_order:ASC,created_at:DESC',
-      filter,
-    });
+  protected async prepareFilters(filter: any) {
+    // Public API chỉ hiển thị active
+    return { ...filter, status: BasicStatus.active };
   }
+
+
 
   async findBySlug(slug: string): Promise<any | null> {
     const about = await this.aboutRepo.findBySlug(slug);

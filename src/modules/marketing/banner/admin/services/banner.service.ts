@@ -18,19 +18,6 @@ export class BannerService extends BaseContentService<Banner, IBannerRepository>
 
     protected defaultSort = 'sort_order:asc,created_at:desc';
 
-    async getList(query: any) {
-        const filter: BannerFilter = {};
-        if (query.search) filter.search = query.search;
-        if (query.status) filter.status = query.status;
-        if (query.locationId) filter.locationId = query.locationId;
-
-        return super.getList({
-            page: query.page,
-            limit: query.limit,
-            sort: query.sort,
-            filter,
-        });
-    }
 
     async getSimpleList(query: any) {
         return this.getList({
