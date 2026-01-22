@@ -13,33 +13,22 @@ export class RolePrismaRepository extends PrismaRepository<
     Prisma.RoleUpdateInput,
     Prisma.RoleOrderByWithRelationInput
 > implements IRoleRepository {
-    private readonly defaultSelect: Prisma.RoleSelect = {
-        id: true,
-        code: true,
-        name: true,
-        status: true,
-        parent_id: true,
-        created_at: true,
-        updated_at: true,
-        parent: { select: { id: true, name: true, code: true, status: true } },
-        children: { select: { id: true, name: true, code: true, status: true } },
-        permissions: { include: { permission: true } },
-        role_contexts: { include: { context: true } },
-    }
 
     constructor(private readonly prisma: PrismaService) {
         super(prisma.role as unknown as any);
-    }
-
-    override async findAll(options: any): Promise<any> {
-        return super.findAll({ ...options, select: this.defaultSelect });
-    }
-
-    override async findById(id: string | number | bigint): Promise<Role | null> {
-        return this.prisma.role.findUnique({
-            where: { id: BigInt(id) },
-            select: this.defaultSelect as any,
-        }) as unknown as Role;
+        this.defaultSelect = {
+            id: true,
+            code: true,
+            name: true,
+            status: true,
+            parent_id: true,
+            created_at: true,
+            updated_at: true,
+            parent: { select: { id: true, name: true, code: true, status: true } },
+            children: { select: { id: true, name: true, code: true, status: true } },
+            permissions: { include: { permission: true } },
+            role_contexts: { include: { context: true } },
+        };
     }
 
     protected buildWhere(filter: RoleFilter & { contextId?: number | bigint }): Prisma.RoleWhereInput {
@@ -66,16 +55,11 @@ export class RolePrismaRepository extends PrismaRepository<
             };
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findByCode(code: string): Promise<Role | null> {
-        return this.prisma.role.findFirst({
-            where: { code, deleted_at: null },
-            select: this.defaultSelect as any,
-        }) as unknown as Role;
+        return this.findOne({ code });
     }
 
     async syncPermissions(roleId: number | bigint, permissionIds: number[]): Promise<void> {

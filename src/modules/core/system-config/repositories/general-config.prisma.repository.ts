@@ -19,12 +19,11 @@ export class GeneralConfigPrismaRepository extends PrismaRepository<
 
     protected buildWhere(filter: GeneralConfigFilter): Prisma.GeneralConfigWhereInput {
         const where: Prisma.GeneralConfigWhereInput = {};
-        where.deleted_at = null;
         return where;
     }
 
     async getConfig(): Promise<GeneralConfig | null> {
-        return this.prisma.generalConfig.findFirst({
+        return this.findFirstRaw({
             where: { deleted_at: null },
             orderBy: { created_at: 'desc' },
         });

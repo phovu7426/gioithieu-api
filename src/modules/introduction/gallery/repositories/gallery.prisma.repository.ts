@@ -35,14 +35,10 @@ export class GalleryPrismaRepository extends PrismaRepository<
             where.featured = filter.isFeatured;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findBySlug(slug: string): Promise<Gallery | null> {
-        return this.prisma.gallery.findFirst({
-            where: { slug, deleted_at: null },
-        });
+        return this.findOne({ slug });
     }
 }

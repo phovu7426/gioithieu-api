@@ -35,8 +35,6 @@ export class PostTagPrismaRepository extends PrismaRepository<
     }
 
     async findBySlug(slug: string): Promise<PostTag | null> {
-        return this.prisma.postTag.findUnique({
-            where: { slug },
-        });
+        return this.findOne({ slug });
     }
 }

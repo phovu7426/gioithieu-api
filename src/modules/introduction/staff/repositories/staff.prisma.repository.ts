@@ -36,8 +36,6 @@ export class StaffPrismaRepository extends PrismaRepository<
             where.department = { contains: filter.department };
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 }

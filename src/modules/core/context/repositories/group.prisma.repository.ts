@@ -15,6 +15,7 @@ export class GroupPrismaRepository extends PrismaRepository<
 > implements IGroupRepository {
     constructor(private readonly prisma: PrismaService) {
         super(prisma.group as unknown as any, 'id:desc');
+        this.defaultInclude = { context: true };
     }
 
     protected buildWhere(filter: GroupFilter): Prisma.GroupWhereInput {
@@ -43,22 +44,10 @@ export class GroupPrismaRepository extends PrismaRepository<
             where.owner_id = BigInt(filter.ownerId);
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findByCode(code: string): Promise<Group | null> {
-        return this.prisma.group.findFirst({
-            where: { code, deleted_at: null },
-            include: { context: true },
-        }) as any;
-    }
-
-    override async findById(id: number): Promise<Group | null> {
-        return this.prisma.group.findFirst({
-            where: { id: BigInt(id), deleted_at: null },
-            include: { context: true },
-        }) as any;
+        return this.findOne({ code });
     }
 }

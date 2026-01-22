@@ -15,7 +15,7 @@ export class UserContextService {
   ) { }
 
   async getUserContexts(userId: number) {
-    const userGroups = await this.userGroupRepo.findMany({
+    const userGroups = await this.userGroupRepo.findManyRaw({
       where: { user_id: BigInt(userId) },
     });
 
@@ -23,7 +23,7 @@ export class UserContextService {
 
     const groupIds = Array.from(new Set(userGroups.map((ug) => ug.group_id)));
 
-    const groups = await this.groupRepo.findMany({
+    const groups = await this.groupRepo.findManyRaw({
       where: {
         id: { in: groupIds.map(id => BigInt(id)) },
         status: 'active' as any,
@@ -33,7 +33,7 @@ export class UserContextService {
     const contextIds = Array.from(new Set(groups.map((g) => g.context_id)));
     if (!contextIds.length) return [];
 
-    const contexts = await this.contextRepo.findMany({
+    const contexts = await this.contextRepo.findManyRaw({
       where: {
         id: { in: contextIds },
         status: 'active' as any,
@@ -44,11 +44,9 @@ export class UserContextService {
   }
 
   async getUserContextsForTransfer(userId: number) {
-    const systemContext = await this.contextRepo.findFirst({
-      where: {
-        id: BigInt(1),
-        status: 'active' as any,
-      },
+    const systemContext = await this.contextRepo.findOne({
+      id: 1,
+      status: 'active'
     });
 
     const userContexts = await this.getUserContexts(userId);

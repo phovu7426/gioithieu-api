@@ -12,6 +12,7 @@ export interface UserFilter {
     groupId?: number; // For filtering users within a group
     contextId?: number; // For system vs context logic
     status?: string; // If applicable
+    NOT?: any;
 }
 
 export interface IUserRepository extends IRepository<User> {
@@ -25,7 +26,7 @@ export interface IUserRepository extends IRepository<User> {
     // Check existence excluding ID (for update validation)
     checkUnique(field: 'email' | 'phone' | 'username', value: string, excludeUserId?: number | bigint): Promise<boolean>;
 
-    upsert(where: Prisma.UserWhereUniqueInput, create: Prisma.UserCreateInput, update: Prisma.UserUpdateInput): Promise<User>;
+    upsert(id: string | number | bigint, data: any): Promise<User>;
     updateLastLogin(userId: number | bigint): Promise<void>;
 
     // For JWT strategy - load basic user info

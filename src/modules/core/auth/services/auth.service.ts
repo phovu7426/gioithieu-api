@@ -40,12 +40,8 @@ export class AuthService {
     }
 
     // Tìm user bằng email (case-insensitive) - repo findByEmail can handle this or just findFirst
-    const user = await this.userRepo.findFirst({
-      where: {
-        email: {
-          equals: dto.email.toLowerCase(),
-        },
-      },
+    const user = await this.userRepo.findOne({
+      email: dto.email.toLowerCase(),
     });
 
     let authError: string | null = null;
@@ -253,26 +249,25 @@ export class AuthService {
     const now = new Date();
 
     // Dùng upsert
-    const dbUser = await this.userRepo.upsert(
-      { email },
-      {
+    let dbUser = await this.userRepo.findByEmail(email);
+    const userData = {
+      name: fullName,
+      image: user.picture ?? null,
+      status: UserStatus.active as any,
+      googleId: user.googleId,
+      email_verified_at: now,
+      last_login_at: now,
+    };
+
+    if (dbUser) {
+      dbUser = await this.userRepo.update(dbUser.id, userData);
+    } else {
+      dbUser = await this.userRepo.create({
+        ...userData,
         email,
         username,
-        name: fullName,
-        image: user.picture ?? null,
-        status: UserStatus.active as any,
-        googleId: user.googleId,
-        email_verified_at: now,
-        last_login_at: now,
-      },
-      {
-        last_login_at: now,
-        email_verified_at: now,
-        ...(user.picture && { image: user.picture }),
-        ...(fullName && { name: fullName }),
-        ...(user.googleId && { googleId: user.googleId }),
-      }
-    );
+      });
+    }
 
     // Kiểm tra status
     if (dbUser.status !== UserStatus.active) {

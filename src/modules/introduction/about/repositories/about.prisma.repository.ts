@@ -10,7 +10,7 @@ export class AboutPrismaRepository extends PrismaRepository<any> implements IAbo
     }
 
     protected buildWhere(filter: AboutFilter): any {
-        const where: any = { deleted_at: null };
+        const where: any = {};
 
         if (filter.search) {
             where.OR = [
@@ -31,12 +31,6 @@ export class AboutPrismaRepository extends PrismaRepository<any> implements IAbo
     }
 
     async findBySlug(slug: string): Promise<any | null> {
-        return this.delegate.findFirst({
-            where: {
-                slug,
-                deleted_at: null,
-                status: 'active' as any,
-            },
-        });
+        return this.findOne({ slug, status: 'active' });
     }
 }

@@ -31,22 +31,14 @@ export class FaqPrismaRepository extends PrismaRepository<
             where.status = filter.status as any;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
-    async incrementViewCount(id: number): Promise<Faq> {
-        return this.prisma.faq.update({
-            where: { id: BigInt(id) },
-            data: { view_count: { increment: 1 } },
-        });
+    async incrementViewCount(id: number | bigint): Promise<Faq> {
+        return this.update(id, { view_count: { increment: 1 } });
     }
 
-    async incrementHelpfulCount(id: number): Promise<Faq> {
-        return this.prisma.faq.update({
-            where: { id: BigInt(id) },
-            data: { helpful_count: { increment: 1 } },
-        });
+    async incrementHelpfulCount(id: number | bigint): Promise<Faq> {
+        return this.update(id, { helpful_count: { increment: 1 } });
     }
 }

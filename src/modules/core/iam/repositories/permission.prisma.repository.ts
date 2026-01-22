@@ -13,32 +13,21 @@ export class PermissionPrismaRepository extends PrismaRepository<
     Prisma.PermissionUpdateInput,
     Prisma.PermissionOrderByWithRelationInput
 > implements IPermissionRepository {
-    private readonly defaultSelect: Prisma.PermissionSelect = {
-        id: true,
-        code: true,
-        name: true,
-        status: true,
-        scope: true,
-        parent_id: true,
-        created_at: true,
-        updated_at: true,
-        parent: { select: { id: true, name: true, code: true, status: true } },
-        children: { select: { id: true, name: true, code: true, status: true } },
-    }
 
     constructor(private readonly prisma: PrismaService) {
         super(prisma.permission as unknown as any);
-    }
-
-    override async findAll(options: any): Promise<any> {
-        return super.findAll({ ...options, select: this.defaultSelect });
-    }
-
-    override async findById(id: string | number | bigint): Promise<Permission | null> {
-        return this.prisma.permission.findUnique({
-            where: { id: BigInt(id) },
-            select: this.defaultSelect as any,
-        }) as unknown as Permission;
+        this.defaultSelect = {
+            id: true,
+            code: true,
+            name: true,
+            status: true,
+            scope: true,
+            parent_id: true,
+            created_at: true,
+            updated_at: true,
+            parent: { select: { id: true, name: true, code: true, status: true } },
+            children: { select: { id: true, name: true, code: true, status: true } },
+        };
     }
 
     protected buildWhere(filter: PermissionFilter): Prisma.PermissionWhereInput {
@@ -63,15 +52,10 @@ export class PermissionPrismaRepository extends PrismaRepository<
             where.parent_id = filter.parentId === null ? null : BigInt(filter.parentId);
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findByCode(code: string): Promise<Permission | null> {
-        return this.prisma.permission.findUnique({
-            where: { code },
-            select: this.defaultSelect as any,
-        }) as unknown as Permission;
+        return this.findOne({ code });
     }
 }

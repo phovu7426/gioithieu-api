@@ -35,8 +35,9 @@ export class ContextService extends BaseService<any, IContextRepository> {
       throw new NotFoundException('Context ID is required in header (X-Context-Id) or query (?context_id)');
     }
 
-    const context = await this.contextRepo.findFirst({
-      where: { id: BigInt(contextId as any), status: 'active' as any }
+    const context = await this.contextRepo.findOne({
+      id: contextId,
+      status: 'active'
     });
 
     if (!context) {
@@ -55,29 +56,30 @@ export class ContextService extends BaseService<any, IContextRepository> {
 
     const groupIds = Array.from(new Set(userGroups.map((ug) => ug.group_id)));
 
-    const groups = await this.groupRepo.findMany({
+    const groups = await this.groupRepo.findManyRaw({
       where: {
         id: { in: groupIds.map(id => BigInt(id)) },
         status: 'active' as any,
-      } as any,
+      }
     });
 
     const contextIds = Array.from(new Set(groups.map((g) => g.context_id)));
     if (!contextIds.length) return [];
 
-    const contexts = await this.contextRepo.findMany({
+    const contexts = await this.contextRepo.findManyRaw({
       where: {
         id: { in: contextIds },
         status: 'active' as any,
-      } as any,
+      }
     });
 
     return contexts.map(ctx => this.transform(ctx));
   }
 
   async getUserContextsForTransfer(userId: number) {
-    const systemContext = await this.contextRepo.findFirst({
-      where: { id: BigInt(1), status: 'active' as any },
+    const systemContext = await this.contextRepo.findOne({
+      id: 1,
+      status: 'active'
     });
 
     const userContexts = await this.getUserContexts(userId);
@@ -96,8 +98,9 @@ export class ContextService extends BaseService<any, IContextRepository> {
   }
 
   async createSystemContext() {
-    const exists = await this.contextRepo.findFirst({
-      where: { type: 'system', ref_id: null }
+    const exists = await this.contextRepo.findOne({
+      type: 'system',
+      ref_id: null
     });
 
     if (exists) return this.transform(exists);

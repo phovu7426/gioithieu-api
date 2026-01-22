@@ -16,28 +16,23 @@ export interface IPaginatedResult<T> {
 export interface IRepository<T> {
     findAll(options?: IPaginationOptions): Promise<IPaginatedResult<T>>;
     findById(id: string | number | bigint): Promise<T | null>;
+    findManyByIds(ids: (string | number | bigint)[]): Promise<T[]>;
     findOne(filter: Record<string, any>): Promise<T | null>;
+    findMany(filter?: Record<string, any>, options?: IPaginationOptions): Promise<T[]>;
+
     create(data: any): Promise<T>;
     update(id: string | number | bigint, data: any): Promise<T>;
+    updateMany(filter: Record<string, any>, data: any): Promise<{ count: number }>;
+    upsert(id: string | number | bigint, data: any): Promise<T>;
     delete(id: string | number | bigint): Promise<boolean>;
 
-    findMany(options?: {
-        where?: any;
-        orderBy?: any;
-        take?: number;
-        skip?: number;
-        include?: any;
-        select?: any;
-    }): Promise<T[]>;
+    exists(filter: Record<string, any>): Promise<boolean>;
+    count(filter?: Record<string, any>): Promise<number>;
 
-    findFirst(options?: {
-        where?: any;
-        orderBy?: any;
-        include?: any;
-        select?: any;
-    }): Promise<T | null>;
+    deleteMany(filter: Record<string, any>): Promise<{ count: number }>;
 
-    count(where?: any): Promise<number>;
-    deleteMany(where: any): Promise<{ count: number }>;
+    // Các phương thức low-level cho trường hợp đặc biệt (vẫn giữ nhưng khuyến khích hạn chế dùng trực tiếp ở Service)
+    findFirstRaw(options: any): Promise<T | null>;
+    findManyRaw(options: any): Promise<T[]>;
 }
 

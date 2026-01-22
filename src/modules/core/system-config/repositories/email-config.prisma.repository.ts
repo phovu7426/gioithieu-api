@@ -19,12 +19,11 @@ export class EmailConfigPrismaRepository extends PrismaRepository<
 
     protected buildWhere(filter: EmailConfigFilter): Prisma.EmailConfigWhereInput {
         const where: Prisma.EmailConfigWhereInput = {};
-        where.deleted_at = null;
         return where;
     }
 
     async getConfig(): Promise<EmailConfig | null> {
-        return this.prisma.emailConfig.findFirst({
+        return this.findFirstRaw({
             where: { deleted_at: null },
             orderBy: { created_at: 'desc' },
         });

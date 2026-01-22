@@ -32,20 +32,19 @@ export class PostCategoryPrismaRepository extends PrismaRepository<
         }
 
         if (filter.parentId !== undefined) {
-            where.parent_id = filter.parentId === null ? null : BigInt(filter.parentId);
+            where.parent_id = filter.parentId === null ? null : this.toPrimaryKey(filter.parentId);
         }
 
         return where;
     }
 
     async findBySlug(slug: string): Promise<PostCategory | null> {
-        return this.prisma.postCategory.findUnique({
-            where: { slug },
-        });
+        return this.findOne({ slug });
     }
 
     async findAllWithChildren(): Promise<any[]> {
-        return this.prisma.postCategory.findMany({
+        return this.findManyRaw({
+            where: {},
             include: {
                 children: true,
             },

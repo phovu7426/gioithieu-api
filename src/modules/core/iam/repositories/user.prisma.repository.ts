@@ -4,8 +4,6 @@ import { User, Prisma, Profile } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { PrismaRepository } from '@/common/core/repositories';
 import { IUserRepository, UserFilter } from './user.repository.interface';
-import { IPaginationOptions, IPaginatedResult } from '@/common/core/repositories';
-import { createPaginationMeta } from '@/common/core/utils';
 
 @Injectable()
 export class UserPrismaRepository extends PrismaRepository<
@@ -17,10 +15,8 @@ export class UserPrismaRepository extends PrismaRepository<
 > implements IUserRepository {
     constructor(private readonly prisma: PrismaService) {
         super(prisma.user as unknown as any);
-    }
-
-    private get defaultSelect(): Prisma.UserSelect {
-        return {
+        this.isSoftDelete = true;
+        this.defaultSelect = {
             id: true,
             email: true,
             phone: true,
@@ -29,10 +25,8 @@ export class UserPrismaRepository extends PrismaRepository<
             updated_at: true,
             last_login_at: true,
             status: true,
-            // Include profile and roles by default as they are always needed in admin
             profile: true,
             user_role_assignments: true,
-            // We might need user_groups to filter but usually not select all of them
         };
     }
 
@@ -44,9 +38,6 @@ export class UserPrismaRepository extends PrismaRepository<
                 { email: { contains: filter.search } },
                 { username: { contains: filter.search } },
                 { phone: { contains: filter.search } },
-                // Profile filtering disabled due to strict type checks on generated Prisma types
-                // { profile: { first_name: { contains: filter.search } } },
-                // { profile: { last_name: { contains: filter.search } } },
             ];
         }
 
@@ -58,94 +49,56 @@ export class UserPrismaRepository extends PrismaRepository<
         if (filter.groupId) {
             where.user_groups = {
                 some: {
-                    group_id: BigInt(filter.groupId),
+                    group_id: this.toPrimaryKey(filter.groupId),
                 },
             };
+        }
+
+        if (filter.NOT) {
+            where.NOT = filter.NOT;
         }
 
         return where;
     }
 
-    // Override findAll to use defaultSelect and relation handling
-    async findAll(options: IPaginationOptions & { filter?: UserFilter } = {}): Promise<IPaginatedResult<User>> {
-        const page = Math.max(Number(options.page) || 1, 1);
-        const limit = Math.max(Number(options.limit) || 10, 1);
-        const sort = options.sort || 'id:DESC';
-
-        const where = this.buildWhere(options.filter || {});
-        const orderBy = this.parseSort(sort);
-
-        const [data, total] = await Promise.all([
-            this.prisma.user.findMany({
-                where,
-                select: this.defaultSelect,
-                orderBy,
-                skip: (page - 1) * limit,
-                take: limit,
-            }),
-            this.prisma.user.count({ where }),
-        ]);
-
-        return {
-            data: data as unknown as User[],
-            meta: createPaginationMeta(page, limit, total),
-        };
-    }
-
-    async findById(id: string | number | bigint): Promise<User | null> {
-        const user = await this.prisma.user.findUnique({
-            where: { id: BigInt(id) },
-            select: this.defaultSelect,
-        });
-        return user as unknown as User;
-    }
-
     async findByEmail(email: string): Promise<User | null> {
-        return this.prisma.user.findUnique({ where: { email } }) as unknown as User;
+        return this.findOne({ email });
     }
 
     async findByPhone(phone: string): Promise<User | null> {
-        return this.prisma.user.findFirst({ where: { phone } }) as unknown as User;
+        return this.findOne({ phone });
     }
 
     async findByUsername(username: string): Promise<User | null> {
-        return this.prisma.user.findUnique({ where: { username } }) as unknown as User;
+        return this.findOne({ username });
     }
 
     async checkUnique(field: 'email' | 'phone' | 'username', value: string, excludeUserId?: number | bigint): Promise<boolean> {
-        const where: Prisma.UserWhereInput = { [field]: value };
+        const filter: Record<string, any> = { [field]: value };
         if (excludeUserId) {
-            where.NOT = { id: BigInt(excludeUserId) };
+            filter.NOT = { id: this.toPrimaryKey(excludeUserId) };
         }
-        const count = await this.prisma.user.count({ where });
-        return count === 0;
+        return !(await this.exists(filter));
     }
 
     async upsertProfile(userId: number | bigint, data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
-        // Ensure user_id is set
-        const profileData = { ...data, user_id: BigInt(userId) };
+        const pk = this.toPrimaryKey(userId);
+        const profileData = { ...data, user_id: pk };
 
         return this.prisma.profile.upsert({
-            where: { user_id: BigInt(userId) },
+            where: { user_id: pk },
             create: profileData,
             update: profileData,
         });
     }
 
-    async upsert(where: Prisma.UserWhereUniqueInput, create: Prisma.UserCreateInput, update: Prisma.UserUpdateInput): Promise<User> {
-        return this.prisma.user.upsert({ where, create, update }) as unknown as User;
-    }
-
     async updateLastLogin(userId: number | bigint): Promise<void> {
-        await this.prisma.user.update({
-            where: { id: BigInt(userId) },
-            data: { last_login_at: new Date() },
-        });
+        await this.update(userId, { last_login_at: new Date() });
     }
 
     async findByIdWithBasicInfo(userId: number | bigint) {
-        return this.prisma.user.findFirst({
-            where: { id: BigInt(userId) },
+        return this.findFirstRaw({
+            where: { id: this.toPrimaryKey(userId) },
             select: {
                 id: true,
                 username: true,

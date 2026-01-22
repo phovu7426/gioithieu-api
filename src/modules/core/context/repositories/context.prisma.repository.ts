@@ -39,24 +39,14 @@ export class ContextPrismaRepository extends PrismaRepository<
             where.status = filter.status;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findByTypeAndRefId(type: string, refId: number | null): Promise<Context | null> {
-        return this.prisma.context.findFirst({
-            where: {
-                type,
-                ref_id: refId === null ? null : BigInt(refId),
-                deleted_at: null,
-            },
-        });
+        return this.findOne({ type, ref_id: refId === null ? null : BigInt(refId) });
     }
 
     async findByCode(code: string): Promise<Context | null> {
-        return this.prisma.context.findFirst({
-            where: { code, deleted_at: null },
-        });
+        return this.findOne({ code });
     }
 }

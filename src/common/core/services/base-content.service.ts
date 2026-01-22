@@ -45,7 +45,7 @@ export abstract class BaseContentService<T, R extends IRepository<T>> extends Ba
         // Lưu ý: Repository implementation phải biết xử lý NOT id nếu cần, 
         // hoặc chúng ta dùng findMany/findFirst với where phức tạp hơn.
 
-        let existing = await this.repository.findFirst({
+        let existing = await this.repository.findFirstRaw({
             where: {
                 [slugField]: normalizedSlug,
                 id: currentId ? { not: currentId } : undefined,
@@ -58,7 +58,7 @@ export abstract class BaseContentService<T, R extends IRepository<T>> extends Ba
             let counter = 1;
             let uniqueSlug = `${normalizedSlug}-${counter}`;
 
-            while (await this.repository.findFirst({
+            while (await this.repository.findFirstRaw({
                 where: { [slugField]: uniqueSlug, deleted_at: null }
             })) {
                 counter++;

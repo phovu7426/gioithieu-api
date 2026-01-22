@@ -35,8 +35,6 @@ export class PartnerPrismaRepository extends PrismaRepository<
             where.type = filter.type as any;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 }

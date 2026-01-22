@@ -29,12 +29,9 @@ export class PublicGalleryService extends BaseService<any, IGalleryRepository> {
   }
 
   async findBySlug(slug: string): Promise<any | null> {
-    const gallery = await this.galleryRepo.findFirst({
-      where: {
-        slug,
-        status: BasicStatus.active as any,
-        deleted_at: null,
-      },
+    const gallery = await this.galleryRepo.findOne({
+      slug,
+      status: BasicStatus.active as any,
     });
 
     return gallery ? this.transform(gallery) : null;

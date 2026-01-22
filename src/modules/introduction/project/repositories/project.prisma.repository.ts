@@ -35,21 +35,14 @@ export class ProjectPrismaRepository extends PrismaRepository<
             where.featured = filter.isFeatured;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findBySlug(slug: string): Promise<Project | null> {
-        return this.prisma.project.findFirst({
-            where: { slug, deleted_at: null },
-        });
+        return this.findOne({ slug });
     }
 
-    async incrementViewCount(id: number): Promise<Project> {
-        return this.prisma.project.update({
-            where: { id: BigInt(id) },
-            data: { view_count: { increment: 1 } },
-        });
+    async incrementViewCount(id: number | bigint): Promise<Project> {
+        return this.update(id, { view_count: { increment: 1 } });
     }
 }

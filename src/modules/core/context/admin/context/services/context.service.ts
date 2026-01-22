@@ -41,8 +41,9 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
   }
 
   async findById(id: number) {
-    const context = await this.contextRepo.findFirst({
-      where: { id: BigInt(id), status: 'active' as any }
+    const context = await this.contextRepo.findOne({
+      id,
+      status: 'active'
     });
     return this.transform(context);
   }
@@ -120,7 +121,7 @@ export class AdminContextService extends BaseService<any, IContextRepository> {
       throw new BadRequestException('Cannot delete system context');
     }
 
-    const groups = await this.groupRepo.findMany({
+    const groups = await this.groupRepo.findManyRaw({
       where: { context_id: BigInt(id), deleted_at: null },
     });
 

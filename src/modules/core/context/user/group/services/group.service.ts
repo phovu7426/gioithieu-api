@@ -47,7 +47,7 @@ export class UserGroupService {
   }
 
   async getGroupContext(groupId: number) {
-    const group = await this.groupRepo.findFirst({
+    const group = await this.groupRepo.findFirstRaw({
       where: { id: BigInt(groupId), status: 'active' as any },
       include: { context: true } as any,
     });
@@ -82,7 +82,7 @@ export class UserGroupService {
     }
 
     if (roleIds.length > 0) {
-      const roles = await this.roleRepo.findMany({
+      const roles = await this.roleRepo.findManyRaw({
         where: { id: { in: roleIds.map((id) => BigInt(id)) } },
       });
       if (roles.length !== roleIds.length) {
@@ -128,7 +128,7 @@ export class UserGroupService {
     });
 
     if (roleIds.length > 0) {
-      const roles = await this.roleRepo.findMany({
+      const roles = await this.roleRepo.findManyRaw({
         where: { id: { in: roleIds.map((id) => BigInt(id)) } },
       });
       if (roles.length !== roleIds.length) {
@@ -174,7 +174,7 @@ export class UserGroupService {
   }
 
   async getGroupMembers(groupId: number) {
-    const members = await this.assignmentRepo.findMany({
+    const members = await this.assignmentRepo.findManyRaw({
       where: {
         group_id: BigInt(groupId),
       },
@@ -205,7 +205,7 @@ export class UserGroupService {
   }
 
   async getUserGroups(userId: number) {
-    const userGroups = await this.userGroupRepo.findMany({
+    const userGroups = await this.userGroupRepo.findManyRaw({
       where: { user_id: BigInt(userId) },
       include: {
         group: true,
@@ -220,7 +220,7 @@ export class UserGroupService {
 
         const context = await this.getGroupContext(Number(group.id));
 
-        const roleAssignments = await this.assignmentRepo.findMany({
+        const roleAssignments = await this.assignmentRepo.findManyRaw({
           where: {
             user_id: BigInt(userId),
             group_id: group.id,

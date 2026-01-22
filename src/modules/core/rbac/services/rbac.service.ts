@@ -61,7 +61,7 @@ export class RbacService {
     let cached = await this.rbacCache.getUserPermissionsInGroup(userId, groupId);
     if (!cached) {
       // Query permissions từ user_role_assignments
-      const assignments = await this.assignmentRepo.findMany({
+      const assignments = await this.assignmentRepo.findManyRaw({
         where: {
           user_id: BigInt(userId),
           group_id: BigInt(groupId),
@@ -122,7 +122,7 @@ export class RbacService {
     required: string[],
   ): Promise<boolean> {
     // Query từ system group
-    const systemAdminGroup = await this.groupRepo.findFirst({
+    const systemAdminGroup = await this.groupRepo.findFirstRaw({
       where: { code: 'system', status: 'active' as any }
     });
 
@@ -138,7 +138,7 @@ export class RbacService {
     }
 
     // Query permissions từ user_role_assignments
-    const assignments = await this.assignmentRepo.findMany({
+    const assignments = await this.assignmentRepo.findManyRaw({
       where: {
         user_id: BigInt(userId),
         group_id: systemAdminGroup.id,
@@ -269,7 +269,7 @@ export class RbacService {
     let roles: any[] = [];
     if (roleIds.length > 0) {
       const roleIdsBigInt = roleIds.map((id) => BigInt(id));
-      roles = await this.roleRepo.findMany({
+      roles = await this.roleRepo.findManyRaw({
         where: { id: { in: roleIdsBigInt } },
       });
 

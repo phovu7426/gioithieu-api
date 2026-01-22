@@ -32,8 +32,6 @@ export class ContactPrismaRepository extends PrismaRepository<
             where.status = filter.status as any;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 }

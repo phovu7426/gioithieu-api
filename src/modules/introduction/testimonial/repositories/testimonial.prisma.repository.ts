@@ -36,8 +36,6 @@ export class TestimonialPrismaRepository extends PrismaRepository<
             where.project_id = filter.projectId === null ? null : BigInt(filter.projectId);
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 }

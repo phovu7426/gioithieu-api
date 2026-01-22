@@ -43,32 +43,20 @@ export class NotificationPrismaRepository extends PrismaRepository<
             where.status = filter.status as any;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
-    async markAsRead(id: number): Promise<Notification> {
-        return this.prisma.notification.update({
-            where: { id: BigInt(id) },
-            data: {
-                is_read: true,
-                read_at: new Date(),
-            },
+    async markAsRead(id: number | bigint): Promise<Notification> {
+        return this.update(id, {
+            is_read: true,
+            read_at: new Date(),
         });
     }
 
-    async markAllAsRead(userId: number): Promise<void> {
-        await this.prisma.notification.updateMany({
-            where: {
-                user_id: BigInt(userId),
-                is_read: false,
-                deleted_at: null,
-            },
-            data: {
-                is_read: true,
-                read_at: new Date(),
-            },
+    async markAllAsRead(userId: number | bigint): Promise<void> {
+        await this.updateMany({ userId, isRead: false }, {
+            is_read: true,
+            read_at: new Date(),
         });
     }
 }

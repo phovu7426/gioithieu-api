@@ -1,4 +1,5 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿
+import { Injectable } from '@nestjs/common';
 import { UserRoleAssignment, Prisma } from '@prisma/client';
 import { PrismaService } from '@/core/database/prisma/prisma.service';
 import { PrismaRepository } from '@/common/core/repositories';
@@ -14,6 +15,7 @@ export class UserRoleAssignmentPrismaRepository extends PrismaRepository<
 > implements IUserRoleAssignmentRepository {
     constructor(private readonly prisma: PrismaService) {
         super(prisma.userRoleAssignment as unknown as any);
+        this.isSoftDelete = false; // Model doesn't have deleted_at
     }
 
     async findUnique(userId: number | bigint, roleId: number | bigint, groupId: number | bigint): Promise<UserRoleAssignment | null> {

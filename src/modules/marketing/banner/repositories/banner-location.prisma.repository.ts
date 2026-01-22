@@ -31,14 +31,10 @@ export class BannerLocationPrismaRepository extends PrismaRepository<
             where.status = filter.status as any;
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findByCode(code: string): Promise<BannerLocation | null> {
-        return this.prisma.bannerLocation.findUnique({
-            where: { code },
-        });
+        return this.findOne({ code });
     }
 }

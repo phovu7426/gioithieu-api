@@ -13,43 +13,32 @@ export class MenuPrismaRepository extends PrismaRepository<
     Prisma.MenuUpdateInput,
     Prisma.MenuOrderByWithRelationInput
 > implements IMenuRepository {
-    private readonly defaultSelect: Prisma.MenuSelect = {
-        id: true,
-        code: true,
-        name: true,
-        icon: true,
-        path: true,
-        type: true,
-        status: true,
-        sort_order: true,
-        parent_id: true,
-        required_permission_id: true,
-        is_public: true,
-        show_in_menu: true,
-        created_at: true,
-        updated_at: true,
-        parent: { select: { id: true, name: true, code: true } },
-        required_permission: { select: { id: true, code: true, name: true } },
-        menu_permissions: {
-            include: {
-                permission: { select: { id: true, code: true, name: true } }
-            }
-        }
-    };
 
     constructor(private readonly prisma: PrismaService) {
         super(prisma.menu as unknown as any, 'sort_order:asc');
-    }
-
-    override async findAll(options: any): Promise<any> {
-        return super.findAll({ ...options, select: this.defaultSelect });
-    }
-
-    override async findById(id: string | number | bigint): Promise<Menu | null> {
-        return this.prisma.menu.findUnique({
-            where: { id: BigInt(id) },
-            select: this.defaultSelect as any,
-        }) as unknown as Menu;
+        this.defaultSelect = {
+            id: true,
+            code: true,
+            name: true,
+            icon: true,
+            path: true,
+            type: true,
+            status: true,
+            sort_order: true,
+            parent_id: true,
+            required_permission_id: true,
+            is_public: true,
+            show_in_menu: true,
+            created_at: true,
+            updated_at: true,
+            parent: { select: { id: true, name: true, code: true } },
+            required_permission: { select: { id: true, code: true, name: true } },
+            menu_permissions: {
+                include: {
+                    permission: { select: { id: true, code: true, name: true } }
+                }
+            }
+        };
     }
 
     protected buildWhere(filter: MenuFilter): Prisma.MenuWhereInput {
@@ -74,23 +63,14 @@ export class MenuPrismaRepository extends PrismaRepository<
             where.parent_id = filter.parentId === null ? null : BigInt(filter.parentId);
         }
 
-        where.deleted_at = null;
-
         return where;
     }
 
     async findAllWithChildren(filter?: MenuFilter): Promise<Menu[]> {
-        return this.prisma.menu.findMany({
-            where: this.buildWhere(filter || {}),
-            select: this.defaultSelect as any,
-            orderBy: { sort_order: 'asc' },
-        }) as unknown as Menu[];
+        return this.findMany(filter || {}, { sort: 'sort_order:asc' });
     }
 
     async findByCode(code: string): Promise<Menu | null> {
-        return this.prisma.menu.findFirst({
-            where: { code, deleted_at: null },
-            select: this.defaultSelect as any,
-        }) as unknown as Menu;
+        return this.findOne({ code });
     }
 }
