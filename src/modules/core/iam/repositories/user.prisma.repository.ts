@@ -65,6 +65,15 @@ export class UserPrismaRepository extends PrismaRepository<
         return this.findOne({ email });
     }
 
+    async findByEmailForAuth(email: string): Promise<User | null> {
+        return this.prisma.user.findFirst({
+            where: {
+                email,
+                deleted_at: null,
+            },
+        });
+    }
+
     async findByPhone(phone: string): Promise<User | null> {
         return this.findOne({ phone });
     }

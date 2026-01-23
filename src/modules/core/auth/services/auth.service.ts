@@ -35,10 +35,8 @@ export class AuthService {
       );
     }
 
-    // Tìm user bằng email (case-insensitive) - repo findByEmail can handle this or just findFirst
-    const user = await this.userRepo.findOne({
-      email: dto.email.toLowerCase(),
-    });
+    // Tìm user bằng email (case-insensitive) - repo findByEmailForAuth will include password
+    const user = await this.userRepo.findByEmailForAuth(dto.email.toLowerCase());
 
     let authError: string | null = null;
 
@@ -74,7 +72,8 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    const existingByEmail = await this.userRepo.findByEmail(dto.email);
+    const email = dto.email.toLowerCase();
+    const existingByEmail = await this.userRepo.findByEmail(email);
     if (existingByEmail) {
       throw new Error('Email đã được sử dụng.');
     }
@@ -95,8 +94,8 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(dto.password, 10);
     const saved = await this.userRepo.create({
-      username: dto.username ?? dto.email,
-      email: dto.email,
+      username: dto.username ?? email,
+      email: email,
       phone: dto.phone ?? null,
       password: hashed,
       name: dto.name,

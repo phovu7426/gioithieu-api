@@ -17,6 +17,7 @@ export interface UserFilter {
 
 export interface IUserRepository extends IRepository<User> {
     findByEmail(email: string): Promise<User | null>;
+    findByEmailForAuth(email: string): Promise<User | null>;
     findByPhone(phone: string): Promise<User | null>;
     findByUsername(username: string): Promise<User | null>;
 
