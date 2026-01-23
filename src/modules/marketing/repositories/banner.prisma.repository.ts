@@ -20,13 +20,14 @@ export class BannerPrismaRepository extends PrismaRepository<
             id: true,
             title: true,
             image: true,
+            mobile_image: true,
             link: true,
             link_target: true,
+            description: true,
+            button_text: true,
             status: true,
             sort_order: true,
             location_id: true,
-            created_at: true,
-            updated_at: true,
             location: { select: { id: true, name: true, code: true } },
         };
     }
@@ -44,6 +45,10 @@ export class BannerPrismaRepository extends PrismaRepository<
 
         if (filter.locationId !== undefined && filter.locationId !== null) {
             where.location_id = this.toPrimaryKey(filter.locationId);
+        }
+
+        if (filter.locationCode) {
+            where.location = { code: filter.locationCode };
         }
 
         return where;

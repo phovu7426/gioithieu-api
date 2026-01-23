@@ -44,13 +44,6 @@ export class BannerController {
         return this.bannerService.getSimpleList(query);
     }
 
-    // Specific routes MUST come before parameterized routes
-    @Get('location/:locationCode')
-    @Permission('banner.manage')
-    findByLocationCode(@Param('locationCode') locationCode: string) {
-        return this.bannerService.findByLocationCode(locationCode);
-    }
-
     @Get(':id')
     @Permission('banner.manage')
     findOne(@Param('id') id: string) {

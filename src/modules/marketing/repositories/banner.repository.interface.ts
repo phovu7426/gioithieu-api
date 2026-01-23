@@ -8,6 +8,7 @@ export interface BannerFilter {
     search?: string;
     status?: string;
     locationId?: number | bigint;
+    locationCode?: string;
 }
 
 export interface IBannerRepository extends IRepository<Banner> {

@@ -10,9 +10,9 @@
     ValidationPipe,
     UseGuards,
 } from '@nestjs/common';
-import { BannerLocationService } from '@/modules/marketing/banner/admin/services/banner-location.service';
-import { CreateBannerLocationDto } from '@/modules/marketing/banner/admin/dtos/create-banner-location.dto';
-import { UpdateBannerLocationDto } from '@/modules/marketing/banner/admin/dtos/update-banner-location.dto';
+import { BannerLocationService } from '@/modules/marketing/banner-location/admin/services/banner-location.service';
+import { CreateBannerLocationDto } from '@/modules/marketing/banner-location/admin/dtos/create-banner-location.dto';
+import { UpdateBannerLocationDto } from '@/modules/marketing/banner-location/admin/dtos/update-banner-location.dto';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { prepareQuery } from '@/common/core/utils';
 import { LogRequest } from '@/common/shared/decorators';
@@ -42,17 +42,6 @@ export class BannerLocationController {
     @Permission('banner_location.manage')
     getSimpleList(@Query(ValidationPipe) query: any) {
         return this.bannerLocationService.getSimpleList(query);
-    }
-
-    // Specific routes MUST come before parameterized routes
-    @Get('code/:code')
-    @Permission('banner_location.manage')
-    findByCode(@Param('code') code: string) {
-        // Since getOne takes number ID now, I should use a different method if I want by code.
-        // But maybe I can just leave it as is if I didn't refactor findByCode in service.
-        // Wait, I did't have findByCode in BannerLocationService. I used getOne({code}) which was PrismaCrudService feature.
-        // I should add findByCode to BannerLocationService.
-        return (this.bannerLocationService as any).findByCode(code);
     }
 
     @Get(':id')

@@ -21,4 +21,4 @@ import { BANNER_LOCATION_REPOSITORY } from './repositories/banner-location.repos
     ],
     exports: [BANNER_REPOSITORY, BANNER_LOCATION_REPOSITORY],
 })
-export class BannerRepositoryModule { }
+export class MarketingRepositoryModule { }

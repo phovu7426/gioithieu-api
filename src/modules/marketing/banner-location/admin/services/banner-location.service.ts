@@ -1,5 +1,5 @@
 ﻿import { Injectable, ConflictException, Inject, NotFoundException } from '@nestjs/common';
-import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY, BannerLocationFilter } from '@/modules/marketing/banner/repositories/banner-location.repository.interface';
+import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY, BannerLocationFilter } from '@/modules/marketing/repositories/banner-location.repository.interface';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { BaseService } from '@/common/core/services';
 import { BannerLocation } from '@prisma/client';
@@ -42,11 +42,6 @@ export class BannerLocationService extends BaseService<BannerLocation, IBannerLo
             }
         }
         return data;
-    }
-
-    async findByCode(code: string) {
-        const location = await this.locationRepo.findByCode(code);
-        return this.transform(location);
     }
 
     async changeStatus(id: number, status: BasicStatus) {

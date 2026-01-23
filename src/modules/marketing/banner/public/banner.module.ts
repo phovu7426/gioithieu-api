@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PublicBannerService } from '@/modules/marketing/banner/public/services/banner.service';
 import { PublicBannerController } from '@/modules/marketing/banner/public/controllers/banner.controller';
-
-import { BannerRepositoryModule } from '@/modules/marketing/banner/banner.repository.module';
+import { MarketingRepositoryModule } from '@/modules/marketing/marketing.repository.module';
 
 @Module({
-    imports: [BannerRepositoryModule],
+    imports: [MarketingRepositoryModule],
     controllers: [PublicBannerController],
     providers: [PublicBannerService],
     exports: [PublicBannerService],

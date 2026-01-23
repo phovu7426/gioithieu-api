@@ -32,7 +32,7 @@ import { UserManagementModule } from '@/modules/core/iam/user-management.module'
 import { EnumModule } from '@/shared/enums';
 import { FileUploadModule } from '@/modules/storage/file-upload/file-upload.module';
 import { MenuModule } from '@/modules/core/menu/menu.module';
-import { BannerModule } from '@/modules/marketing/banner/banner.module';
+import { MarketingModule } from '@/modules/marketing/marketing.module';
 import { ContactModule } from '@/modules/introduction/contact/contact.module';
 import { SystemConfigModule } from '@/modules/core/system-config/system-config.module';
 import { AppMailModule } from '@/core/mail/mail.module';
@@ -62,7 +62,7 @@ import { HomepageModule } from '@/modules/homepage/homepage.module';
     EnumModule,
     FileUploadModule,
     MenuModule,
-    BannerModule,
+    MarketingModule,
     ContactModule,
     SystemConfigModule,
     AppMailModule,

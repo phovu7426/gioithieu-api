@@ -2,13 +2,12 @@ import { Module } from '@nestjs/common';
 import { BannerService } from '@/modules/marketing/banner/admin/services/banner.service';
 import { BannerController } from '@/modules/marketing/banner/admin/controllers/banner.controller';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
-
-import { BannerRepositoryModule } from '@/modules/marketing/banner/banner.repository.module';
+import { MarketingRepositoryModule } from '@/modules/marketing/marketing.repository.module';
 
 @Module({
     imports: [
         RbacModule,
-        BannerRepositoryModule,
+        MarketingRepositoryModule,
     ],
     controllers: [BannerController],
     providers: [BannerService],

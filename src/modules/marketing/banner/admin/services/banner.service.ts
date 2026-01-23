@@ -1,7 +1,6 @@
 ﻿import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { IBannerRepository, BANNER_REPOSITORY, BannerFilter } from '@/modules/marketing/banner/repositories/banner.repository.interface';
-import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY } from '@/modules/marketing/banner/repositories/banner-location.repository.interface';
-import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
+import { IBannerRepository, BANNER_REPOSITORY } from '@/modules/marketing/repositories/banner.repository.interface';
+import { IBannerLocationRepository, BANNER_LOCATION_REPOSITORY } from '@/modules/marketing/repositories/banner-location.repository.interface';
 import { BaseContentService } from '@/common/core/services';
 import { Banner } from '@prisma/client';
 
@@ -47,16 +46,6 @@ export class BannerService extends BaseContentService<Banner, IBannerRepository>
             }
         }
         return data;
-    }
-
-    async findByLocationCode(locationCode: string) {
-        const location = await this.locationRepo.findByCode(locationCode);
-        if (!location || (location as any).status !== BasicStatus.active) {
-            throw new NotFoundException(`Vị trí banner với mã "${locationCode}" không tồn tại hoặc không hoạt động`);
-        }
-
-        const banners = await this.bannerRepo.findAllByLocation(locationCode);
-        return banners.map(item => this.transform(item));
     }
 
     protected transform(banner: any) {
