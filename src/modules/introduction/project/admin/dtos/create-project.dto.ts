@@ -49,13 +49,13 @@ export class CreateProjectDto {
   @Type(() => Number)
   area?: number;
 
-  @IsDateString()
   @IsOptional()
-  start_date?: string;
+  @Type(() => Date)
+  start_date?: Date;
 
-  @IsDateString()
   @IsOptional()
-  end_date?: string;
+  @Type(() => Date)
+  end_date?: Date;
 
   @IsOptional()
   @IsEnum(ProjectStatus)

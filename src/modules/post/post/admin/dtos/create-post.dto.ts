@@ -1,4 +1,5 @@
 import { IsString, IsOptional, IsArray, IsNumber, IsBoolean, IsEnum, IsDateString, IsInt, Min, MaxLength, ValidateIf } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PostStatus, PostType } from '@/shared/enums';
 
 export class CreatePostDto {
@@ -59,8 +60,8 @@ export class CreatePostDto {
   is_pinned?: boolean;
 
   @IsOptional()
-  @IsDateString()
-  published_at?: string;
+  @Type(() => Date)
+  published_at?: Date;
 
   @IsOptional()
   @IsString()

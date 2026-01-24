@@ -28,13 +28,13 @@ export class CreateCertificateDto {
   @MaxLength(255)
   issued_by?: string;
 
-  @IsDateString()
   @IsOptional()
-  issued_date?: string;
+  @Type(() => Date)
+  issued_date?: Date;
 
-  @IsDateString()
   @IsOptional()
-  expiry_date?: string;
+  @Type(() => Date)
+  expiry_date?: Date;
 
   @IsString()
   @IsOptional()
