@@ -24,5 +24,11 @@ export class PublicTestimonialController {
   findByProject(@Param('projectId') projectId: string) {
     return this.testimonialService.findByProject(Number(projectId));
   }
+
+  @Permission('public')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.testimonialService.getOne(Number(id));
+  }
 }
 

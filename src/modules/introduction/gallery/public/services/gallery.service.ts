@@ -41,5 +41,28 @@ export class PublicGalleryService extends BaseService<any, IGalleryRepository> {
     });
     return result.data as any[];
   }
+
+  protected transform(gallery: any) {
+    if (!gallery) return gallery;
+    const item = super.transform(gallery) as any;
+
+    // Normalize images
+    if (item.images) {
+      if (typeof item.images === 'string') {
+        try {
+          item.images = JSON.parse(item.images);
+        } catch (e) {
+          item.images = [];
+        }
+      }
+      if (!Array.isArray(item.images)) {
+        item.images = [];
+      }
+    } else {
+      item.images = [];
+    }
+
+    return item;
+  }
 }
 

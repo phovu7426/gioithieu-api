@@ -19,5 +19,11 @@ export class PublicCertificateController {
   findByType(@Param('type') type: CertificateType) {
     return this.certificateService.findByType(type);
   }
+
+  @Permission('public')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.certificateService.getOne(Number(id));
+  }
 }
 

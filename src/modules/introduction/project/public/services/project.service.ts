@@ -45,6 +45,23 @@ export class PublicProjectService extends BaseContentService<any, IProjectReposi
     if (!project) return project;
     const item = super.transform(project) as any;
     if (item.view_count !== undefined) item.view_count = Number(item.view_count);
+
+    // Normalize images
+    if (item.images) {
+      if (typeof item.images === 'string') {
+        try {
+          item.images = JSON.parse(item.images);
+        } catch (e) {
+          item.images = [];
+        }
+      }
+      if (!Array.isArray(item.images)) {
+        item.images = [];
+      }
+    } else {
+      item.images = [];
+    }
+
     return item;
   }
 }

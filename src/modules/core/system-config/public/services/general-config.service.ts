@@ -37,4 +37,27 @@ export class PublicGeneralConfigService extends BaseService<any, IGeneralConfigR
   async clearCache(): Promise<void> {
     await this.cacheService.del(this.CACHE_KEY);
   }
+
+  protected transform(config: any) {
+    if (!config) return config;
+    const item = super.transform(config) as any;
+
+    // Ensure contact_channels is an array
+    if (item.contact_channels) {
+      if (typeof item.contact_channels === 'string') {
+        try {
+          item.contact_channels = JSON.parse(item.contact_channels);
+        } catch (e) {
+          item.contact_channels = [];
+        }
+      }
+      if (!Array.isArray(item.contact_channels)) {
+        item.contact_channels = [];
+      }
+    } else {
+      item.contact_channels = [];
+    }
+
+    return item;
+  }
 }

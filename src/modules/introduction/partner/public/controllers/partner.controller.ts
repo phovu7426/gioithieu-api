@@ -19,5 +19,11 @@ export class PublicPartnerController {
   findByType(@Param('type') type: PartnerType) {
     return this.partnerService.findByType(type);
   }
+
+  @Permission('public')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.partnerService.getOne(Number(id));
+  }
 }
 
