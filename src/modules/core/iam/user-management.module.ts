@@ -9,6 +9,7 @@ import { AdminPermissionModule } from '@/modules/core/iam/permission/admin/permi
 
 // Import user modules
 import { UserRepositoryModule } from './user.repository.module';
+import { UserProfileModule } from '@/modules/core/iam/user/user/user.module';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { RbacModule } from '@/modules/core/rbac/rbac.module';
     AdminPermissionModule,
     // User modules
     UserRepositoryModule,
+    UserProfileModule,
     // Shared modules
     RbacModule,
   ],

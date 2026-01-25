@@ -188,19 +188,36 @@ export abstract class BaseService<T, R extends IRepository<T>> {
      */
     protected deepConvertBigInt(obj: any): any {
         if (obj === null || obj === undefined) return obj;
+
+        // Chuyển đổi BigInt sang Number
         if (typeof obj === 'bigint') return Number(obj);
-        if (Array.isArray(obj)) return obj.map((v) => this.deepConvertBigInt(v));
-        if (typeof obj === 'object') {
-            const res: any = {};
-            for (const key in obj) {
-                try {
-                    res[key] = this.deepConvertBigInt(obj[key]);
-                } catch (e) {
-                    res[key] = obj[key];
-                }
-            }
-            return res;
+
+        // Nếu không phải object hoặc array thì giữ nguyên
+        if (typeof obj !== 'object') return obj;
+
+        // Xử lý Date: Trả về đối tượng Date để JSON.stringify tự xử lý sang chuỗi ISO
+        if (Object.prototype.toString.call(obj) === '[object Date]') {
+            return obj;
         }
-        return obj;
+
+        // Xử lý Array
+        if (Array.isArray(obj)) {
+            return obj.map((v) => this.deepConvertBigInt(v));
+        }
+
+        // Xử lý Object: Tạo clone và convert đệ quy các thuộc tính
+        // Chỉ xử lý sâu các plain object ({}), các class instance khác giữ nguyên
+        const isPlainObject = obj.constructor === undefined || obj.constructor.name === 'Object';
+        if (!isPlainObject) {
+            return obj;
+        }
+
+        const res: any = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                res[key] = this.deepConvertBigInt(obj[key]);
+            }
+        }
+        return res;
     }
 }

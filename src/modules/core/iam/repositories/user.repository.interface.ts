@@ -20,6 +20,7 @@ export interface IUserRepository extends IRepository<User> {
     findByEmailForAuth(email: string): Promise<User | null>;
     findByPhone(phone: string): Promise<User | null>;
     findByUsername(username: string): Promise<User | null>;
+    findByIdForAuth(id: number | bigint): Promise<User | null>;
 
     // Aggregate methods
     upsertProfile(userId: number | bigint, data: Prisma.ProfileUncheckedCreateInput): Promise<Profile>;

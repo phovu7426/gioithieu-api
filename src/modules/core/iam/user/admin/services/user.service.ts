@@ -16,9 +16,6 @@ export class UserService extends BaseService<any, IUserRepository> {
     super(userRepo);
   }
 
-  private pendingRoleIds: number[] | null = null;
-  private pendingProfileData: any = null;
-
   protected async prepareFilters(filter: any) {
     // Lấy context để filter theo group nếu cần
     const context = RequestContext.get<any>('context');
@@ -32,8 +29,6 @@ export class UserService extends BaseService<any, IUserRepository> {
 
     return filter;
   }
-
-
 
   async getSimpleList(query: any) {
     return this.getList({ ...query, limit: 1000 });
@@ -60,6 +55,20 @@ export class UserService extends BaseService<any, IUserRepository> {
     await this.userRepo.update(id, { password: hashed });
   }
 
+  async userChangePassword(id: number, oldPassword: string, newPassword: string) {
+    const user = await this.userRepo.findByIdForAuth(id);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    if (user.password) {
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) throw new BadRequestException('Mật khẩu cũ không chính xác');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.update(id, { password: hashed });
+  }
+
+
   protected async beforeCreate(data: any) {
     const payload = { ...data };
 
@@ -79,26 +88,27 @@ export class UserService extends BaseService<any, IUserRepository> {
       throw new BadRequestException('Tên đăng nhập đã được sử dụng.');
     }
 
-    this.pendingRoleIds = this.normalizeIdArray(payload.role_ids);
-    this.pendingProfileData = payload.profile;
+    // Tách dữ liệu quan hệ để xử lý trong afterCreate
     delete payload.role_ids;
     delete payload.profile;
 
     return payload;
   }
 
-  protected async afterCreate(user: any) {
+  protected async afterCreate(user: any, data: any) {
     const id = (user as any).id;
-    if (this.pendingProfileData) {
-      await this.userRepo.upsertProfile(id, this.pendingProfileData);
-      this.pendingProfileData = null;
+
+    // Xử lý Profile
+    if (data.profile) {
+      await this.userRepo.upsertProfile(id, data.profile);
     }
 
-    if (this.pendingRoleIds && this.pendingRoleIds.length > 0) {
+    // Xử lý Roles
+    const roleIds = this.normalizeIdArray(data.role_ids);
+    if (roleIds && roleIds.length > 0) {
       const groupId = RequestContext.get<number | null>('groupId');
       if (groupId) {
-        await this.rbacService.syncRolesInGroup(Number(id), groupId, this.pendingRoleIds, true);
-        this.pendingRoleIds = null;
+        await this.rbacService.syncRolesInGroup(Number(id), groupId, roleIds, true);
       }
     }
   }
@@ -124,25 +134,27 @@ export class UserService extends BaseService<any, IUserRepository> {
       throw new BadRequestException('Tên đăng nhập đã được sử dụng.');
     }
 
-    this.pendingRoleIds = this.normalizeIdArray(payload.role_ids);
-    this.pendingProfileData = payload.profile;
+    // Tách dữ liệu quan hệ để xử lý trong afterUpdate
     delete payload.role_ids;
     delete payload.profile;
 
     return payload;
   }
 
-  protected async afterUpdate(id: number | bigint) {
-    if (this.pendingProfileData) {
-      await this.userRepo.upsertProfile(id, this.pendingProfileData);
-      this.pendingProfileData = null;
+  protected async afterUpdate(user: any, data: any) {
+    const id = (user as any).id;
+
+    // Xử lý Profile
+    if (data.profile) {
+      await this.userRepo.upsertProfile(id, data.profile);
     }
 
-    if (this.pendingRoleIds !== null) {
+    // Xử lý Roles
+    const roleIds = this.normalizeIdArray(data.role_ids);
+    if (roleIds !== null) {
       const groupId = RequestContext.get<number | null>('groupId');
       if (groupId) {
-        await this.rbacService.syncRolesInGroup(Number(id), groupId, this.pendingRoleIds, true);
-        this.pendingRoleIds = null;
+        await this.rbacService.syncRolesInGroup(Number(id), groupId, roleIds, true);
       }
     }
   }

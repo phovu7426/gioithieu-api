@@ -61,48 +61,53 @@ export function transformFilePaths(
     return obj.map(item => transformFilePaths(item, baseUrl, pathFields));
   }
 
-  // Nếu là object, transform từng property
-  if (typeof obj === 'object' && obj !== null) {
-    const transformed: any = {};
-
-    for (const [key, value] of Object.entries(obj)) {
-      // Check if this field is a known path field
-      if (pathFields.includes(key)) {
-        if (typeof value === 'string') {
-          // Check if it's a JSON string
-          const trimmed = value.trim();
-          if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
-            try {
-              const parsed = JSON.parse(value);
-              transformed[key] = transformFilePaths(parsed, baseUrl, pathFields);
-              continue;
-            } catch (e) {
-              // Not valid JSON, treat as regular path string
-            }
-          }
-          // Regular string path
-          transformed[key] = addDomainToPath(value, baseUrl);
-        } else if (typeof value === 'object' && value !== null) {
-          // Flatten/Recursively transform nested objects/arrays (e.g. images array)
-          transformed[key] = transformFilePaths(value, baseUrl, pathFields);
-        } else {
-          transformed[key] = value;
-        }
-      } else {
-        // Not a path field, but assume if it looks like a path we process it
-        if (typeof value === 'string' && (value.startsWith('/uploads') || value.startsWith('/storage'))) {
-          transformed[key] = addDomainToPath(value, baseUrl);
-        } else {
-          // Recursively transform nested objects/arrays
-          transformed[key] = transformFilePaths(value, baseUrl, pathFields);
-        }
-      }
-    }
-
-    return transformed;
+  // Nếu không phải object hoặc là null thì giữ nguyên
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
   }
 
-  // Trả về giá trị gốc cho các kiểu dữ liệu khác
-  return obj;
+  // Nếu là Date hoặc các class đặc biệt (ví dụ Prisma Decimal), giữ nguyên để tránh biến thành {}
+  if (Object.prototype.toString.call(obj) === '[object Date]' || (obj.constructor && obj.constructor.name !== 'Object')) {
+    return obj;
+  }
+
+  // Nếu là object, transform từng property
+  const transformed: any = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    // Check if this field is a known path field
+    if (pathFields.includes(key)) {
+      if (typeof value === 'string') {
+        // Check if it's a JSON string
+        const trimmed = value.trim();
+        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(value);
+            transformed[key] = transformFilePaths(parsed, baseUrl, pathFields);
+            continue;
+          } catch (e) {
+            // Not valid JSON, treat as regular path string
+          }
+        }
+        // Regular string path
+        transformed[key] = addDomainToPath(value, baseUrl);
+      } else if (typeof value === 'object' && value !== null) {
+        // Flatten/Recursively transform nested objects/arrays (e.g. images array)
+        transformed[key] = transformFilePaths(value, baseUrl, pathFields);
+      } else {
+        transformed[key] = value;
+      }
+    } else {
+      // Not a path field, but assume if it looks like a path we process it
+      if (typeof value === 'string' && (value.startsWith('/uploads') || value.startsWith('/storage'))) {
+        transformed[key] = addDomainToPath(value, baseUrl);
+      } else {
+        // Recursively transform nested objects/arrays
+        transformed[key] = transformFilePaths(value, baseUrl, pathFields);
+      }
+    }
+  }
+
+  return transformed;
 }
 

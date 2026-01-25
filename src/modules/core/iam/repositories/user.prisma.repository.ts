@@ -21,6 +21,8 @@ export class UserPrismaRepository extends PrismaRepository<
             email: true,
             phone: true,
             username: true,
+            name: true,
+            image: true,
             created_at: true,
             updated_at: true,
             last_login_at: true,
@@ -82,6 +84,15 @@ export class UserPrismaRepository extends PrismaRepository<
         return this.findOne({ username });
     }
 
+    async findByIdForAuth(id: number | bigint): Promise<User | null> {
+        return this.prisma.user.findFirst({
+            where: {
+                id: this.toPrimaryKey(id),
+                deleted_at: null,
+            },
+        });
+    }
+
     async checkUnique(field: 'email' | 'phone' | 'username', value: string, excludeUserId?: number | bigint): Promise<boolean> {
         const filter: Record<string, any> = { [field]: value };
         if (excludeUserId) {
@@ -91,13 +102,40 @@ export class UserPrismaRepository extends PrismaRepository<
     }
 
     async upsertProfile(userId: number | bigint, data: Prisma.ProfileUncheckedCreateInput): Promise<Profile> {
-        const pk = this.toPrimaryKey(userId);
-        const profileData = { ...data, user_id: pk };
+        // Đảm bảo userId là number hoặc bigint, không phải object
+        const numericId = typeof userId === 'object' ? Number((userId as any).id || userId) : userId;
+        const pk = this.toPrimaryKey(numericId);
+
+        // Chỉ lấy các trường hợp lệ của Profile
+        const validProfileFields = ['birthday', 'gender', 'address', 'about', 'created_user_id', 'updated_user_id'];
+        const dataAny = data as any;
+
+        const createData: any = { user_id: pk };
+        const updateData: any = {};
+
+        for (const field of validProfileFields) {
+            if (dataAny[field] !== undefined) {
+                let value = dataAny[field];
+
+                // Chuyển đổi birthday sang Date object hợp lệ
+                if (field === 'birthday') {
+                    if (typeof value === 'string' && value.trim() !== '') {
+                        const date = new Date(value);
+                        value = isNaN(date.getTime()) ? null : date;
+                    } else if (!value) {
+                        value = null;
+                    }
+                }
+
+                createData[field] = value;
+                updateData[field] = value;
+            }
+        }
 
         return this.prisma.profile.upsert({
             where: { user_id: pk },
-            create: profileData,
-            update: profileData,
+            create: createData,
+            update: updateData,
         });
     }
 
