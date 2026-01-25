@@ -6,7 +6,7 @@ import * as bcrypt from 'bcryptjs';
 export class SeedEmailConfigs {
   private readonly logger = new Logger(SeedEmailConfigs.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async seed(): Promise<void> {
     this.logger.log('Seeding email configs...');
@@ -26,18 +26,18 @@ export class SeedEmailConfigs {
     const defaultUserId = adminUser ? Number(adminUser.id) : 1;
 
     // Hash default password
-    const defaultPassword = await bcrypt.hash('default_password', 10);
+    // const defaultPassword = await bcrypt.hash('default_password', 10);
 
     await this.prisma.emailConfig.create({
       data: {
         smtp_host: 'smtp.gmail.com',
         smtp_port: 587,
         smtp_secure: true,
-        smtp_username: 'your-email@gmail.com',
-        smtp_password: defaultPassword,
+        smtp_username: 'test@gmail.com',
+        smtp_password: '33333333333333',
         from_email: 'noreply@example.com',
         from_name: 'My Website',
-        reply_to_email: 'contact@example.com',
+        reply_to_email: 'test@gmail.com',
         created_user_id: defaultUserId,
         updated_user_id: defaultUserId,
       },

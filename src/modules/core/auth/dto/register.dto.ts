@@ -28,6 +28,10 @@ export class RegisterDto {
   @IsString()
   @Match('password', { message: 'Xác nhận mật khẩu không khớp.' })
   confirmPassword: string;
+
+  @IsNotEmpty({ message: 'Mã OTP không được để trống.' })
+  @IsString()
+  otp: string;
 }
 
 

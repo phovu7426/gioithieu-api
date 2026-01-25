@@ -10,6 +10,7 @@ import { JwtStrategy } from '@/modules/core/auth/strategies/jwt.strategy';
 import { GoogleStrategy } from '@/modules/core/auth/strategies/google.strategy';
 import { TokenService } from '@/modules/core/auth/services/token.service';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
+import { AppMailModule } from '@/core/mail/mail.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RbacModule } from '@/modules/core/rbac/rbac.module';
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(googleOAuthConfig),
     RbacModule,
+    AppMailModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

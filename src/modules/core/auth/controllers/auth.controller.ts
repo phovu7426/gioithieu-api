@@ -8,6 +8,7 @@ import { RegisterDto } from '@/modules/core/auth/dto/register.dto';
 import { RefreshTokenDto } from '@/modules/core/auth/dto/refresh-token.dto';
 import { ForgotPasswordDto } from '@/modules/core/auth/dto/forgot-password.dto';
 import { ResetPasswordDto } from '@/modules/core/auth/dto/reset-password.dto';
+import { SendOtpDto } from '@/modules/core/auth/dto/send-otp.dto';
 import { Auth } from '@/common/auth/utils';
 import { Permission } from '@/common/auth/decorators';
 import { LogRequest } from '@/common/shared/decorators';
@@ -84,6 +85,22 @@ export class AuthController {
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @LogRequest({ fileBaseName: 'auth_register_send_otp' })
+  @Permission('public')
+  @Throttle({ default: { limit: 2, ttl: 60000 } }) // Max 2 emails per minute
+  @Post('register/send-otp')
+  async registerSendOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendOtpForRegister(dto);
+  }
+
+  @LogRequest({ fileBaseName: 'auth_forgot_password_send_otp' })
+  @Permission('public')
+  @Throttle({ default: { limit: 2, ttl: 60000 } }) // Max 2 emails per minute
+  @Post('forgot-password/send-otp')
+  async forgotPasswordSendOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendOtpForForgotPassword(dto);
   }
 
   @LogRequest({ fileBaseName: 'auth_google' })

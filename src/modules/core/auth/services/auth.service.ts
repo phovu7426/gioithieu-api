@@ -12,6 +12,8 @@ import { LoginDto } from '@/modules/core/auth/dto/login.dto';
 import { RegisterDto } from '@/modules/core/auth/dto/register.dto';
 import * as crypto from 'crypto';
 import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/repositories/user.repository.interface';
+import { MailService } from '@/core/mail/mail.service';
+import { SendOtpDto } from '../dto/send-otp.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,7 @@ export class AuthService {
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly tokenService: TokenService,
     private readonly accountLockoutService: AttemptLimiterService,
+    private readonly mailService: MailService,
   ) { }
 
   async login(dto: LoginDto) {
@@ -73,6 +76,14 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase();
+
+    // Verify OTP
+    const otpKey = `otp:register:${email}`;
+    const cachedOtp = await this.redis.get(otpKey);
+    if (!cachedOtp || cachedOtp !== dto.otp) {
+      throw new Error('Mã OTP không chính xác hoặc đã hết hạn.');
+    }
+
     const existingByEmail = await this.userRepo.findByEmail(email);
     if (existingByEmail) {
       throw new Error('Email đã được sử dụng.');
@@ -101,6 +112,8 @@ export class AuthService {
       name: dto.name,
       status: UserStatus.active as any,
     });
+
+    await this.redis.del(otpKey);
 
     return { user: safeUser(saved) };
   }
@@ -168,60 +181,80 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const user = await this.userRepo.findOne({ email: dto.email });
-
-    if (user && user.email) {
-      const token = crypto.randomBytes(32).toString('hex');
-      const key = `password_reset:${token}`;
-      const data = JSON.stringify({ userId: user.id.toString(), email: user.email });
-
-      await this.redis.set(key, data, 3600); // 1 hour TTL
+    const user = await this.userRepo.findOne({ email: dto.email.toLowerCase() });
+    if (!user) {
+      throw new Error('Email không tồn tại trong hệ thống.');
     }
 
-    return null;
+    return this.sendOtpForForgotPassword({ email: dto.email });
+  }
+
+  async sendOtpForRegister(dto: SendOtpDto) {
+    const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findByEmail(email);
+    if (user) {
+      throw new Error('Email đã được sử dụng.');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = `otp:register:${email}`;
+
+    await this.redis.set(key, otp, 300); // 5 minutes
+
+    await this.mailService.send({
+      to: email,
+      subject: 'Mã xác thực đăng ký tài khoản',
+      html: `<p>Mã OTP của bạn là: <b>${otp}</b>. Mã có hiệu lực trong 5 phút.</p>`,
+    });
+
+    return { message: 'Mã OTP đã được gửi đến email của bạn.' };
+  }
+
+  async sendOtpForForgotPassword(dto: SendOtpDto) {
+    const email = dto.email.toLowerCase();
+    const user = await this.userRepo.findOne({ email });
+    if (!user) {
+      throw new Error('Email không tồn tại trong hệ thống.');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const key = `otp:forgot-password:${email}`;
+
+    await this.redis.set(key, otp, 300); // 5 minutes
+
+    await this.mailService.send({
+      to: email,
+      subject: 'Mã xác thực khôi phục mật khẩu',
+      html: `<p>Mã OTP của bạn là: <b>${otp}</b>. Mã có hiệu lực trong 5 phút.</p>`,
+    });
+
+    return { message: 'Mã OTP đã được gửi đến email của bạn.' };
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    let resetError: string | null = null;
-
+    const email = dto.email.toLowerCase();
     if (dto.password !== dto.confirmPassword) {
-      resetError = 'Mật khẩu xác nhận không khớp.';
+      throw new Error('Mật khẩu xác nhận không khớp.');
     }
 
-    const key = `password_reset:${dto.token}`;
-    const data = resetError ? null : await this.redis.get(key);
-
-    if (!resetError && !data) {
-      resetError = 'Token không hợp lệ hoặc đã hết hạn.';
+    // Verify OTP
+    const otpKey = `otp:forgot-password:${email}`;
+    const cachedOtp = await this.redis.get(otpKey);
+    if (!cachedOtp || cachedOtp !== dto.otp) {
+      throw new Error('Mã OTP không chính xác hoặc đã hết hạn.');
     }
 
-    let userIdForReset: number | undefined;
-    if (!resetError && data) {
-      try {
-        const tokenData = JSON.parse(data);
-        userIdForReset = Number(tokenData.userId);
-        if (!userIdForReset) resetError = 'Token không hợp lệ hoặc đã hết hạn.';
-      } catch {
-        resetError = 'Token không hợp lệ hoặc đã hết hạn.';
-      }
-    }
-
-    let user: any = null;
-    if (!resetError && userIdForReset) {
-      user = await this.userRepo.findById(userIdForReset);
-      if (!user) resetError = 'Người dùng không tồn tại.';
-    }
-
-    if (resetError) {
-      throw new Error(resetError);
+    const user = await this.userRepo.findOne({ email });
+    if (!user) {
+      throw new Error('Người dùng không tồn tại.');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    await this.userRepo.update(user!.id, { password: hashedPassword });
-    await this.redis.del(key);
-    await this.accountLockoutService.reset('auth:login', user!.email!.toLowerCase());
+    await this.userRepo.update(user.id, { password: hashedPassword });
+    await this.redis.del(otpKey);
+    await this.accountLockoutService.reset('auth:login', email);
 
-    return null;
+    return { message: 'Đổi mật khẩu thành công.' };
   }
 
   async handleGoogleAuth(user: {

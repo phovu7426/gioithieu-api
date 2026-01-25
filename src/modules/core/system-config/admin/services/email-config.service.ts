@@ -32,10 +32,8 @@ export class EmailConfigService extends BaseService<any, IEmailConfigRepository>
 
     const updateData: any = { ...dto };
 
-    // Nếu có password mới, hash nó
-    if (dto.smtp_password) {
-      updateData.smtp_password = await bcrypt.hash(dto.smtp_password, 10);
-    } else if (existing) {
+    // SMTP Password phải để plain text để nodemailer có thể sử dụng gửi mail
+    if (!dto.smtp_password && existing) {
       // Nếu không gửi password, giữ nguyên password cũ
       delete updateData.smtp_password;
     }
@@ -43,13 +41,12 @@ export class EmailConfigService extends BaseService<any, IEmailConfigRepository>
     let result: any;
 
     if (!existing) {
-      const defaultPassword = dto.smtp_password ? updateData.smtp_password : await bcrypt.hash('', 10);
       result = await this.emailConfigRepo.create({
         smtp_host: dto.smtp_host || 'smtp.gmail.com',
         smtp_port: dto.smtp_port || 587,
         smtp_secure: dto.smtp_secure !== undefined ? dto.smtp_secure : true,
         smtp_username: dto.smtp_username || '',
-        smtp_password: defaultPassword,
+        smtp_password: dto.smtp_password || '',
         from_email: dto.from_email || '',
         from_name: dto.from_name || '',
         reply_to_email: dto.reply_to_email,

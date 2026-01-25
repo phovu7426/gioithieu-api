@@ -4,6 +4,7 @@
   Put,
   Body,
   ValidationPipe,
+  Post,
 } from '@nestjs/common';
 import { EmailConfigService } from '../services/email-config.service';
 import { UpdateEmailConfigDto } from '../dtos/update-email-config.dto';
@@ -32,7 +33,7 @@ export class EmailConfigController {
    */
   @Permission('config.manage')
   @LogRequest()
-  @Put()
+  @Post()
   updateConfig(@Body(ValidationPipe) dto: UpdateEmailConfigDto) {
     const userId = this.auth.id() || undefined;
     return this.emailConfigService.updateConfig(dto, userId);
