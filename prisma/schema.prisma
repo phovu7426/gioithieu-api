@@ -926,3 +926,55 @@ model Faq {
   @@index([deleted_at], map: "idx_faqs_deleted_at")
   @@map("faqs")
 }
+
+// ============================================
+// Unified Content & Document System
+// ============================================
+
+enum TemplateCategory {
+  render   // Nội dung được render từ text/html (Email, Tele, Zalo, PDF từ HTML)
+  file     // File mẫu có sẵn (Word, Excel, PDF form) để người dùng tải lên/xuống
+}
+
+enum TemplateType {
+  email
+  telegram
+  zalo
+  sms
+  pdf_generated    // Sinh từ HTML content
+  file_word        // File mẫu .docx
+  file_excel       // File mẫu .xlsx
+  file_pdf         // File mẫu .pdf có sẵn
+}
+
+model ContentTemplate {
+  id              BigInt           @id @default(autoincrement()) @db.UnsignedBigInt
+  code            String           @unique @db.VarChar(100)
+  name            String           @db.VarChar(255)
+  category        TemplateCategory @default(render)
+  type            TemplateType
+  
+  // 1. Dành cho loại 'render': Lưu nội dung HTML/Markdown/Text
+  content         String?          @db.LongText
+  
+  // 2. Dành cho loại 'file': Lưu đường dẫn file mẫu đã upload (ví dụ: /uploads/templates/contract_v1.docx)
+  file_path       String?          @db.VarChar(500)
+  
+  // Cấu hình bổ sung (Subject email, Header, Cấu hình trang PDF...)
+  metadata        Json?        
+  
+  // Danh sách biến mẫu khả dụng (Ví dụ: { "customer_name": "Tên khách", "amount": "Số tiền" })
+  variables       Json?        
+  
+  status          BasicStatus      @default(active)
+  created_at      DateTime         @default(now()) @db.DateTime(0)
+  updated_at      DateTime         @updatedAt @db.DateTime(0)
+  deleted_at      DateTime?        @db.DateTime(0)
+
+  @@index([code], map: "idx_content_templates_code")
+  @@index([status], map: "idx_content_templates_status")
+  @@index([category], map: "idx_content_templates_category")
+  @@index([type], map: "idx_content_templates_type")
+  @@index([deleted_at], map: "idx_content_templates_deleted_at")
+  @@map("content_templates")
+}
