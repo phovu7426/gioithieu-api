@@ -1,22 +1,19 @@
-
-import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
-import { BannerPrismaRepository } from './repositories/banner.prisma.repository';
-import { BANNER_REPOSITORY } from './repositories/banner.repository.interface';
-import { BannerLocationPrismaRepository } from './repositories/banner-location.prisma.repository';
-import { BANNER_LOCATION_REPOSITORY } from './repositories/banner-location.repository.interface';
+import { Global, Module } from '@nestjs/common';
+import { BANNER_REPOSITORY } from './banner/domain/banner.repository';
+import { BannerRepositoryImpl } from './banner/infrastructure/repositories/banner.repository.impl';
+import { BANNER_LOCATION_REPOSITORY } from './banner-location/domain/banner-location.repository';
+import { BannerLocationRepositoryImpl } from './banner-location/infrastructure/repositories/banner-location.repository.impl';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
     providers: [
         {
             provide: BANNER_REPOSITORY,
-            useClass: BannerPrismaRepository,
+            useClass: BannerRepositoryImpl,
         },
         {
             provide: BANNER_LOCATION_REPOSITORY,
-            useClass: BannerLocationPrismaRepository,
+            useClass: BannerLocationRepositoryImpl,
         },
     ],
     exports: [BANNER_REPOSITORY, BANNER_LOCATION_REPOSITORY],

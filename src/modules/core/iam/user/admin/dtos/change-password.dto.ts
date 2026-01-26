@@ -1,4 +1,4 @@
-﻿import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { Match } from '@/common/shared/validators';
 
 export class ChangePasswordDto {

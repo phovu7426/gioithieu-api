@@ -1,16 +1,13 @@
-
-import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
-import { MenuPrismaRepository } from './repositories/menu.prisma.repository';
-import { MENU_REPOSITORY } from './repositories/menu.repository.interface';
+import { Global, Module } from '@nestjs/common';
+import { MENU_REPOSITORY } from './domain/menu.repository';
+import { MenuRepositoryImpl } from './infrastructure/repositories/menu.repository.impl';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
     providers: [
         {
             provide: MENU_REPOSITORY,
-            useClass: MenuPrismaRepository,
+            useClass: MenuRepositoryImpl,
         },
     ],
     exports: [MENU_REPOSITORY],

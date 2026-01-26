@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
-import { ABOUT_REPOSITORY } from './repositories/about.repository.interface';
-import { AboutPrismaRepository } from './repositories/about.prisma.repository';
+import { Global, Module } from '@nestjs/common';
+import { ABOUT_REPOSITORY } from './domain/about.repository';
+import { AboutRepositoryImpl } from './infrastructure/repositories/about.repository.impl';
 
+@Global()
 @Module({
     providers: [
         {
             provide: ABOUT_REPOSITORY,
-            useClass: AboutPrismaRepository,
+            useClass: AboutRepositoryImpl,
         },
     ],
     exports: [ABOUT_REPOSITORY],

@@ -1,5 +1,5 @@
-﻿import { Injectable, Inject } from '@nestjs/common';
-import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/repositories/partner.repository.interface';
+import { Injectable, Inject } from '@nestjs/common';
+import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/domain/partner.repository';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 import { PartnerType } from '@/shared/enums/types/partner-type.enum';
 import { BaseService } from '@/common/core/services';

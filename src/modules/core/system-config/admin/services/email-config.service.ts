@@ -1,6 +1,6 @@
-﻿import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { IEmailConfigRepository, EMAIL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/email-config.repository.interface';
+import { IEmailConfigRepository, EMAIL_CONFIG_REPOSITORY } from '@/modules/core/system-config/system-config/domain/email-config.repository';
 import { UpdateEmailConfigDto } from '../dtos/update-email-config.dto';
 import { BaseService } from '@/common/core/services';
 

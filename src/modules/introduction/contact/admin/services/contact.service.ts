@@ -1,6 +1,6 @@
-﻿import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Contact } from '@prisma/client';
-import { IContactRepository, CONTACT_REPOSITORY, ContactFilter } from '@/modules/introduction/contact/repositories/contact.repository.interface';
+import { IContactRepository, CONTACT_REPOSITORY, ContactFilter } from '@/modules/introduction/contact/domain/contact.repository';
 import { ContactStatus } from '@/shared/enums/types/contact-status.enum';
 import { BaseService } from '@/common/core/services';
 

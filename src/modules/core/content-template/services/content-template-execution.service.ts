@@ -2,7 +2,7 @@ import { Injectable, Inject, NotFoundException, BadRequestException } from '@nes
 import {
     CONTENT_TEMPLATE_REPOSITORY,
     IContentTemplateRepository
-} from '../repositories/content-template.repository.interface';
+} from '../domain/content-template.repository';
 import { ContentRendererService } from './content-renderer.service';
 import { MailService } from '@/core/mail/mail.service';
 import { TemplateType } from '@/shared/enums/types/template-type.enum';

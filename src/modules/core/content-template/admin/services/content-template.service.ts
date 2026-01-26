@@ -2,7 +2,7 @@ import { Injectable, Inject, ConflictException, NotFoundException } from '@nestj
 import {
     CONTENT_TEMPLATE_REPOSITORY,
     IContentTemplateRepository
-} from '../../repositories/content-template.repository.interface';
+} from '../../domain/content-template.repository';
 import { BaseService } from '@/common/core/services';
 import { ContentTemplate } from '@prisma/client';
 

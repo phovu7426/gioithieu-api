@@ -1,5 +1,5 @@
-﻿import { Injectable, Inject, Logger, BadRequestException, NotFoundException, forwardRef } from '@nestjs/common';
-import { IMenuRepository, MENU_REPOSITORY, MenuFilter } from '@/modules/core/menu/repositories/menu.repository.interface';
+import { Injectable, Inject, Logger, BadRequestException, NotFoundException, forwardRef } from '@nestjs/common';
+import { IMenuRepository, MENU_REPOSITORY, MenuFilter } from '@/modules/core/menu/domain/menu.repository';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';
 import { RequestContext } from '@/common/shared/utils';
 import { BasicStatus } from '@/shared/enums/types/basic-status.enum';

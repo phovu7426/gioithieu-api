@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PublicPartnerService } from '@/modules/introduction/partner/public/services/partner.service';
 import { PartnerType } from '@/shared/enums/types/partner-type.enum';
 import { prepareQuery } from '@/common/core/utils';

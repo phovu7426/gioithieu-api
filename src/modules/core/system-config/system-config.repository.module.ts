@@ -1,21 +1,23 @@
+import { Global, Module, Provider } from '@nestjs/common';
+import { GENERAL_CONFIG_REPOSITORY } from './system-config/domain/general-config.repository';
+import { GeneralConfigRepositoryImpl } from './system-config/infrastructure/repositories/general-config.repository.impl';
+import { EMAIL_CONFIG_REPOSITORY } from './system-config/domain/email-config.repository';
+import { EmailConfigRepositoryImpl } from './system-config/infrastructure/repositories/email-config.repository.impl';
 
-import { Module } from '@nestjs/common';
-import { GENERAL_CONFIG_REPOSITORY } from './repositories/general-config.repository.interface';
-import { GeneralConfigPrismaRepository } from './repositories/general-config.prisma.repository';
-import { EMAIL_CONFIG_REPOSITORY } from './repositories/email-config.repository.interface';
-import { EmailConfigPrismaRepository } from './repositories/email-config.prisma.repository';
+const repositories: Provider[] = [
+    {
+        provide: GENERAL_CONFIG_REPOSITORY,
+        useClass: GeneralConfigRepositoryImpl,
+    },
+    {
+        provide: EMAIL_CONFIG_REPOSITORY,
+        useClass: EmailConfigRepositoryImpl,
+    },
+];
 
+@Global()
 @Module({
-    providers: [
-        {
-            provide: GENERAL_CONFIG_REPOSITORY,
-            useClass: GeneralConfigPrismaRepository,
-        },
-        {
-            provide: EMAIL_CONFIG_REPOSITORY,
-            useClass: EmailConfigPrismaRepository,
-        },
-    ],
-    exports: [GENERAL_CONFIG_REPOSITORY, EMAIL_CONFIG_REPOSITORY],
+    providers: [...repositories],
+    exports: [...repositories],
 })
 export class SystemConfigRepositoryModule { }

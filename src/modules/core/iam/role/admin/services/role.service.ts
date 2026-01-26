@@ -1,9 +1,9 @@
-﻿import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { RbacCacheService } from '@/modules/core/rbac/services/rbac-cache.service';
 import { RequestContext } from '@/common/shared/utils';
-import { IRoleRepository, ROLE_REPOSITORY, RoleFilter } from '@/modules/core/iam/repositories/role.repository.interface';
-import { IPermissionRepository, PERMISSION_REPOSITORY } from '@/modules/core/iam/repositories/permission.repository.interface';
-import { IUserRoleAssignmentRepository, USER_ROLE_ASSIGNMENT_REPOSITORY } from '@/modules/core/rbac/repositories/user-role-assignment.repository.interface';
+import { IRoleRepository, ROLE_REPOSITORY, RoleFilter } from '@/modules/core/iam/role/domain/role.repository';
+import { IPermissionRepository, PERMISSION_REPOSITORY } from '@/modules/core/iam/permission/domain/permission.repository';
+import { IUserRoleAssignmentRepository, USER_ROLE_ASSIGNMENT_REPOSITORY } from '@/modules/core/rbac/user-role-assignment/domain/user-role-assignment.repository';
 import { BaseService } from '@/common/core/services';
 
 @Injectable()

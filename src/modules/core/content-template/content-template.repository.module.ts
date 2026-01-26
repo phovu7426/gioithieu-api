@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
-import { CONTENT_TEMPLATE_REPOSITORY } from './repositories/content-template.repository.interface';
-import { ContentTemplatePrismaRepository } from './repositories/content-template.prisma.repository';
+import { Global, Module } from '@nestjs/common';
+import { CONTENT_TEMPLATE_REPOSITORY } from './domain/content-template.repository';
+import { ContentTemplateRepositoryImpl } from './infrastructure/repositories/content-template.repository.impl';
 
+@Global()
 @Module({
     providers: [
         {
             provide: CONTENT_TEMPLATE_REPOSITORY,
-            useClass: ContentTemplatePrismaRepository,
+            useClass: ContentTemplateRepositoryImpl,
         },
     ],
     exports: [CONTENT_TEMPLATE_REPOSITORY],

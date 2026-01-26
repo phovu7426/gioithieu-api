@@ -1,16 +1,13 @@
-
-import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
-import { ProjectPrismaRepository } from './repositories/project.prisma.repository';
-import { PROJECT_REPOSITORY } from './repositories/project.repository.interface';
+import { Global, Module } from '@nestjs/common';
+import { PROJECT_REPOSITORY } from './domain/project.repository';
+import { ProjectRepositoryImpl } from './infrastructure/repositories/project.repository.impl';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
     providers: [
         {
             provide: PROJECT_REPOSITORY,
-            useClass: ProjectPrismaRepository,
+            useClass: ProjectRepositoryImpl,
         },
     ],
     exports: [PROJECT_REPOSITORY],

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
-import { IPostCommentRepository, POST_COMMENT_REPOSITORY, PostCommentFilter } from '@/modules/post/repositories/post-comment.repository.interface';
-import { POST_REPOSITORY, IPostRepository } from '@/modules/post/repositories/post.repository.interface';
+import { IPostCommentRepository, POST_COMMENT_REPOSITORY, PostCommentFilter } from '@/modules/post/comment/domain/post-comment.repository';
+import { POST_REPOSITORY, IPostRepository } from '@/modules/post/post/domain/post.repository';
 
 @Injectable()
 export class PostCommentService {

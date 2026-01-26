@@ -1,5 +1,5 @@
-﻿import { Injectable, Inject } from '@nestjs/common';
-import { IGeneralConfigRepository, GENERAL_CONFIG_REPOSITORY } from '@/modules/core/system-config/repositories/general-config.repository.interface';
+import { Injectable, Inject } from '@nestjs/common';
+import { IGeneralConfigRepository, GENERAL_CONFIG_REPOSITORY } from '@/modules/core/system-config/system-config/domain/general-config.repository';
 import { CacheService } from '@/common/cache/services';
 import { BaseService } from '@/common/core/services';
 

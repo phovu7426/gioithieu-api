@@ -1,16 +1,13 @@
-
-import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
-import { StaffPrismaRepository } from './repositories/staff.prisma.repository';
-import { STAFF_REPOSITORY } from './repositories/staff.repository.interface';
+import { Global, Module } from '@nestjs/common';
+import { STAFF_REPOSITORY } from './domain/staff.repository';
+import { StaffRepositoryImpl } from './infrastructure/repositories/staff.repository.impl';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
     providers: [
         {
             provide: STAFF_REPOSITORY,
-            useClass: StaffPrismaRepository,
+            useClass: StaffRepositoryImpl,
         },
     ],
     exports: [STAFF_REPOSITORY],

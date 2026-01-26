@@ -1,4 +1,4 @@
-﻿import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Match } from '@/common/shared/validators';
 
 export class RegisterDto {

@@ -1,5 +1,5 @@
-﻿import { Injectable, Inject } from '@nestjs/common';
-import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/repositories/partner.repository.interface';
+import { Injectable, Inject } from '@nestjs/common';
+import { IPartnerRepository, PARTNER_REPOSITORY, PartnerFilter } from '@/modules/introduction/partner/domain/partner.repository';
 import { BaseContentService } from '@/common/core/services';
 import { Partner } from '@prisma/client';
 

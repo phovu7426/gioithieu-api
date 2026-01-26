@@ -1,4 +1,4 @@
-﻿import { Controller, Put, Body, Param, ParseIntPipe, BadRequestException } from '@nestjs/common';
+import { Controller, Put, Body, Param, ParseIntPipe, BadRequestException } from '@nestjs/common';
 import { LogRequest } from '@/common/shared/decorators';
 import { Permission } from '@/common/auth/decorators';
 import { RbacService } from '@/modules/core/rbac/services/rbac.service';

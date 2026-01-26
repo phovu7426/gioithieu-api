@@ -1,16 +1,13 @@
-
-import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
-import { TestimonialPrismaRepository } from './repositories/testimonial.prisma.repository';
-import { TESTIMONIAL_REPOSITORY } from './repositories/testimonial.repository.interface';
+import { Global, Module } from '@nestjs/common';
+import { TESTIMONIAL_REPOSITORY } from './domain/testimonial.repository';
+import { TestimonialRepositoryImpl } from './infrastructure/repositories/testimonial.repository.impl';
 
 @Global()
 @Module({
-    imports: [PrismaModule],
     providers: [
         {
             provide: TESTIMONIAL_REPOSITORY,
-            useClass: TestimonialPrismaRepository,
+            useClass: TestimonialRepositoryImpl,
         },
     ],
     exports: [TESTIMONIAL_REPOSITORY],

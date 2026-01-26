@@ -1,4 +1,4 @@
-﻿import { Controller, Get } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { HomepageService } from '@/modules/homepage/services/homepage.service';
 import { Permission } from '@/common/auth/decorators';
 

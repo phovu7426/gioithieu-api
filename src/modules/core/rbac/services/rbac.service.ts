@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { RbacCacheService } from '@/modules/core/rbac/services/rbac-cache.service';
-import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '../repositories/user-group.repository.interface';
-import { IUserRoleAssignmentRepository, USER_ROLE_ASSIGNMENT_REPOSITORY } from '../repositories/user-role-assignment.repository.interface';
-import { IRoleHasPermissionRepository, ROLE_HAS_PERMISSION_REPOSITORY } from '../repositories/role-has-permission.repository.interface';
-import { IRoleContextRepository, ROLE_CONTEXT_REPOSITORY } from '../repositories/role-context.repository.interface';
-import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/core/context/repositories/group.repository.interface';
-import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/repositories/user.repository.interface';
-import { IRoleRepository, ROLE_REPOSITORY } from '@/modules/core/iam/repositories/role.repository.interface';
+import { IUserGroupRepository, USER_GROUP_REPOSITORY } from '@/modules/core/rbac/user-group/domain/user-group.repository';
+import { IUserRoleAssignmentRepository, USER_ROLE_ASSIGNMENT_REPOSITORY } from '@/modules/core/rbac/user-role-assignment/domain/user-role-assignment.repository';
+import { IRoleHasPermissionRepository, ROLE_HAS_PERMISSION_REPOSITORY } from '@/modules/core/rbac/role-has-permission/domain/role-has-permission.repository';
+import { IRoleContextRepository, ROLE_CONTEXT_REPOSITORY } from '@/modules/core/rbac/role-context/domain/role-context.repository';
+import { IGroupRepository, GROUP_REPOSITORY } from '@/modules/core/context/group/domain/group.repository';
+import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/user/domain/user.repository';
+import { IRoleRepository, ROLE_REPOSITORY } from '@/modules/core/iam/role/domain/role.repository';
 
 /**
  * Service quản lý RBAC (Role-Based Access Control)
@@ -75,7 +75,7 @@ export class RbacService {
         cached = new Set<string>();
       } else {
         const roleIds = Array.from(
-          new Set(assignments.map((a) => a.role_id)),
+          new Set(assignments.map((a: any) => a.role_id)),
         );
 
         const links = await this.roleHasPermRepo.findMany({
@@ -150,7 +150,7 @@ export class RbacService {
     if (!assignments.length) return false;
 
     const roleIds = Array.from(
-      new Set(assignments.map((a) => a.role_id)),
+      new Set(assignments.map((a: any) => a.role_id)),
     );
 
     const links = await this.roleHasPermRepo.findMany({

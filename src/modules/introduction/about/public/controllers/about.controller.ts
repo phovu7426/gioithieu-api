@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
 import { PublicAboutService } from '@/modules/introduction/about/public/services/about.service';
 import { AboutSectionType } from '@/shared/enums/types/about-section-type.enum';
 import { prepareQuery } from '@/common/core/utils';

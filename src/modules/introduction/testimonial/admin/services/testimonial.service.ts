@@ -1,6 +1,6 @@
-﻿import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { ITestimonialRepository, TESTIMONIAL_REPOSITORY, TestimonialFilter } from '@/modules/introduction/testimonial/repositories/testimonial.repository.interface';
-import { IProjectRepository, PROJECT_REPOSITORY } from '@/modules/introduction/project/repositories/project.repository.interface';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { ITestimonialRepository, TESTIMONIAL_REPOSITORY, TestimonialFilter } from '@/modules/introduction/testimonial/domain/testimonial.repository';
+import { IProjectRepository, PROJECT_REPOSITORY } from '@/modules/introduction/project/domain/project.repository';
 import { BaseService } from '@/common/core/services';
 import { Testimonial } from '@prisma/client';
 

@@ -1,13 +1,13 @@
+import { Global, Module } from '@nestjs/common';
+import { NOTIFICATION_REPOSITORY } from './domain/notification.repository';
+import { NotificationRepositoryImpl } from './infrastructure/repositories/notification.repository.impl';
 
-import { Module } from '@nestjs/common';
-import { NOTIFICATION_REPOSITORY } from './repositories/notification.repository.interface';
-import { NotificationPrismaRepository } from './repositories/notification.prisma.repository';
-
+@Global()
 @Module({
     providers: [
         {
             provide: NOTIFICATION_REPOSITORY,
-            useClass: NotificationPrismaRepository,
+            useClass: NotificationRepositoryImpl,
         },
     ],
     exports: [NOTIFICATION_REPOSITORY],

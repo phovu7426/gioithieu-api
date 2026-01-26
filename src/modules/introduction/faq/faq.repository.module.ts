@@ -1,13 +1,13 @@
+import { Global, Module } from '@nestjs/common';
+import { FAQ_REPOSITORY } from './domain/faq.repository';
+import { FaqRepositoryImpl } from './infrastructure/repositories/faq.repository.impl';
 
-import { Module } from '@nestjs/common';
-import { FAQ_REPOSITORY } from './repositories/faq.repository.interface';
-import { FaqPrismaRepository } from './repositories/faq.prisma.repository';
-
+@Global()
 @Module({
     providers: [
         {
             provide: FAQ_REPOSITORY,
-            useClass: FaqPrismaRepository,
+            useClass: FaqRepositoryImpl,
         },
     ],
     exports: [FAQ_REPOSITORY],

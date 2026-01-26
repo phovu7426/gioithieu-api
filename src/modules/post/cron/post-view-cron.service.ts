@@ -1,7 +1,7 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RedisUtil } from '@/core/utils/redis.util';
-import { IPostRepository, POST_REPOSITORY } from '../repositories/post.repository.interface';
+import { IPostRepository, POST_REPOSITORY } from '@/modules/post/post/domain/post.repository';
 
 @Injectable()
 export class PostViewCronService {

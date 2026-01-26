@@ -1,5 +1,5 @@
-﻿import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { INotificationRepository, NOTIFICATION_REPOSITORY, NotificationFilter } from '@/modules/core/notification/repositories/notification.repository.interface';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { INotificationRepository, NOTIFICATION_REPOSITORY, NotificationFilter } from '@/modules/core/notification/domain/notification.repository';
 import { BaseService } from '@/common/core/services';
 
 @Injectable()

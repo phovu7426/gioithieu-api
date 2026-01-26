@@ -1,13 +1,13 @@
+import { Global, Module } from '@nestjs/common';
+import { GALLERY_REPOSITORY } from './domain/gallery.repository';
+import { GalleryRepositoryImpl } from './infrastructure/repositories/gallery.repository.impl';
 
-import { Module } from '@nestjs/common';
-import { GALLERY_REPOSITORY } from './repositories/gallery.repository.interface';
-import { GalleryPrismaRepository } from './repositories/gallery.prisma.repository';
-
+@Global()
 @Module({
     providers: [
         {
             provide: GALLERY_REPOSITORY,
-            useClass: GalleryPrismaRepository,
+            useClass: GalleryRepositoryImpl,
         },
     ],
     exports: [GALLERY_REPOSITORY],

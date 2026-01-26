@@ -1,4 +1,4 @@
-﻿import { INestApplication, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
+import { INestApplication, ValidationPipe, HttpException, HttpStatus } from '@nestjs/common';
 import { ResponseUtil } from '@/common/shared/utils';
 
 export function applyGlobalPipes(app: INestApplication, options: { production: boolean }) {

@@ -1,6 +1,6 @@
-﻿import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { Gallery } from '@prisma/client';
-import { IGalleryRepository, GALLERY_REPOSITORY, GalleryFilter } from '@/modules/introduction/gallery/repositories/gallery.repository.interface';
+import { IGalleryRepository, GALLERY_REPOSITORY, GalleryFilter } from '@/modules/introduction/gallery/domain/gallery.repository';
 import { BaseContentService } from '@/common/core/services';
 
 @Injectable()

@@ -1,16 +1,14 @@
-
-import { Module, Global } from '@nestjs/common';
-import { PrismaModule } from '@/core/database/prisma/prisma.module';
-import { ContactPrismaRepository } from './repositories/contact.prisma.repository';
-import { CONTACT_REPOSITORY } from './repositories/contact.repository.interface';
+import { Global, Module } from '@nestjs/common';
+import { CONTACT_REPOSITORY } from './domain/contact.repository';
+import { ContactRepositoryImpl } from './infrastructure/repositories/contact.repository.impl';
 
 @Global()
+@Global()
 @Module({
-    imports: [PrismaModule],
     providers: [
         {
             provide: CONTACT_REPOSITORY,
-            useClass: ContactPrismaRepository,
+            useClass: ContactRepositoryImpl,
         },
     ],
     exports: [CONTACT_REPOSITORY],

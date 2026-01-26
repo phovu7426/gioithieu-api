@@ -1,6 +1,6 @@
-﻿import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { PostTag } from '@prisma/client';
-import { IPostTagRepository, POST_TAG_REPOSITORY, PostTagFilter } from '@/modules/post/repositories/post-tag.repository.interface';
+import { IPostTagRepository, POST_TAG_REPOSITORY, PostTagFilter } from '@/modules/post/post-tag/domain/post-tag.repository';
 import { BaseService } from '@/common/core/services';
 
 @Injectable()

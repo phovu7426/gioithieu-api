@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
 
 // Import admin modules
-import { AdminContextModule } from '@/modules/core/context/admin/context/context.module';
-import { AdminGroupModule } from '@/modules/core/context/admin/group/group.module';
+import { AdminContextModule } from '@/modules/core/context/context/admin/context.module';
+import { AdminGroupModule } from '@/modules/core/context/group/admin/group.module';
 
 // Import user modules
-import { UserContextModule } from '@/modules/core/context/user/context/context.module';
-import { UserGroupModule } from '@/modules/core/context/user/group/group.module';
+import { UserContextModule } from '@/modules/core/context/context/user/context.module';
+import { UserGroupModule } from '@/modules/core/context/group/user/group.module';
 
 // Import repository module
 import { ContextRepositoryModule } from './context.repository.module';

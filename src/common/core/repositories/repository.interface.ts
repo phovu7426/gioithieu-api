@@ -1,4 +1,4 @@
-﻿import { PaginationMeta } from '@/common/core/utils';
+import { PaginationMeta } from '@/common/core/utils';
 
 export interface IPaginationOptions {
     page?: number;

@@ -1,31 +1,31 @@
+import { Global, Module } from '@nestjs/common';
+import { USER_GROUP_REPOSITORY } from './user-group/domain/user-group.repository';
+import { UserGroupRepositoryImpl } from './user-group/infrastructure/repositories/user-group.repository.impl';
+import { USER_ROLE_ASSIGNMENT_REPOSITORY } from './user-role-assignment/domain/user-role-assignment.repository';
+import { UserRoleAssignmentRepositoryImpl } from './user-role-assignment/infrastructure/repositories/user-role-assignment.repository.impl';
+import { ROLE_HAS_PERMISSION_REPOSITORY } from './role-has-permission/domain/role-has-permission.repository';
+import { RoleHasPermissionRepositoryImpl } from './role-has-permission/infrastructure/repositories/role-has-permission.repository.impl';
+import { ROLE_CONTEXT_REPOSITORY } from './role-context/domain/role-context.repository';
+import { RoleContextRepositoryImpl } from './role-context/infrastructure/repositories/role-context.repository.impl';
 
-import { Module } from '@nestjs/common';
-import { USER_GROUP_REPOSITORY } from './repositories/user-group.repository.interface';
-import { UserGroupPrismaRepository } from './repositories/user-group.prisma.repository';
-import { USER_ROLE_ASSIGNMENT_REPOSITORY } from './repositories/user-role-assignment.repository.interface';
-import { UserRoleAssignmentPrismaRepository } from './repositories/user-role-assignment.prisma.repository';
-import { ROLE_HAS_PERMISSION_REPOSITORY } from './repositories/role-has-permission.repository.interface';
-import { RoleHasPermissionPrismaRepository } from './repositories/role-has-permission.prisma.repository';
-import { ROLE_CONTEXT_REPOSITORY } from './repositories/role-context.repository.interface';
-import { RoleContextPrismaRepository } from './repositories/role-context.prisma.repository';
-
+@Global()
 @Module({
     providers: [
         {
             provide: USER_GROUP_REPOSITORY,
-            useClass: UserGroupPrismaRepository,
+            useClass: UserGroupRepositoryImpl,
         },
         {
             provide: USER_ROLE_ASSIGNMENT_REPOSITORY,
-            useClass: UserRoleAssignmentPrismaRepository,
+            useClass: UserRoleAssignmentRepositoryImpl,
         },
         {
             provide: ROLE_HAS_PERMISSION_REPOSITORY,
-            useClass: RoleHasPermissionPrismaRepository,
+            useClass: RoleHasPermissionRepositoryImpl,
         },
         {
             provide: ROLE_CONTEXT_REPOSITORY,
-            useClass: RoleContextPrismaRepository,
+            useClass: RoleContextRepositoryImpl,
         },
     ],
     exports: [

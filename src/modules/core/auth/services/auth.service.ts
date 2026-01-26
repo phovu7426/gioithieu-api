@@ -11,7 +11,7 @@ import { ResetPasswordDto } from '@/modules/core/auth/dto/reset-password.dto';
 import { LoginDto } from '@/modules/core/auth/dto/login.dto';
 import { RegisterDto } from '@/modules/core/auth/dto/register.dto';
 import * as crypto from 'crypto';
-import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/repositories/user.repository.interface';
+import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/user/domain/user.repository';
 import { MailService } from '@/core/mail/mail.service';
 import { ContentTemplateExecutionService } from '@/modules/core/content-template/services/content-template-execution.service';
 import { SendOtpDto } from '../dto/send-otp.dto';

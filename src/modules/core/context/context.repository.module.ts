@@ -1,19 +1,19 @@
+import { Global, Module } from '@nestjs/common';
+import { CONTEXT_REPOSITORY } from './context/domain/context.repository';
+import { ContextRepositoryImpl } from './context/infrastructure/repositories/context.repository.impl';
+import { GROUP_REPOSITORY } from './group/domain/group.repository';
+import { GroupRepositoryImpl } from './group/infrastructure/repositories/group.repository.impl';
 
-import { Module } from '@nestjs/common';
-import { CONTEXT_REPOSITORY } from './repositories/context.repository.interface';
-import { GROUP_REPOSITORY } from './repositories/group.repository.interface';
-import { ContextPrismaRepository } from './repositories/context.prisma.repository';
-import { GroupPrismaRepository } from './repositories/group.prisma.repository';
-
+@Global()
 @Module({
     providers: [
         {
             provide: CONTEXT_REPOSITORY,
-            useClass: ContextPrismaRepository,
+            useClass: ContextRepositoryImpl,
         },
         {
             provide: GROUP_REPOSITORY,
-            useClass: GroupPrismaRepository,
+            useClass: GroupRepositoryImpl,
         },
     ],
     exports: [CONTEXT_REPOSITORY, GROUP_REPOSITORY],
