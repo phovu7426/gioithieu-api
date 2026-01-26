@@ -34,7 +34,7 @@ export class SeedEmailConfigs {
         smtp_port: 587,
         smtp_secure: true,
         smtp_username: 'test@gmail.com',
-        smtp_password: '33333333333333',
+        smtp_password: 'wxqmolbvransywhq',
         from_email: 'noreply@example.com',
         from_name: 'My Website',
         reply_to_email: 'test@gmail.com',

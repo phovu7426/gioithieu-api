@@ -29,12 +29,12 @@ export class ContentTemplateController {
 
     @Get()
     findAll(@Query() query: ContentTemplateQueryDto) {
-        return this.service.findAll(query);
+        return this.service.getList(query);
     }
 
     @Get(':id')
     findOne(@Param('id', ParseIntPipe) id: number) {
-        return this.service.findOne(id);
+        return this.service.getOne(id);
     }
 
     @Patch(':id')
@@ -47,7 +47,7 @@ export class ContentTemplateController {
 
     @Delete(':id')
     remove(@Param('id', ParseIntPipe) id: number) {
-        return this.service.remove(id);
+        return this.service.delete(id);
     }
 
     @Post(':code/test')

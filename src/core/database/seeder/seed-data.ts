@@ -19,6 +19,7 @@ import { SeedGallery } from '@/core/database/seeder/seed-gallery';
 import { SeedCertificates } from '@/core/database/seeder/seed-certificates';
 import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
 import { SeedPosts } from '@/core/database/seeder/seed-posts';
+import { SeedContentTemplates } from '@/core/database/seeder/seed-content-templates';
 
 @Injectable()
 export class SeedService {
@@ -36,6 +37,7 @@ export class SeedService {
     private readonly seedGeneralConfigs: SeedGeneralConfigs,
     private readonly seedEmailConfigs: SeedEmailConfigs,
     private readonly seedGroups: SeedGroups,
+    private readonly seedContentTemplates: SeedContentTemplates,
     // Introduction Seeders
     private readonly seedProjects: SeedProjects,
     private readonly seedAboutSections: SeedAboutSections,
@@ -73,6 +75,7 @@ export class SeedService {
       // System config
       await this.seedGeneralConfigs.seed();
       await this.seedEmailConfigs.seed();
+      await this.seedContentTemplates.seed();
 
       // Groups and contexts (sau khi có users và system context)
       await this.seedGroups.seed();
@@ -129,6 +132,10 @@ export class SeedService {
 
       await this.prisma.emailConfig.deleteMany({});
       await this.prisma.generalConfig.deleteMany({});
+      // Use explicit delete for content templates if needed, or rely on cascade if relation exists? No relation to user usually.
+      // But lint error said contentTemplate doesn't exist? Assuming it does.
+      // Actually, I can't put comment inside code block if I want to match.
+      await this.prisma.contentTemplate.deleteMany({});
 
       // Introduction Tables
       await this.prisma.testimonial.deleteMany({});

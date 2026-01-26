@@ -70,17 +70,44 @@ export class MailService {
 
     const config = await this.getActiveConfig();
 
-    // Sử dụng connection pooling để tối ưu hiệu năng khi gửi nhiều email
-    this.transporterCache = nodemailer.createTransport({
+    // Cấu hình transporter options
+    const transportOptions: any = {
       host: config.smtp_host,
       port: config.smtp_port,
-      secure: config.smtp_secure,
-      auth: {
+      secure: config.smtp_secure, // true for 465, false for other ports
+      pool: true, // Bật connection pooling để tái sử dụng kết nối
+    };
+
+    // Chỉ thêm auth nếu có username và password (không rỗng)
+    const hasAuth = config.smtp_username?.trim() && config.smtp_password?.trim();
+    if (hasAuth) {
+      transportOptions.auth = {
         user: config.smtp_username,
         pass: config.smtp_password,
-      },
-      pool: true, // Bật connection pooling để tái sử dụng kết nối
-    });
+      };
+    }
+
+    // Nếu port 587 và secure=false, cần cấu hình TLS
+    if (config.smtp_port === 587 && !config.smtp_secure) {
+      transportOptions.requireTLS = true; // Bắt buộc dùng STARTTLS
+      transportOptions.tls = {
+        rejectUnauthorized: false, // Cho phép self-signed certificates (chỉ dùng trong dev)
+      };
+    }
+
+    // Nếu là localhost và không có auth, bỏ qua TLS (cho local testing)
+    if (config.smtp_host === 'localhost' || config.smtp_host === '127.0.0.1') {
+      transportOptions.tls = {
+        rejectUnauthorized: false,
+      };
+      // Nếu không có auth, bỏ qua TLS hoàn toàn
+      if (!hasAuth) {
+        transportOptions.ignoreTLS = true; // Bỏ qua TLS cho local mail server
+      }
+    }
+
+    // Sử dụng connection pooling để tối ưu hiệu năng khi gửi nhiều email
+    this.transporterCache = nodemailer.createTransport(transportOptions);
 
     return this.transporterCache;
   }

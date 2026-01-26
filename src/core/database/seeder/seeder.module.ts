@@ -21,6 +21,8 @@ import { SeedCertificates } from '@/core/database/seeder/seed-certificates';
 import { SeedFaqs } from '@/core/database/seeder/seed-faqs';
 import { SeedPosts } from '@/core/database/seeder/seed-posts';
 
+import { SeedContentTemplates } from '@/core/database/seeder/seed-content-templates';
+
 @Module({
   imports: [PrismaModule],
   providers: [
@@ -37,6 +39,7 @@ import { SeedPosts } from '@/core/database/seeder/seed-posts';
     SeedGeneralConfigs,
     SeedEmailConfigs,
     SeedGroups,
+    SeedContentTemplates,
     // Introduction Seeders
     SeedProjects,
     SeedAboutSections,

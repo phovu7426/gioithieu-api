@@ -6,6 +6,7 @@ import { BasicStatus } from '@/shared/enums/types/basic-status.enum';
 
 export interface ContentTemplateFilter {
     search?: string;
+    code?: string;
     category?: TemplateCategory;
     type?: TemplateType;
     status?: BasicStatus;

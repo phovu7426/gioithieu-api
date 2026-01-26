@@ -18,6 +18,7 @@ import { SeederModule } from '@/core/database/seeder/seeder.module';
 import { RedisUtil } from '@/core/utils/redis.util';
 import { TokenBlacklistService } from '@/core/security/token-blacklist.service';
 import { AttemptLimiterService } from '@/core/security/attempt-limiter.service';
+import { AppQueueModule } from '@/core/queue/queue.module';
 
 @Global()
 @Module({
@@ -111,6 +112,7 @@ import { AttemptLimiterService } from '@/core/security/attempt-limiter.service';
     }),
     PrismaModule,
     SeederModule,
+    AppQueueModule,
   ],
   providers: [RedisUtil, TokenBlacklistService, AttemptLimiterService],
   exports: [ConfigModule, PrismaModule, RedisUtil, TokenBlacklistService, AttemptLimiterService],

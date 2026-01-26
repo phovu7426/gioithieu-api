@@ -7,6 +7,7 @@ import { UserManagementModule } from './iam/user-management.module';
 import { MenuModule } from './menu/menu.module';
 import { SystemConfigModule } from './system-config/system-config.module';
 import { ContentTemplateModule } from './content-template/content-template.module';
+import { QueueWorkerModule } from './queue/queue.module';
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { ContentTemplateModule } from './content-template/content-template.modul
         MenuModule,
         SystemConfigModule,
         ContentTemplateModule,
+        QueueWorkerModule,
     ],
     exports: [
         AuthModule,
@@ -28,6 +30,7 @@ import { ContentTemplateModule } from './content-template/content-template.modul
         MenuModule,
         SystemConfigModule,
         ContentTemplateModule,
+        QueueWorkerModule,
     ],
 })
 export class CoreModulesModule { }

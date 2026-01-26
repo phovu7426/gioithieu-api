@@ -11,6 +11,9 @@ import { GoogleStrategy } from '@/modules/core/auth/strategies/google.strategy';
 import { TokenService } from '@/modules/core/auth/services/token.service';
 import { RbacModule } from '@/modules/core/rbac/rbac.module';
 import { AppMailModule } from '@/core/mail/mail.module';
+import { BullModule } from '@nestjs/bull';
+
+import { ContentTemplateAdminModule } from '@/modules/core/content-template/admin/content-template.module';
 
 @Module({
   imports: [
@@ -19,6 +22,10 @@ import { AppMailModule } from '@/core/mail/mail.module';
     ConfigModule.forFeature(googleOAuthConfig),
     RbacModule,
     AppMailModule,
+    ContentTemplateAdminModule,
+    BullModule.registerQueue({
+      name: 'notification',
+    }),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

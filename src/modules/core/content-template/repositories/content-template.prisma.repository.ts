@@ -32,6 +32,10 @@ export class ContentTemplatePrismaRepository
             where.type = filter.type;
         }
 
+        if (filter.code) {
+            where.code = filter.code;
+        }
+
         if (filter.status) {
             where.status = filter.status;
         }

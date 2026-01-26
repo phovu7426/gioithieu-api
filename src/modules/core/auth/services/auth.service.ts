@@ -13,7 +13,10 @@ import { RegisterDto } from '@/modules/core/auth/dto/register.dto';
 import * as crypto from 'crypto';
 import { IUserRepository, USER_REPOSITORY } from '@/modules/core/iam/repositories/user.repository.interface';
 import { MailService } from '@/core/mail/mail.service';
+import { ContentTemplateExecutionService } from '@/modules/core/content-template/services/content-template-execution.service';
 import { SendOtpDto } from '../dto/send-otp.dto';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +27,10 @@ export class AuthService {
     private readonly tokenBlacklistService: TokenBlacklistService,
     private readonly tokenService: TokenService,
     private readonly accountLockoutService: AttemptLimiterService,
-    private readonly mailService: MailService,
+    private readonly mailService: MailService, // Keep for backward compatibility or direct usage if needed
+    private readonly contentTemplateService: ContentTemplateExecutionService,
+    @InjectQueue('notification')
+    private readonly notificationQueue: Queue,
   ) { }
 
   async login(dto: LoginDto) {
@@ -115,6 +121,25 @@ export class AuthService {
 
     await this.redis.del(otpKey);
 
+    // Send success email via queue (non-critical)
+    this.notificationQueue.add('send_email_template', {
+      templateCode: 'registration_success',
+      options: {
+        to: saved.email!,
+        variables: {
+          name: saved.name || saved.username,
+          username: saved.username,
+          email: saved.email,
+          loginUrl: `${process.env.APP_URL}/auth/login`,
+        },
+      },
+    }, {
+      jobId: `register-success-${saved.id}`,
+      attempts: 3,
+      backoff: 5000,
+      removeOnComplete: true,
+    }).catch(err => console.error('Failed to queue registration success email', err));
+
     return { user: safeUser(saved) };
   }
 
@@ -201,10 +226,12 @@ export class AuthService {
 
     await this.redis.set(key, otp, 300); // 5 minutes
 
-    await this.mailService.send({
+    await this.redis.set(key, otp, 300); // 5 minutes
+
+    // Use Content Template
+    await this.contentTemplateService.execute('send_otp_register', {
       to: email,
-      subject: 'Mã xác thực đăng ký tài khoản',
-      html: `<p>Mã OTP của bạn là: <b>${otp}</b>. Mã có hiệu lực trong 5 phút.</p>`,
+      variables: { otp },
     });
 
     return { message: 'Mã OTP đã được gửi đến email của bạn.' };
@@ -222,10 +249,12 @@ export class AuthService {
 
     await this.redis.set(key, otp, 300); // 5 minutes
 
-    await this.mailService.send({
+    await this.redis.set(key, otp, 300); // 5 minutes
+
+    // Use Content Template
+    await this.contentTemplateService.execute('send_otp_forgot_password', {
       to: email,
-      subject: 'Mã xác thực khôi phục mật khẩu',
-      html: `<p>Mã OTP của bạn là: <b>${otp}</b>. Mã có hiệu lực trong 5 phút.</p>`,
+      variables: { otp },
     });
 
     return { message: 'Mã OTP đã được gửi đến email của bạn.' };
@@ -253,6 +282,24 @@ export class AuthService {
     await this.userRepo.update(user.id, { password: hashedPassword });
     await this.redis.del(otpKey);
     await this.accountLockoutService.reset('auth:login', email);
+
+    // Send success email via queue (non-critical)
+    this.notificationQueue.add('send_email_template', {
+      templateCode: 'reset_password_success',
+      options: {
+        to: user.email!,
+        variables: {
+          name: user.name || user.username,
+          time: new Date().toLocaleString('vi-VN'),
+          loginUrl: `${process.env.APP_URL}/login`,
+        },
+      },
+    }, {
+      jobId: `reset-password-success-${user.id}`,
+      attempts: 3,
+      backoff: 5000,
+      removeOnComplete: true,
+    }).catch(err => console.error('Failed to queue reset password success email', err));
 
     return { message: 'Đổi mật khẩu thành công.' };
   }
