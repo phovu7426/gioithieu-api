@@ -165,7 +165,7 @@ export class SeedMenus {
         is_public: false,
         show_in_menu: true,
         permission_code: 'config.manage',
-        permission_codes: ['config.manage'], // Có thể thêm permissions khác nếu cần
+        permission_codes: ['config.manage', 'content_template.manage'], // Có thể thêm permissions khác nếu cần
       },
       {
         code: 'config-general',
@@ -194,6 +194,20 @@ export class SeedMenus {
         is_public: false,
         show_in_menu: true,
         permission_code: 'config.manage',
+      },
+      {
+        code: 'content-templates',
+        name: 'Mẫu tài liệu',
+        path: '/admin/content-templates',
+        api_path: 'api/admin/content-templates',
+        icon: '📄',
+        type: MenuType.route,
+        status: BasicStatus.active,
+        parent_code: 'config-management',
+        sort_order: 30,
+        is_public: false,
+        show_in_menu: true,
+        permission_code: 'content_template.manage',
       },
 
       // ========== MENU ==========

@@ -10,15 +10,8 @@ export class SeedPermissions {
   async seed(): Promise<void> {
     this.logger.log('Seeding permissions...');
 
-    // Check if permissions already exist
-    const existingPermissions = await this.prisma.permission.count();
-    if (existingPermissions > 0) {
-      this.logger.log('Permissions already seeded, skipping...');
-      return;
-    }
-
     // Get admin user for audit fields
-    const adminUser = await this.prisma.user.findFirst({ where: { username: 'admin' } });
+    const adminUser = await this.prisma.user.findFirst({ where: { username: 'systemadmin' } });
     const defaultUserId = adminUser ? Number(adminUser.id) : 1;
 
     // Seed permissions - Chỉ có quyền manage level, không chia nhỏ thành read, create, update, delete
@@ -73,6 +66,8 @@ export class SeedPermissions {
       { code: 'gallery.manage', name: 'Quản lý Thư viện ảnh', status: 'active', parent_code: null },
       { code: 'certificate.manage', name: 'Quản lý Chứng chỉ', status: 'active', parent_code: null },
       { code: 'faq.manage', name: 'Quản lý Câu hỏi thường gặp', status: 'active', parent_code: null },
+      // ========== CONTENT TEMPLATE MODULE ==========
+      { code: 'content_template.manage', name: 'Quản lý Mẫu tài liệu', status: 'active', parent_code: null },
     ];
 
     const createdPermissions: Map<string, any> = new Map();
@@ -85,15 +80,24 @@ export class SeedPermissions {
       if (permData.parent_code) {
         parentPermission = createdPermissions.get(permData.parent_code) || null;
         if (!parentPermission) {
-          this.logger.warn(`Parent permission not found for ${permData.code}, skipping parent relation`);
+          // Try to find in DB if not in map
+          parentPermission = await this.prisma.permission.findFirst({ where: { code: permData.parent_code } });
         }
       }
 
       // Tự động set scope: nếu code bắt đầu bằng 'system.' thì scope = 'system', ngược lại = 'context'
       const scope = permData.code.startsWith('system.') ? 'system' : 'context';
 
-      const saved = await this.prisma.permission.create({
-        data: {
+      const saved = await this.prisma.permission.upsert({
+        where: { code: permData.code },
+        update: {
+          name: permData.name,
+          status: permData.status,
+          scope: scope,
+          parent_id: parentPermission ? parentPermission.id : null,
+          updated_user_id: defaultUserId,
+        },
+        create: {
           code: permData.code,
           name: permData.name,
           status: permData.status,
@@ -104,7 +108,7 @@ export class SeedPermissions {
         },
       });
       createdPermissions.set(saved.code, saved);
-      this.logger.log(`Created permission: ${saved.code}${parentPermission ? ` (parent: ${parentPermission.code})` : ''}`);
+      this.logger.log(`Seeded permission: ${saved.code}`);
     }
 
     this.logger.log(`Permissions seeding completed - Total: ${createdPermissions.size}`);

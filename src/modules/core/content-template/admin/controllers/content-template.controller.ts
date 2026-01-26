@@ -14,6 +14,7 @@ import { ContentTemplateExecutionService } from '../../services/content-template
 import { CreateContentTemplateDto } from '../dtos/create-content-template.dto';
 import { UpdateContentTemplateDto } from '../dtos/update-content-template.dto';
 import { ContentTemplateQueryDto } from '../dtos/content-template-query.dto';
+import { Permission } from '@/common/auth/decorators';
 
 @Controller('admin/content-templates')
 export class ContentTemplateController {
@@ -22,21 +23,25 @@ export class ContentTemplateController {
         private readonly executionService: ContentTemplateExecutionService,
     ) { }
 
+    @Permission('content_template.manage')
     @Post()
     create(@Body() dto: CreateContentTemplateDto) {
         return this.service.create(dto);
     }
 
+    @Permission('content_template.manage')
     @Get()
     findAll(@Query() query: ContentTemplateQueryDto) {
         return this.service.getList(query);
     }
 
+    @Permission('content_template.manage')
     @Get(':id')
     findOne(@Param('id', ParseIntPipe) id: number) {
         return this.service.getOne(id);
     }
 
+    @Permission('content_template.manage')
     @Patch(':id')
     update(
         @Param('id', ParseIntPipe) id: number,
@@ -45,11 +50,13 @@ export class ContentTemplateController {
         return this.service.update(id, dto);
     }
 
+    @Permission('content_template.manage')
     @Delete(':id')
     remove(@Param('id', ParseIntPipe) id: number) {
         return this.service.delete(id);
     }
 
+    @Permission('content_template.manage')
     @Post(':code/test')
     testExecute(
         @Param('code') code: string,

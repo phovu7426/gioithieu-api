@@ -18,7 +18,7 @@ export class SeedRoles {
     }
 
     // Get admin user for audit fields
-    const adminUser = await this.prisma.user.findFirst({ where: { username: 'admin' } });
+    const adminUser = await this.prisma.user.findFirst({ where: { username: 'systemadmin' } });
     const defaultUserId = adminUser ? Number(adminUser.id) : 1;
 
     // Seed roles - Theo yêu cầu: System có 2 roles, Shop context có 2 roles
