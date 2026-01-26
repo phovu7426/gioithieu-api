@@ -3,7 +3,7 @@ import {
     Get,
     Post,
     Body,
-    Patch,
+    Put,
     Param,
     Delete,
     Query,
@@ -42,7 +42,7 @@ export class ContentTemplateController {
     }
 
     @Permission('content_template.manage')
-    @Patch(':id')
+    @Put(':id')
     update(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: UpdateContentTemplateDto,
